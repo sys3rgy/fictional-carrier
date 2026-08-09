@@ -1,211 +1,379 @@
-# SFC Bellwether — a sci-fi fighter carrier.
+# SFC Bellwether — sci-fi carrier warship, built to the supplied brief.
 #
-# Not a flat-top: the default carrier is a Nimitz in space, one wedge hull
-# with the flight deck exposed on the roof. This one is built around what a
-# carrier is actually for, which is getting damaged fighters back aboard
-# while something is shooting at it. So it is two hulls with the recovery
-# channel slung *between* them — the deck is the most protected place on the
-# ship instead of the most exposed, and the function is visible in the
-# outline: a two-tined fork with the fighters sitting down in the slot.
+# --- the brief, enumerated before building ----------------------------------
+# [G] earns geometry (changes the outline)  [C] colour/texture  [-] dropped
 #
-# Ablative ceramic, scorched black at the stern. Nothing glows.
+# [G] long dagger hull, wide at the deck, tapering inward to a narrow keel, so
+#     each flank is ONE large angled plane            -> `profile daggersec`
+# [G] blunt raked bow; squared stern
+# [G] raised dorsal spine running the length
+# [G] launch trench recessed into the PORT flank of the spine (+X is port),
+#     about a third of the hull long — asymmetric, authored outside `mirror`
+# [G] orange coaming framing the trench opening
+# [G] two twin-barrel turrets on the spine centreline, staggered fore and aft,
+#     NOT a mirrored pair — two separate groups at different z
+# [G] continuous taper off the spine into a low pointed prow, no raised head
+# [G] slim ventral prong forward under the bow, teal tip
+# [G] aft deckhouse on the spine, fillet skirt blending it into the hull
+# [G] offset lattice mast with two crossbars; small satellite dish
+# [G] wide blocky engine housing, four nozzles
+# [C] steel-blue / slate-grey plating, dense panel-line grid -> planks + bricks
+# [C] rust-brown cargo plating blocks -> ring material bands along the hull
+# [C] ochre trim down both deck edges -> material_arc stripes
+# [C] cyan containment field with a bright rim, warm amber deck glow below it
+#     -> three concentric bands: orange coaming, amber deck, cyan field
+# [C] orange ring collar / teal throat / white-hot core -> nozzle ring bands
+# [C] thin brow strip along the bow taper
+# [C] rows of small warm windows on the taper -> texture band; far below
+#     geometry scale, they would be 2 triangles each and read as noise
+# [C] red/teal running lights -> lamp boxes on the mast and along the deck edge
+# [-] "slow pulse running along" the field: materials do not animate here
+# [-] translucency and additive glow: the language has no emissive or alpha
+#     channel (a palette colour takes metal= and rough= and nothing else), so
+#     the field is an opaque bright panel. Glow is faked with near-white
+#     saturated colour, which is all there is.
+# [-] the cyan exhaust wash: BUILT and then removed. Opaque cones behind the
+#     nozzles read as four solid pale fangs, not a soft additive trail — worse
+#     than leaving it out, since the teal-throat/white-core nozzle banding
+#     already reads as lit. Trivially restorable if you want it anyway.
+# [-] starfield, nebula, cool key from upper-left, blue rim from behind,
+#     orthographic isometric framing — renderer/presentation, not model
+#     properties. The compiler's sheet uses its own fixed light and background.
+# ----------------------------------------------------------------------------
 
 model carrier
-  height 140                     # meters, keel to radiator tip
+  height 140                     # meters, keel to masthead
   style smooth
-  shading faceted                # a hull is flat panels, not a smooth blob
+  shading faceted                # a warship is flat panels, not a smooth blob
 
 palette
-  hull  #d9d3c4                  # bone-white ablative ceramic
-  frame #b5622a                  # oxide-orange structural frames and ribs
-  char  #3b3a38                  # scorched graphite: bells, blast channel
-  deck  #6f7b80                  # the recovery deck, worn slate
-  warn  #c8342b                  # signal red — the recovery throat, nothing else
+  steel  #52657a                 # steel-blue plating
+  slate  #6e747f                 # slate-grey plating
+  rust   #8a5236                 # rust-brown cargo plating blocks
+  ochre  #bf8f42                 # deck-edge trim
+  orange #d4741f                 # coaming, barbette collars, nozzle rings
+  cyan   #a8f0ff                 # containment field — faked glow, no emissive
+  teal   #35d2c0                 # nozzle throats, prong tip
+  amber  #f2ae44                 # trench deck light from below
+  core   #f8fcff                 # white-hot nozzle core
+  red    #d0342c                 # running lights
+  dark   #2b3037 metal=0.4 rough=0.5   # recesses, mast lattice, gun barrels
 
-# A hull section: flat weather deck on top, slab sides, narrow keel.
-profile hullsec mirror
-  0.00,1.00  0.62,0.94  0.78,0.34  0.66,-0.42  0.32,-0.86  0.00,-1.00
+# Wide flat deck, one large angled plane per flank, narrow keel. This section
+# is the whole "dagger" read; a superellipse cannot make it.
+profile daggersec mirror
+  0.00,1.00  0.88,0.90  0.66,-0.24  0.34,-0.78  0.00,-1.00
 
 skeleton
-  root keel at (0,0.34,-1.95)
-  bone spine1 parent=keel   dir=fwd len=1.20
-  bone spine2 parent=spine1 dir=fwd len=1.20
-  bone spine3 parent=spine2 dir=fwd len=1.00
+  root keel at (0,0.30,-2.05)
+  bone hull1 parent=keel  dir=fwd len=1.20
+  bone hull2 parent=hull1 dir=fwd len=1.20
+  bone hull3 parent=hull2 dir=fwd len=1.10
+  bone bow   parent=hull3 dir=fwd len=0.95
 
-  # blockhouse bridging the two hulls, well aft
-  bone tower parent=spine1 at=0.08 up=0.06 dir=up len=0.42
+  # raised dorsal spine, and its continuous taper down into the prow
+  bone sp1   parent=keel up=0.36 dir=fwd len=1.30
+  bone sp2   parent=sp1  dir=fwd len=1.30
+  bone sp3   parent=sp2  dir=fwd len=1.30
+  bone spbow parent=sp3  dir=fwd pitch=16 len=0.56
 
-  mirror
-    bone hull1 parent=keel side=0.60 dir=fwd len=1.20
-    bone hull2 parent=hull1 dir=fwd len=1.20
-    bone hull3 parent=hull2 dir=fwd len=1.00
-    bone ram   parent=hull3 dir=fwd len=0.55
+  # ventral prong under the bow
+  bone prong parent=bow at=0.58 up=-0.13 dir=fwd pitch=3 len=0.78
 
-    # radiator fins, raked up and out off the blockhouse
-    bone fin parent=tower at=0.86 side=0.05 dir=side tilt=36 len=0.46
-  end
+  # trench on the PORT flank of the spine — one side only, by design
+  bone tr parent=sp2 at=0.02 side=0.15 up=0.05 dir=fwd len=1.46
+
+  # aft deckhouse, and its offset mast
+  bone dh   parent=sp1 at=0.26 dir=up len=0.16
+  bone mast parent=dh at=1.0 side=0.115 fwd=-0.02 dir=up pitch=-5 len=0.18
+
+  # turrets get their own bones so each can traverse independently — which is
+  # the entire point of staggering them fore and aft
+  bone tur_a parent=sp2 at=0.30 up=0.105 dir=up len=0.02
+  bone tur_b parent=sp3 at=0.34 up=0.085 dir=up len=0.02
 
 parts
-  # --- the two hulls
-  mirror
-    loft hull bones=hull1..ram material=hull frame=up shape=hullsec
-      ring 0.00 w=0.32 d=0.66
-      ring 0.08 w=0.36 d=0.70
-      ring 0.30 w=0.36 d=0.67
-      ring 0.34 w=0.36 d=0.57      # the deck line steps down here, so the
-      ring 0.62 w=0.35 d=0.55      # profile is not one smooth curve
-      ring 0.80 w=0.33 d=0.51
-      ring 0.90 w=0.28 d=0.42
-      ring 0.97 w=0.20 d=0.31
-      ring 1.00 w=0.15 d=0.24      # a chisel prow, not a needle
+  # --- hull -----------------------------------------------------------------
+  #     Rust-brown plating blocks and the ochre deck-edge trim are ring bands
+  #     and arcs, not parts. Arc 0 deg is the +side axis, 90 the +depth (up)
+  #     axis, so the deck edge sits near 35 deg either side of the beam.
+  loft hull bones=hull1..bow material=steel frame=up shape=daggersec \
+       material_arc=ochre:29-39,ochre:141-151
+    ring 0.00 w=0.80 d=0.60
+    ring 0.06 w=0.82 d=0.62
+    ring 0.24 w=0.82 d=0.61 material=rust
+    ring 0.32 w=0.81 d=0.60 material=steel
+    ring 0.50 w=0.80 d=0.58
+    ring 0.58 w=0.79 d=0.57 material=rust
+    ring 0.64 w=0.78 d=0.56 material=steel
+    ring 0.78 w=0.70 d=0.51
+    ring 0.88 w=0.56 d=0.44 up=0.02
+    ring 0.95 w=0.38 d=0.32 up=0.04      # raked: the deck line runs on past
+    ring 1.00 w=0.20 d=0.18 up=0.05      # the keel line, so the stem leans
+    cap start=flat end=flat              # blunt, not a needle
+
+  # --- raised dorsal spine, tapering continuously into a low pointed prow ---
+  loft spine bones=sp1..spbow material=slate frame=up shape=squarish
+    ring 0.00 w=0.36 d=0.30
+    ring 0.30 w=0.36 d=0.29
+    ring 0.62 w=0.34 d=0.26
+    ring 0.80 w=0.30 d=0.22 material=rust
+    ring 0.86 w=0.27 d=0.19 material=slate
+    ring 0.94 w=0.18 d=0.13
+    ring 1.00 w=0.06 d=0.05
+    cap start=flat end=point
+
+  # a thin brow strip where the taper meets the bow
+  loft brow bone=sp3 at=0.72 dir=fwd len=0.62 material=ochre frame=up
+    ring 0.00 w=0.20 d=0.035
+    ring 0.55 w=0.15 d=0.030
+    ring 1.00 w=0.06 d=0.022
+    cap start=flat end=flat
+
+  # --- ventral prong --------------------------------------------------------
+  loft prong bones=prong..prong material=slate frame=up
+    ring 0.00 w=0.11 d=0.10
+    ring 0.45 w=0.07 d=0.065
+    ring 0.82 w=0.05 d=0.045 material=teal
+    ring 1.00 w=0.03 d=0.028
+    cap start=flat end=point
+
+  # --- launch trench, PORT side only ---------------------------------------
+  #     Three concentric slabs, each standing slightly further out than the
+  #     one behind it: orange coaming, then the amber deck glow, then the
+  #     containment field. With no alpha channel that banding is what carries
+  #     "lit deck seen through a field" — you see amber all round the cyan.
+  loft coaming bones=tr..tr material=orange frame=up
+    ring 0.00 w=0.07 d=0.11
+    ring 0.05 w=0.07 d=0.17
+    ring 0.95 w=0.07 d=0.17
+    ring 1.00 w=0.07 d=0.11
+    cap start=flat end=flat
+
+  loft trenchglow bone=tr at=0.0 offset=(0.035,0,0) dir=fwd len=1.46 material=amber frame=up
+    ring 0.00 w=0.04 d=0.095
+    ring 0.05 w=0.04 d=0.155
+    ring 0.95 w=0.04 d=0.155
+    ring 1.00 w=0.04 d=0.095
+    cap start=flat end=flat
+
+  loft field bone=tr at=0.05 offset=(0.05,0,0) dir=fwd len=1.30 material=cyan frame=up
+    ring 0.00 w=0.035 d=0.045
+    ring 0.06 w=0.035 d=0.075
+    ring 0.94 w=0.035 d=0.075
+    ring 1.00 w=0.035 d=0.045
+    cap start=flat end=flat
+
+  # --- turrets: centreline, staggered fore and aft, deliberately not a pair --
+  group turret_a bone=tur_a at=1.0 dir=up
+    loft barbette_a at=(0,0,0) dir=up len=0.075 material=orange
+      ring 0.00 w=0.21 d=0.21
+      ring 1.00 w=0.20 d=0.20
+      cap start=flat end=flat
+    loft house_a at=(0,0.06,0) dir=up len=0.11 material=slate shape=squarish
+      ring 0.00 w=0.23 d=0.27
+      ring 0.55 w=0.24 d=0.29
+      ring 1.00 w=0.19 d=0.23
+      cap start=flat end=flat
+    loft barrel_al at=(0.055,0.12,0.10) dir=fwd len=0.32 material=dark
+      ring 0.00 w=0.038 d=0.038
+      ring 1.00 w=0.028 d=0.028
+      cap start=flat end=flat
+    loft barrel_ar at=(-0.055,0.12,0.10) dir=fwd len=0.32 material=dark
+      ring 0.00 w=0.038 d=0.038
+      ring 1.00 w=0.028 d=0.028
       cap start=flat end=flat
   end
 
-  # --- the recovery deck, slung in the channel between them
-  #     The mouth is painted rather than built: a separate throat part was a
-  #     sheet wrapped round the deck and read as a collar clipping through it.
-  loft deck bones=spine1..spine3 material=deck frame=up
-    ring 0.00 w=0.94 d=0.11
-    ring 0.22 w=0.94 d=0.11
-    ring 0.80 w=0.88 d=0.10
-    ring 0.90 w=0.78 d=0.09 material=warn
-    ring 1.00 w=0.60 d=0.08
+  group turret_b bone=tur_b at=1.0 dir=up
+    loft barbette_b at=(0,0,0) dir=up len=0.075 material=orange
+      ring 0.00 w=0.19 d=0.19
+      ring 1.00 w=0.18 d=0.18
+      cap start=flat end=flat
+    loft house_b at=(0,0.06,0) dir=up len=0.10 material=slate shape=squarish
+      ring 0.00 w=0.21 d=0.25
+      ring 0.55 w=0.22 d=0.26
+      ring 1.00 w=0.17 d=0.21
+      cap start=flat end=flat
+    loft barrel_bl at=(0.05,0.11,0.09) dir=fwd len=0.29 material=dark
+      ring 0.00 w=0.034 d=0.034
+      ring 1.00 w=0.025 d=0.025
+      cap start=flat end=flat
+    loft barrel_br at=(-0.05,0.11,0.09) dir=fwd len=0.29 material=dark
+      ring 0.00 w=0.034 d=0.034
+      ring 1.00 w=0.025 d=0.025
+      cap start=flat end=flat
+  end
+
+  # --- aft deckhouse --------------------------------------------------------
+  loft skirt bone=sp1 at=0.26 offset=(0,-0.10,0) dir=up len=0.13 material=slate frame=fwd shape=squarish
+    ring 0.00 w=0.44 d=0.52
+    ring 1.00 w=0.34 d=0.40
+    cap start=flat end=none
+
+  loft deckhouse bones=dh..dh material=slate frame=fwd shape=squarish continues=skirt
+    ring 0.00 w=0.34 d=0.40
+    ring 0.30 w=0.33 d=0.38
+    ring 0.72 w=0.31 d=0.34 material=rust
+    ring 1.00 w=0.29 d=0.31 material=slate
+    cap end=flat
+
+  loft roofbox bone=dh at=1.0 offset=(-0.07,0,0.06) dir=up len=0.06 material=dark frame=fwd shape=box
+    ring 0.00 w=0.09 d=0.13
+    ring 1.00 w=0.08 d=0.12
     cap start=flat end=flat
 
-  # --- blockhouse
-  loft tower bones=tower..tower material=hull frame=fwd shape=box
-    ring 0.00 w=0.88 d=0.86
-    ring 0.34 w=0.80 d=0.78
-    ring 0.40 w=0.66 d=0.60
-    ring 0.74 w=0.58 d=0.50
-    ring 0.80 w=0.44 d=0.36
-    ring 1.00 w=0.38 d=0.30
+  loft roofvent bone=dh at=1.0 offset=(0.06,0,-0.09) dir=up len=0.045 material=dark frame=fwd
+    ring 0.00 w=0.10 d=0.08
+    ring 1.00 w=0.09 d=0.07
+    cap start=flat end=flat
+
+  # offset lattice mast, two crossbars, running lights, dish
+  loft mast bones=mast..mast material=dark frame=fwd
+    ring 0.00 w=0.035 d=0.035
+    ring 0.55 w=0.024 d=0.024
+    ring 1.00 w=0.016 d=0.016
+    cap start=flat end=flat
+
+  loft yard1 bone=mast at=0.42 offset=(-0.10,0,0) dir=side len=0.20 material=dark frame=up
+    ring 0.00 w=0.014 d=0.014
+    ring 1.00 w=0.014 d=0.014
+    cap start=flat end=flat
+
+  loft yard2 bone=mast at=0.76 offset=(-0.07,0,0) dir=side len=0.14 material=dark frame=up
+    ring 0.00 w=0.012 d=0.012
+    ring 1.00 w=0.012 d=0.012
+    cap start=flat end=flat
+
+  attach lamp_p bone=mast at=0.42 offset=(0.10,0,0) kind=box size=0.030 material=red
+  attach lamp_s bone=mast at=0.42 offset=(-0.10,0,0) kind=box size=0.030 material=teal
+  attach dish   bone=mast at=0.86 offset=(0.05,0,0.03) kind=sphere size=0.055 material=slate
+
+  # --- engines --------------------------------------------------------------
+  loft ehouse bone=hull1 at=0.0 dir=back len=0.44 material=slate frame=up shape=box
+    ring 0.00 w=0.76 d=0.58
+    ring 0.50 w=0.80 d=0.60 material=rust
+    ring 0.80 w=0.78 d=0.58 material=slate
+    ring 1.00 w=0.72 d=0.52
     cap start=flat end=flat
 
   mirror
-    # --- transverse frames under the deck, tying the hulls together. Authored
-    #     as half-spans from the centreline so each half is hosted on the bone
-    #     its origin actually sits on.
-    loft brace1 bone=spine1 at=0.55 offset=(-0.035,-0.135,0) dir=side len=0.505 material=frame
-      ring 0.00 w=0.12 d=0.14
-      ring 1.00 w=0.11 d=0.13
+    # four nozzles: orange collar, teal throat, white-hot core
+    loft nozzle bone=hull1 at=0.0 offset=(0.13,0.0,-0.44) dir=back len=0.20 material=orange frame=up
+      ring 0.00 w=0.23 d=0.23
+      ring 0.30 w=0.21 d=0.21
+      ring 0.42 w=0.19 d=0.19 material=teal
+      ring 0.78 w=0.15 d=0.15
+      ring 0.88 w=0.13 d=0.13 material=core
+      ring 1.00 w=0.12 d=0.12
       cap start=flat end=flat
 
-    loft brace2 bone=spine2 at=0.55 offset=(-0.035,-0.135,0) dir=side len=0.505 material=frame
-      ring 0.00 w=0.11 d=0.13
-      ring 1.00 w=0.10 d=0.12
+    loft nozzle2 bone=hull1 at=0.0 offset=(0.36,0.0,-0.44) dir=back len=0.18 material=orange frame=up
+      ring 0.00 w=0.20 d=0.20
+      ring 0.30 w=0.18 d=0.18
+      ring 0.42 w=0.16 d=0.16 material=teal
+      ring 0.78 w=0.13 d=0.13
+      ring 0.88 w=0.11 d=0.11 material=core
+      ring 1.00 w=0.10 d=0.10
       cap start=flat end=flat
 
-    # --- radiator panels: thin, broad, and edge-on from the bow
-    loft fin bones=fin..fin material=frame frame=fwd
-      ring 0.00 w=0.07 d=0.36
-      ring 0.32 w=0.06 d=0.54
-      ring 1.00 w=0.035 d=0.46
-      cap start=flat end=flat
+    # sparse greebles pinned to the flank and keel
+    attach greeb_f bone=hull2 at=0.40 offset=(0.42,0.02,0) kind=box size=0.055 on=hull material=dark
+    attach greeb_k bone=hull2 at=0.75 offset=(0.16,-0.30,0) kind=box size=0.045 on=hull material=dark
+    attach greeb_d bone=hull3 at=0.30 offset=(0.34,0.26,0) kind=box size=0.05 on=hull material=dark
 
-    # --- main drives, one drum per hull, plus the scorched bell
-    loft nacelle bone=hull1 at=0.0 offset=(0,0.06,0) dir=back len=0.46 material=hull frame=up
-      ring 0.00 w=0.30 d=0.34
-      ring 0.45 w=0.32 d=0.36
-      ring 0.80 w=0.30 d=0.34
-      ring 1.00 w=0.26 d=0.30
-      cap start=flat end=none
-
-    loft bell bone=hull1 at=0.0 offset=(0,0.06,-0.46) dir=back len=0.20 material=char frame=up continues=nacelle
-      ring 0.00 w=0.26 d=0.30
-      ring 1.00 w=0.34 d=0.38
-      cap end=none
-
-    # --- fighters parked in the channel: the only thing that gives the ship
-    #     its scale, so they earn their triangles
-    loft fbody bone=spine2 at=0.30 offset=(0.26,0.10,0) dir=fwd len=0.30 material=deck frame=up
-      ring 0.00 w=0.07 d=0.06
-      ring 0.45 w=0.09 d=0.08
-      ring 0.80 w=0.06 d=0.06
-      ring 1.00 w=0.03 d=0.03
-      cap start=flat end=point
-
-    loft fwing bone=spine2 at=0.30 offset=(0.09,0.11,0.10) dir=side len=0.34 material=warn frame=fwd
-      ring 0.00 w=0.02 d=0.06
-      ring 0.50 w=0.03 d=0.13
-      ring 1.00 w=0.02 d=0.05
-      cap start=flat end=flat
-
-    loft fbody2 bone=spine2 at=0.72 offset=(0.26,0.10,0) dir=fwd len=0.30 material=deck frame=up
-      ring 0.00 w=0.07 d=0.06
-      ring 0.45 w=0.09 d=0.08
-      ring 0.80 w=0.06 d=0.06
-      ring 1.00 w=0.03 d=0.03
-      cap start=flat end=point
-
-    loft fwing2 bone=spine2 at=0.72 offset=(0.09,0.11,0.10) dir=side len=0.34 material=warn frame=fwd
-      ring 0.00 w=0.02 d=0.06
-      ring 0.50 w=0.03 d=0.13
-      ring 1.00 w=0.02 d=0.05
-      cap start=flat end=flat
+    # alternating running lights along both deck edges
+    attach rl_a bone=hull1 at=0.55 offset=(0.40,0.26,0) kind=box size=0.030 on=hull material=red
+    attach rl_b bone=hull2 at=0.55 offset=(0.40,0.26,0) kind=box size=0.030 on=hull material=teal
+    attach rl_c bone=hull3 at=0.45 offset=(0.38,0.24,0) kind=box size=0.030 on=hull material=red
   end
 
 textures
-  texture hull base=#d9d3c4
-    gradient axis=v from=-0.12 to=0.08
-    planks dir=u count=11 seam=#b3ab9a width=0.028
-    noise scale=0.20 amount=0.06
+  texture steel base=#52657a
+    gradient axis=v from=-0.14 to=0.10
+    bricks courses=22 ratio=2.4 width=0.05 seam=#3e4d5e
+    noise scale=0.16 amount=0.06
     ao amount=0.18
-  texture char base=#3b3a38
-    streaks along=v amount=0.15
-    noise scale=0.10 amount=0.11
-    ao amount=0.22
-  texture deck base=#6f7b80
-    planks dir=v count=9 seam=#495256 width=0.035
-    noise scale=0.13 amount=0.08
+  texture slate base=#6e747f
+    gradient axis=v from=-0.12 to=0.08
+    planks dir=u count=9 seam=#565b64 width=0.03
+    noise scale=0.12 amount=0.07
+    ao amount=0.18
+  texture rust base=#8a5236
+    bricks courses=8 ratio=1.6 width=0.06 seam=#6a3d28
+    noise scale=0.09 amount=0.12
     ao amount=0.20
-  texture frame base=#b5622a
-    streaks along=v amount=0.10
-    noise scale=0.09 amount=0.09
-    ao amount=0.20
-  texture warn base=#c8342b
-    noise scale=0.07 amount=0.08
-    ao amount=0.14
+  texture dark base=#2b3037
+    streaks along=v amount=0.12
+    ao amount=0.24
+  texture amber base=#f2ae44
+    band axis=along at=0.5 width=0.5 color=#ffd07a
+    noise scale=0.05 amount=0.07
+  texture cyan base=#a8f0ff
+    planks dir=v count=11 seam=#f2ae44 width=0.055    # lattice; amber between
+    band axis=u at=0.5 width=0.30 color=#ffffff       # bright core along it
+    noise scale=0.04 amount=0.05
+  texture ochre base=#bf8f42
+    noise scale=0.06 amount=0.08
 
 animations
-  # Station-keeping: the hull barely moves, the radiators do the breathing.
-  anim patrol loop dur=6.0
-    ch keel  roll 0%=0 25%=4 50%=0 75%=-4 100%=0
-    ch keel  pitch 0%=0 40%=2 100%=0
-    ch fin.l tilt 0%=0 30%=13 70%=-11 100%=0
-    ch fin.r tilt 0%=0 30%=-13 70%=11 100%=0
+  # Station-keeping. There is no root translation channel, so the ship coasts
+  # by rotating about the keel.
+  anim patrol loop dur=8.0
+    ch keel roll  0%=0 25%=3 50%=0 75%=-3 100%=0
+    ch keel pitch 0%=0 40%=2 100%=0
+    ch mast roll  0%=0 50%=6 100%=0
 
-  # Radiators come up from stowed. Rest pose is deployed, so the clip runs
-  # from folded-down back to zero.
-  anim deploy dur=2.4
-    ch fin.l tilt 0%=-64 45%=-22 78%=6 100%=0
-    ch fin.r tilt 0%=64 45%=22 78%=-6 100%=0
-    ch keel  pitch 0%=0 50%=-2 100%=0
+  # Both turrets track a target to port, then return. The forward mount leads
+  # the aft one, which is the point of staggering them.
+  anim track dur=3.0
+    ch tur_a yaw 0%=0 35%=-38 70%=-46 100%=0
+    ch tur_b yaw 0%=0 48%=-28 82%=-46 100%=0
+    ch mast  roll 0%=0 40%=8 100%=0
+    ch keel  roll 0%=0 45%=4 80%=2 100%=0
 
 checks
-  # --- proportion: it is a ship, not a brick
-  assert depth / height in 3.6..5.0
-  assert width / height in 0.9..1.5
-  assert bottom(hull.l) == 0 +- 0.02
+  # --- proportion: a dagger, not a brick
+  assert depth / height in 4.0..6.0
+  assert width / height in 0.6..1.0
+  assert height > 0.95
 
-  # --- the channel is the whole design. If the hulls close up, the ship is
-  #     just a wedge again, and nothing else in the file would notice.
-  assert gap(hull.l, hull.r) > 0.30
-  assert width(deck) > gap(hull.l, hull.r)         # the deck spans it
-  assert top(hull.l) > top(deck)                   # ...and the hulls shelter it
+  # --- the dagger section: the deck is much wider than the keel. Nothing else
+  #     in the file would notice if the profile silently became an oval.
+  # concavity() cannot see this: it reads 0.0000 for the dagger profile AND
+  # for a plain round section, because a profile is normalised to the same
+  # bounding box as a circle. Section *fill* does separate them — measured on
+  # this hull: daggersec 0.614, round 0.649, squarish 0.719 — so the bound
+  # sits between real alternatives rather than being invented.
+  assert volume(hull) / (width(hull) * height(hull) * depth(hull)) < 0.632
+  assert width(hull) / width(prong) > 6
 
-  # --- fighters sit in the channel, below the hull tops, or the slot is a lie
-  assert top(fbody.l) < top(hull.l)
-  assert bottom(fbody.l) > top(deck) - 0.03
+  # --- the trench is on ONE side. If a stray mirror ever wraps these, the
+  #     asymmetry that defines the ship dies silently — so assert the sign.
+  assert x(coaming) > 0.08
+  assert x(field) > x(coaming)
+  assert x(trenchglow) > x(coaming)
+  assert top(field) < top(coaming)              # coaming frames the opening
+  assert bottom(field) > bottom(coaming)
 
-  # --- the radiators set the height, not the blockhouse
-  assert top(fin.l) > top(tower)
+  # --- turrets staggered fore and aft, and both on the centreline
+  assert z(house_a) < z(house_b) - 0.6
+  assert abs(x(house_a)) < 0.02
+  assert abs(x(house_b)) < 0.02
 
+  # --- spine tapers into the prow rather than stopping at a raised head
+  assert zmax(spine) > zmax(hull) - 0.10
+  assert top(prong) < bottom(spine)             # the prong is ventral
+
+  # --- the mast is offset, not centred, and tops the ship
+  assert x(mast) > 0.03
+  assert top(mast) > top(house_a)
+
+  measure section_fill volume(hull) / (width(hull) * height(hull) * depth(hull))
   measure length_over_beam depth / width
-  measure channel gap(hull.l, hull.r)
-  assert tris < 9000
-
-  # The deck and the transverse frames are *let into* both hulls — that is
-  # what a structural member does — so those pairs are excluded by name
-  # rather than by weakening the tolerance for everything else.
-  noclip except=deck+hull.l,deck+hull.r,tower+hull.l,tower+hull.r,brace1.l+hull.l,brace1.r+hull.r,brace2.l+hull.l,brace2.r+hull.r
+  measure trench_len depth(coaming) / depth
+  assert tris < 12000
+  # The trench is three concentric slabs, each standing proud of the one behind
+  # it, so those pairs overlap by construction — named individually rather than
+  # by loosening the tolerance for the other 600-odd pairs.
+  noclip except=spine+hull,skirt+hull,coaming+spine,trenchglow+spine,field+spine,coaming+trenchglow,field+trenchglow,ehouse+hull,brow+spine,brow+hull
