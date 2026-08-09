@@ -1,0 +1,211 @@
+# SFC Bellwether — a sci-fi fighter carrier.
+#
+# Not a flat-top: the default carrier is a Nimitz in space, one wedge hull
+# with the flight deck exposed on the roof. This one is built around what a
+# carrier is actually for, which is getting damaged fighters back aboard
+# while something is shooting at it. So it is two hulls with the recovery
+# channel slung *between* them — the deck is the most protected place on the
+# ship instead of the most exposed, and the function is visible in the
+# outline: a two-tined fork with the fighters sitting down in the slot.
+#
+# Ablative ceramic, scorched black at the stern. Nothing glows.
+
+model carrier
+  height 140                     # meters, keel to radiator tip
+  style smooth
+  shading faceted                # a hull is flat panels, not a smooth blob
+
+palette
+  hull  #d9d3c4                  # bone-white ablative ceramic
+  frame #b5622a                  # oxide-orange structural frames and ribs
+  char  #3b3a38                  # scorched graphite: bells, blast channel
+  deck  #6f7b80                  # the recovery deck, worn slate
+  warn  #c8342b                  # signal red — the recovery throat, nothing else
+
+# A hull section: flat weather deck on top, slab sides, narrow keel.
+profile hullsec mirror
+  0.00,1.00  0.62,0.94  0.78,0.34  0.66,-0.42  0.32,-0.86  0.00,-1.00
+
+skeleton
+  root keel at (0,0.34,-1.95)
+  bone spine1 parent=keel   dir=fwd len=1.20
+  bone spine2 parent=spine1 dir=fwd len=1.20
+  bone spine3 parent=spine2 dir=fwd len=1.00
+
+  # blockhouse bridging the two hulls, well aft
+  bone tower parent=spine1 at=0.08 up=0.06 dir=up len=0.42
+
+  mirror
+    bone hull1 parent=keel side=0.60 dir=fwd len=1.20
+    bone hull2 parent=hull1 dir=fwd len=1.20
+    bone hull3 parent=hull2 dir=fwd len=1.00
+    bone ram   parent=hull3 dir=fwd len=0.55
+
+    # radiator fins, raked up and out off the blockhouse
+    bone fin parent=tower at=0.86 side=0.05 dir=side tilt=36 len=0.46
+  end
+
+parts
+  # --- the two hulls
+  mirror
+    loft hull bones=hull1..ram material=hull frame=up shape=hullsec
+      ring 0.00 w=0.32 d=0.66
+      ring 0.08 w=0.36 d=0.70
+      ring 0.30 w=0.36 d=0.67
+      ring 0.34 w=0.36 d=0.57      # the deck line steps down here, so the
+      ring 0.62 w=0.35 d=0.55      # profile is not one smooth curve
+      ring 0.80 w=0.33 d=0.51
+      ring 0.90 w=0.28 d=0.42
+      ring 0.97 w=0.20 d=0.31
+      ring 1.00 w=0.15 d=0.24      # a chisel prow, not a needle
+      cap start=flat end=flat
+  end
+
+  # --- the recovery deck, slung in the channel between them
+  #     The mouth is painted rather than built: a separate throat part was a
+  #     sheet wrapped round the deck and read as a collar clipping through it.
+  loft deck bones=spine1..spine3 material=deck frame=up
+    ring 0.00 w=0.94 d=0.11
+    ring 0.22 w=0.94 d=0.11
+    ring 0.80 w=0.88 d=0.10
+    ring 0.90 w=0.78 d=0.09 material=warn
+    ring 1.00 w=0.60 d=0.08
+    cap start=flat end=flat
+
+  # --- blockhouse
+  loft tower bones=tower..tower material=hull frame=fwd shape=box
+    ring 0.00 w=0.88 d=0.86
+    ring 0.34 w=0.80 d=0.78
+    ring 0.40 w=0.66 d=0.60
+    ring 0.74 w=0.58 d=0.50
+    ring 0.80 w=0.44 d=0.36
+    ring 1.00 w=0.38 d=0.30
+    cap start=flat end=flat
+
+  mirror
+    # --- transverse frames under the deck, tying the hulls together. Authored
+    #     as half-spans from the centreline so each half is hosted on the bone
+    #     its origin actually sits on.
+    loft brace1 bone=spine1 at=0.55 offset=(-0.035,-0.135,0) dir=side len=0.505 material=frame
+      ring 0.00 w=0.12 d=0.14
+      ring 1.00 w=0.11 d=0.13
+      cap start=flat end=flat
+
+    loft brace2 bone=spine2 at=0.55 offset=(-0.035,-0.135,0) dir=side len=0.505 material=frame
+      ring 0.00 w=0.11 d=0.13
+      ring 1.00 w=0.10 d=0.12
+      cap start=flat end=flat
+
+    # --- radiator panels: thin, broad, and edge-on from the bow
+    loft fin bones=fin..fin material=frame frame=fwd
+      ring 0.00 w=0.07 d=0.36
+      ring 0.32 w=0.06 d=0.54
+      ring 1.00 w=0.035 d=0.46
+      cap start=flat end=flat
+
+    # --- main drives, one drum per hull, plus the scorched bell
+    loft nacelle bone=hull1 at=0.0 offset=(0,0.06,0) dir=back len=0.46 material=hull frame=up
+      ring 0.00 w=0.30 d=0.34
+      ring 0.45 w=0.32 d=0.36
+      ring 0.80 w=0.30 d=0.34
+      ring 1.00 w=0.26 d=0.30
+      cap start=flat end=none
+
+    loft bell bone=hull1 at=0.0 offset=(0,0.06,-0.46) dir=back len=0.20 material=char frame=up continues=nacelle
+      ring 0.00 w=0.26 d=0.30
+      ring 1.00 w=0.34 d=0.38
+      cap end=none
+
+    # --- fighters parked in the channel: the only thing that gives the ship
+    #     its scale, so they earn their triangles
+    loft fbody bone=spine2 at=0.30 offset=(0.26,0.10,0) dir=fwd len=0.30 material=deck frame=up
+      ring 0.00 w=0.07 d=0.06
+      ring 0.45 w=0.09 d=0.08
+      ring 0.80 w=0.06 d=0.06
+      ring 1.00 w=0.03 d=0.03
+      cap start=flat end=point
+
+    loft fwing bone=spine2 at=0.30 offset=(0.09,0.11,0.10) dir=side len=0.34 material=warn frame=fwd
+      ring 0.00 w=0.02 d=0.06
+      ring 0.50 w=0.03 d=0.13
+      ring 1.00 w=0.02 d=0.05
+      cap start=flat end=flat
+
+    loft fbody2 bone=spine2 at=0.72 offset=(0.26,0.10,0) dir=fwd len=0.30 material=deck frame=up
+      ring 0.00 w=0.07 d=0.06
+      ring 0.45 w=0.09 d=0.08
+      ring 0.80 w=0.06 d=0.06
+      ring 1.00 w=0.03 d=0.03
+      cap start=flat end=point
+
+    loft fwing2 bone=spine2 at=0.72 offset=(0.09,0.11,0.10) dir=side len=0.34 material=warn frame=fwd
+      ring 0.00 w=0.02 d=0.06
+      ring 0.50 w=0.03 d=0.13
+      ring 1.00 w=0.02 d=0.05
+      cap start=flat end=flat
+  end
+
+textures
+  texture hull base=#d9d3c4
+    gradient axis=v from=-0.12 to=0.08
+    planks dir=u count=11 seam=#b3ab9a width=0.028
+    noise scale=0.20 amount=0.06
+    ao amount=0.18
+  texture char base=#3b3a38
+    streaks along=v amount=0.15
+    noise scale=0.10 amount=0.11
+    ao amount=0.22
+  texture deck base=#6f7b80
+    planks dir=v count=9 seam=#495256 width=0.035
+    noise scale=0.13 amount=0.08
+    ao amount=0.20
+  texture frame base=#b5622a
+    streaks along=v amount=0.10
+    noise scale=0.09 amount=0.09
+    ao amount=0.20
+  texture warn base=#c8342b
+    noise scale=0.07 amount=0.08
+    ao amount=0.14
+
+animations
+  # Station-keeping: the hull barely moves, the radiators do the breathing.
+  anim patrol loop dur=6.0
+    ch keel  roll 0%=0 25%=4 50%=0 75%=-4 100%=0
+    ch keel  pitch 0%=0 40%=2 100%=0
+    ch fin.l tilt 0%=0 30%=13 70%=-11 100%=0
+    ch fin.r tilt 0%=0 30%=-13 70%=11 100%=0
+
+  # Radiators come up from stowed. Rest pose is deployed, so the clip runs
+  # from folded-down back to zero.
+  anim deploy dur=2.4
+    ch fin.l tilt 0%=-64 45%=-22 78%=6 100%=0
+    ch fin.r tilt 0%=64 45%=22 78%=-6 100%=0
+    ch keel  pitch 0%=0 50%=-2 100%=0
+
+checks
+  # --- proportion: it is a ship, not a brick
+  assert depth / height in 3.6..5.0
+  assert width / height in 0.9..1.5
+  assert bottom(hull.l) == 0 +- 0.02
+
+  # --- the channel is the whole design. If the hulls close up, the ship is
+  #     just a wedge again, and nothing else in the file would notice.
+  assert gap(hull.l, hull.r) > 0.30
+  assert width(deck) > gap(hull.l, hull.r)         # the deck spans it
+  assert top(hull.l) > top(deck)                   # ...and the hulls shelter it
+
+  # --- fighters sit in the channel, below the hull tops, or the slot is a lie
+  assert top(fbody.l) < top(hull.l)
+  assert bottom(fbody.l) > top(deck) - 0.03
+
+  # --- the radiators set the height, not the blockhouse
+  assert top(fin.l) > top(tower)
+
+  measure length_over_beam depth / width
+  measure channel gap(hull.l, hull.r)
+  assert tris < 9000
+
+  # The deck and the transverse frames are *let into* both hulls — that is
+  # what a structural member does — so those pairs are excluded by name
+  # rather than by weakening the tolerance for everything else.
+  noclip except=deck+hull.l,deck+hull.r,tower+hull.l,tower+hull.r,brace1.l+hull.l,brace1.r+hull.r,brace2.l+hull.l,brace2.r+hull.r
