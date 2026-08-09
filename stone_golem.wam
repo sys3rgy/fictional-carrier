@@ -1,0 +1,235 @@
+# The Lintel — a squat stone golem.
+#
+# Not a pile of boulders with a face. This was cut as one block: the keystone
+# of a fortress arch, with a cornice course at the springing to take the weight
+# of the wall. When the gate fell it walked out of its own doorway, and it
+# still carries the doorway's shape — flat-topped, mass all in the shoulders,
+# and a blunt wedge of a head thrust out under the brow where a neck should be.
+#
+# The load is carried on the arms, not the legs: the legs are stubs it stands
+# on and the arms are the piers it walks on.
+
+model golem
+  height 2.15
+  style chunky
+
+palette
+  stone #b08d5e                  # warm quarry sandstone — the body block
+  pale  #ddd0b0                  # a cream stratum, and the polished bearing faces
+  dark  #6b5335                  # deep course: undersides, plinth feet, the brow
+  shade #4a3822                  # the shadow under the brow, and the eyes
+  moss  #6e7a45                  # lichen, only where rain sits
+
+skeleton
+  root pelvis at 0.30
+  bone spine1 parent=pelvis dir=up len=0.22
+  bone chest  parent=spine1 dir=up len=0.25
+  bone shelf  parent=chest  dir=up len=0.23
+
+  # No neck in silhouette: the head is thrust forward and down off the chest,
+  # under the cornice, looking at whoever is at the gate.
+  bone neck parent=chest at=0.70 dir=fwd pitch=30 len=0.11
+  bone head parent=neck  dir=fwd pitch=12 len=0.27
+
+  mirror
+    # Shoulders drop outboard, so the arms hang clear of the trunk and the
+    # cornice sits over them.
+    bone clavicle parent=chest at=0.80 dir=side tilt=-12 len=0.41
+    bone upperarm parent=clavicle dir=down tilt=6 len=0.24
+    bone forearm  parent=upperarm dir=down tilt=2 pitch=-7 len=0.22
+    bone hand     parent=forearm  dir=down pitch=-5 len=0.11
+
+    # Stub legs, set close in under a body that overhangs its own stance.
+    bone thigh parent=pelvis side=0.13 dir=down tilt=4 len=0.13
+    bone shin  parent=thigh dir=down tilt=-4 len=0.12
+    bone foot  parent=shin  dir=fwd len=0.115
+  end
+
+parts
+  # --- trunk: the block. Strata banded across it by ring material.
+  loft trunk bones=pelvis..chest material=stone frame=fwd
+    ring 0.00 w=0.44 d=0.36
+    ring 0.20 w=0.45 d=0.37 material=dark
+    ring 0.40 w=0.47 d=0.39 material=stone
+    ring 0.60 w=0.49 d=0.41 material=pale
+    ring 0.78 w=0.50 d=0.42 material=stone
+    ring 1.00 w=0.50 d=0.42
+    cap start=dome end=none
+
+  # --- the signature: a cornice course corbelled out over the shoulders,
+  #     grown out of the trunk so there is no seam between body and masonry.
+  #     Paired rings step it out in flat courses instead of flaring smoothly,
+  #     and `faceted` keeps the ledges as hard edges — otherwise the whole
+  #     thing shades into a bowl.
+  loft shelf bones=shelf..shelf material=stone continues=trunk shape=box faceted
+    ring 0.00 w=0.50 d=0.42
+    ring 0.26 w=0.53 d=0.44
+    ring 0.30 w=0.66 d=0.49 fwd=0.02
+    ring 0.56 w=0.68 d=0.50 fwd=0.02
+    ring 0.60 w=0.80 d=0.55 fwd=0.03
+    ring 0.86 w=0.83 d=0.56 fwd=0.03
+    ring 1.00 w=0.86 d=0.57 fwd=0.03 material=moss
+    cap end=flat
+
+  # --- head: a blunt wedge thrust out from under the brow. Dark, so it reads
+  #     against the pale shoulder blocks it sits between.
+  loft head bones=neck..head material=shade frame=up
+    ring 0.00 w=0.26 d=0.24
+    ring 0.30 w=0.38 d=0.30
+    ring 0.66 w=0.36 d=0.24 material=dark
+    ring 0.88 w=0.32 d=0.17 material=stone
+    ring 1.00 w=0.24 d=0.12
+    cap start=dome end=flat
+
+  # Deep-set, unlit. A stone golem with lamps for eyes is the default; this
+  # one just has two holes cut in the block.
+  mirror
+    attach eye bone=head kind=eye at=0.62 around=48 on=head size=0.05 material=shade
+  end
+
+  mirror
+    # --- shoulder blocks: these, not the trunk, are what make the top broad.
+    #     Lofted along the whole clavicle so the arm is genuinely joined to
+    #     the trunk, but kept shallow so they frame the head instead of
+    #     burying it.
+    loft pauldron bones=clavicle..clavicle material=pale frame=up shape=squarish faceted
+      ring 0.00 w=0.30 d=0.22
+      ring 0.60 w=0.36 d=0.27
+      ring 1.00 w=0.33 d=0.25
+      cap start=dome end=flat
+
+    # --- arms: piers. Thick at the shoulder, waisted, then a mason's fist.
+    loft arm bones=upperarm..forearm material=stone shape=squarish frame=fwd
+      ring 0.00 w=0.30 d=0.30
+      ring 0.30 w=0.23 d=0.24
+      ring 0.62 w=0.24 d=0.25
+      ring 1.00 w=0.25 d=0.26
+      cap start=dome end=none
+
+    loft fist bones=hand..hand material=dark continues=arm shape=box
+      ring 0.00 w=0.25 d=0.26
+      ring 0.50 w=0.30 d=0.31
+      ring 1.00 w=0.26 d=0.28
+      cap end=flat
+
+    # --- legs: stubs. Half the arm's length, and clearly not a fourth post.
+    loft leg bones=thigh..shin material=stone frame=fwd
+      ring 0.00 w=0.24 d=0.26
+      ring 0.50 w=0.21 d=0.23
+      ring 1.00 w=0.20 d=0.22
+      cap start=dome end=dome
+
+    loft foot bones=foot..foot material=dark frame=up shape=box
+      ring 0.00 w=0.25 d=0.11
+      ring 0.55 w=0.29 d=0.11
+      ring 1.00 w=0.25 d=0.10
+      cap start=flat end=flat
+  end
+
+textures
+  # Sedimentary courses, not granite. The body is bedded stone with the
+  # bedding planes showing, which is why the strata run across the trunk.
+  texture stone base=#b08d5e
+    gradient axis=v from=-0.14 to=0.14
+    bricks courses=6 ratio=1.7 width=0.045 seam=#7d6340
+    noise scale=0.09 amount=0.10
+    ao amount=0.20
+  texture pale base=#ddd0b0
+    gradient axis=v from=-0.10 to=0.10
+    bricks courses=3 ratio=1.2 width=0.05 seam=#a8977a
+    noise scale=0.07 amount=0.08
+    ao amount=0.16
+  texture dark base=#6b5335
+    gradient axis=v from=-0.12 to=0.08
+    streaks along=v amount=0.10
+    noise scale=0.11 amount=0.11
+    ao amount=0.22
+  texture shade base=#4a3822
+    noise scale=0.06 amount=0.09
+    ao amount=0.26
+  texture moss base=#6e7a45
+    spots scale=0.055 density=0.6 color=#55632f
+    noise scale=0.05 amount=0.14
+    ao amount=0.12
+
+animations
+  # Amplitude, not subtlety: anything under ~9 degrees reads as a still frame.
+  anim idle loop dur=4.2
+    ch spine1 roll  0%=0 25%=11 50%=0 75%=-11 100%=0
+    ch chest  roll  0%=0 30%=-9 50%=0 80%=9 100%=0
+    ch neck   pitch 0%=0 35%=12 65%=-10 100%=0
+    ch head   yaw   0%=0 45%=14 100%=0
+    ch clavicle.l tilt 0%=0 40%=10 100%=0
+    ch clavicle.r tilt 0%=0 40%=-10 100%=0
+
+  # A trudge. 0%..50% is stance (the thigh travels front to back); the knee
+  # flexes only through the swing that follows, or the gait reads as walking
+  # backwards. Signs come from the compiler's own sensitivity report: +pitch
+  # on thigh, shin and foot all drive the foot DOWN, so flexion is negative
+  # and the foot pitch counter-rotates to keep the sole planted through
+  # stance instead of arcing through the floor.
+  anim walk loop dur=2.2
+    ch thigh.l pitch 0%=-8 44%=8 58%=7 74%=0 88%=-5 100%=-8
+    ch shin.l  pitch 0%=0 38%=-2 46%=-22 56%=-46 70%=-52 84%=-26 94%=-6 100%=0
+    ch foot.l  pitch 0%=4 44%=-4 56%=-14 72%=-16 90%=-3 100%=4
+    ch upperarm.l pitch 0%=11 50%=-11 100%=11
+    ch forearm.l  pitch 0%=-8 50%=-15 100%=-8
+    ch spine1 roll 0%=6 50%=-6 100%=6
+    ch chest  roll 0%=-5 50%=5 100%=-5
+    ch neck   pitch 0%=4 50%=-4 100%=4
+    mirrorphase 50%
+
+  # It does not punch. It leans back and drops the whole cornice on you.
+  anim slam dur=1.6
+    ch clavicle.l tilt 0%=0 30%=-24 55%=12 100%=0
+    ch clavicle.r tilt 0%=0 30%=24 55%=-12 100%=0
+    ch upperarm.l pitch 0%=0 30%=40 55%=-28 100%=0
+    ch upperarm.r pitch 0%=0 30%=40 55%=-28 100%=0
+    ch forearm.l  pitch 0%=0 30%=-28 60%=-6 100%=0
+    ch forearm.r  pitch 0%=0 30%=-28 60%=-6 100%=0
+    ch spine1 pitch 0%=0 30%=-11 55%=15 100%=0
+    ch chest  pitch 0%=0 30%=-8 55%=11 100%=0
+    ch neck   pitch 0%=0 30%=-13 55%=17 100%=0
+
+checks
+  # stance
+  assert bottom(foot.l) == 0 +- 0.012
+  assert height > 0.97
+
+  # squat: broader than it is tall, which is the whole brief
+  assert width / height in 0.95..1.25
+
+  # It must not read as a table: the four posts have to be two long piers and
+  # two stubs, not four of the same thing.
+  assert (top(arm.l) - bottom(fist.l)) / (top(leg.l) - bottom(foot.l)) > 1.6
+  assert width(fist.l) / width(leg.l) > 1.2
+
+  # ...and the body has to be the dominant mass, not a gap between the posts.
+  # The cornice is a course over the shoulders, not a tabletop on a stick.
+  assert width(shelf) / width(trunk) in 1.4..1.9
+
+  # The head sits under the cornice — that is the whole conceit — but it has
+  # to break the brow line in z or it is invisible from every angle. Both at
+  # once: below the lintel, out in front of it.
+  assert top(head) < top(shelf)
+  assert zmax(head) > zmax(trunk)
+  assert zmax(head) - zmax(shelf) in 0.03..0.14
+
+  # ...and clear of the shoulder blocks, which is what buried it the first time
+  assert zmax(head) - zmax(pauldron.l) > 0.10
+
+  measure head_heights height / height(head)
+  measure head_proud zmax(head) - zmax(pauldron.l)
+  measure cornice width(shelf) / width(trunk)
+  measure arm_over_leg (top(arm.l) - bottom(fist.l)) / (top(leg.l) - bottom(foot.l))
+  assert tris < 6000
+  noclip
+
+  # --- animation
+  assert slide(foot.l, walk) < 0.02          # not moonwalking
+  assert lowest(walk) > -0.02                # nothing sinks through the floor
+  assert swing(thigh.l, walk) in 15..40
+  assert moves(head, idle) > 0.07            # the idle is not a still frame
+  assert clip(fist.l, leg.l, walk) < 0.01    # the piers clear the stubs in motion
+  measure idle_motion moves(head, idle)
+  noclip in=walk
