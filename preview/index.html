@@ -1,5 +1,5 @@
 <meta charset="utf-8">
-<title>Lancer-class Carrier</title>
+<title>Lancer Fleet Sprites</title>
 <style>
   /* Committed single look: these sprites are authored to sit on deep space, and a
      light ground would misrepresent them. Every colour is painted explicitly so the
@@ -328,21 +328,22 @@
 
 <div class="wrap">
   <header>
-    <p class="eyebrow">Isometric sprite set &middot; 8 facings &middot; 6 animations</p>
-    <h1>Lancer-class Carrier</h1>
+    <p class="eyebrow">Isometric sprite set &middot; carrier and air wing &middot; 8 facings</p>
+    <h1>Lancer Fleet Sprites</h1>
     <p class="lede">
-      Every frame here is <strong>rendered, not drawn</strong>. The carrier is described once as a
+      Every frame here is <strong>rendered, not drawn</strong>. Each craft is described once as a
       small 3D model of boxes, ellipsoids and cylinders grouped into swappable modules; each
       animation poses that model, and the pose is rotated in 45&deg; steps and projected through a
-      fixed isometric camera. Swap the hangar module and all 8 facings of all 6 animations agree
-      on proportion, lighting and palette by construction.
+      fixed isometric camera. The carrier and the fighters that launch from it share one camera,
+      one light rig and one palette, so they agree by construction &mdash; the squadrons in the
+      carrier's launch animation are the fighter model itself, scaled down.
     </p>
     <div class="facts">
-      <div class="fact"><b>96&times;96</b><span>Cell, 1&times;</span></div>
+      <div class="fact"><b id="fact-cell">&mdash;</b><span>Cell, 1&times;</span></div>
       <div class="fact"><b>8</b><span>Facings</span></div>
-      <div class="fact"><b>6</b><span>Animations</span></div>
-      <div class="fact"><b>52</b><span>Frames each</span></div>
-      <div class="fact"><b>3</b><span>Loadouts</span></div>
+      <div class="fact"><b id="fact-anims">&mdash;</b><span>Animations</span></div>
+      <div class="fact"><b id="fact-frames">&mdash;</b><span>Frames each</span></div>
+      <div class="fact"><b id="fact-loadouts">&mdash;</b><span>Loadouts</span></div>
     </div>
   </header>
 
@@ -381,6 +382,11 @@
     </div>
 
     <aside>
+      <section>
+        <h2>Craft</h2>
+        <div class="ctl-row" id="craft-buttons" style="margin-top:0"></div>
+      </section>
+
       <section>
         <h2>Loadout</h2>
         <div class="loadouts" id="loadouts"></div>
@@ -434,6 +440,7 @@
 
   const state = {
     atlas: null,
+    craft: 0,
     loadout: 0,
     anim: 0,
     facing: 0,
@@ -453,8 +460,10 @@
   const stage = $("stage");
   const sctx = stage.getContext("2d");
 
-  const lo = () => state.atlas.loadouts[state.loadout];
+  const cr = () => state.atlas.craft[state.craft];
+  const lo = () => cr().loadouts[state.loadout];
   const an = () => lo().animations[state.anim];
+  const cell = () => cr().sprite_size;
 
   // ---- starfield: three depth layers drifting to port -------------------------
   const STARS = [];
@@ -487,12 +496,13 @@
   }
 
   function preload() {
-    for (const l of state.atlas.loadouts) for (const a of l.animations) loadImage(a.sheet);
+    for (const c of state.atlas.craft)
+      for (const l of c.loadouts) for (const a of l.animations) loadImage(a.sheet);
   }
 
   // ---- main stage -------------------------------------------------------------
   function drawStage(t) {
-    const S = state.atlas.sprite_size;
+    const S = cell();
     const px = S * state.zoom;
     if (stage.width !== px) { stage.width = px; stage.height = px; }
 
@@ -516,7 +526,7 @@
   let stripCanvases = [];
 
   function buildStrip() {
-    const S = state.atlas.sprite_size;
+    const S = cell();
     const el = $("strip");
     el.innerHTML = "";
     stripCanvases = [];
@@ -536,7 +546,7 @@
   }
 
   function drawStrip() {
-    const S = state.atlas.sprite_size;
+    const S = cell();
     const img = loadImage(an().sheet);
     if (!img.complete || !img.naturalWidth) return;
     stripCanvases.forEach((c, i) => {
@@ -569,18 +579,44 @@
   }
 
   // ---- panels -----------------------------------------------------------------
+  function buildCraft() {
+    const el = $("craft-buttons");
+    el.innerHTML = "";
+    state.atlas.craft.forEach((c, i) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = c.craft;
+      b.setAttribute("aria-pressed", i === state.craft ? "true" : "false");
+      b.addEventListener("click", () => {
+        if (i === state.craft) return;
+        state.craft = i;
+        state.loadout = 0;
+        state.anim = 0;
+        state.frame = 0;
+        fitZoom();
+        rebuild();
+      });
+      el.append(b);
+    });
+  }
+
   function buildLoadouts() {
     const el = $("loadouts");
     el.innerHTML = "";
-    state.atlas.loadouts.forEach((l, i) => {
+    cr().loadouts.forEach((l, i) => {
       const b = document.createElement("button");
       b.type = "button";
       b.className = "loadout";
       b.setAttribute("aria-pressed", i === state.loadout ? "true" : "false");
+      // carriers report squadron capacity, fighters report their role
+      const trait = l.squadron_capacity
+        ? l.squadron_capacity + " squadrons"
+        : (l.role || "");
       b.innerHTML =
         '<span class="lo-name">' + l.display_name + "</span>" +
-        '<span class="lo-cap">' + l.loadout.toUpperCase() + " \u00b7 " +
-        l.squadron_capacity + " squadrons \u00b7 " + l.modules.length + " modules</span>";
+        '<span class="lo-cap">' + l.loadout.toUpperCase() +
+        (trait ? " \u00b7 " + trait : "") +
+        " \u00b7 " + l.modules.length + " modules</span>";
       b.addEventListener("click", () => {
         state.loadout = i;
         state.anim = Math.min(state.anim, l.animations.length - 1);
@@ -594,7 +630,7 @@
   function buildModules() {
     const el = $("modules");
     el.innerHTML = "";
-    const base = state.atlas.loadouts[0].modules;
+    const base = cr().loadouts[0].modules;
     lo().modules.forEach((m) => {
       const li = document.createElement("li");
       const isNew = !base.includes(m);
@@ -635,20 +671,26 @@
         "<td>" + a.frames + "</td>" +
         "<td>" + a.fps + "</td>" +
         "<td>" + (a.loop ? '<span class="loop">loop</span>' : '<span class="once">once</span>') + "</td>" +
-        "<td>" + (a.frames * state.atlas.sprite_size) + "\u00d7" + (8 * state.atlas.sprite_size) + "</td>" +
+        "<td>" + (a.frames * cell()) + "\u00d7" + (8 * cell()) + "</td>" +
         '<td><a href="' + assetUrl(a.sheet) + '" download="' + a.sheet + '">1&times;</a> &nbsp; ' +
         '<a href="' + assetUrl(a.sheet_2x) + '" download="' + a.sheet_2x + '">2&times;</a></td>';
       el.append(tr);
     });
     $("dl-caption").textContent =
       l.display_name + " \u2014 rows are the 8 facings, columns are the animation frames. " +
-      "Cell " + state.atlas.sprite_size + "\u00d7" + state.atlas.sprite_size + " at 1\u00d7.";
+      "Cell " + cell() + "\u00d7" + cell() + " at 1\u00d7.";
   }
 
   // ---- sync + loop ------------------------------------------------------------
   function sync() {
     const l = lo(), a = an();
     $("ro-ship").textContent = l.loadout;
+    $("fact-cell").textContent = cell() + "\u00d7" + cell();
+    $("fact-anims").textContent = l.animations.length;
+    $("fact-frames").textContent = l.animations.reduce((n, x) => n + x.frames, 0);
+    $("fact-loadouts").textContent = cr().loadouts.length;
+    [...$("craft-buttons").children].forEach((b, i) =>
+      b.setAttribute("aria-pressed", i === state.craft ? "true" : "false"));
     $("ro-anim").textContent = a.name.replace(/_/g, " ");
     $("ro-face").textContent = l.facings[state.facing].name;
 
@@ -660,7 +702,17 @@
       b.setAttribute("aria-pressed", i === state.loadout ? "true" : "false"));
   }
 
+  // Keep the ship the same size on screen across craft: a 48px fighter at 4x would
+  // sit in a quarter of the area a 96px carrier occupies.
+  function fitZoom() {
+    const z = Math.max(2, Math.min(8, Math.round(384 / cell())));
+    state.zoom = z;
+    $("zoom").value = z;
+    $("zoom-out").textContent = z + "\u00d7";
+  }
+
   function rebuild() {
+    buildCraft();
     buildLoadouts();
     buildModules();
     buildAnimButtons();
@@ -740,6 +792,7 @@
       $("stars").setAttribute("aria-pressed", "false");
     }
     preload();
+    fitZoom();
     rebuild();
     requestAnimationFrame(tick);
   }
@@ -747,7 +800,7 @@
   if (EMBEDDED_ATLAS) {
     boot(EMBEDDED_ATLAS);
   } else {
-    fetch(SPRITE_DIR + "carrier_atlas.json")
+    fetch(SPRITE_DIR + "sprite_atlas.json")
       .then((r) => r.json())
       .then(boot)
       .catch(() => {

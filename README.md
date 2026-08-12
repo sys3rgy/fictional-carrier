@@ -1,13 +1,25 @@
-# Lancer-class carrier sprites
+# Lancer fleet sprites
 
-Isometric sprite sheets for a modular sci-fi carrier: **8 facings x 6 animations x 3
-module loadouts**, 96x96 per cell at 1x, plus 2x.
+Isometric sprite sheets for a modular sci-fi carrier and the fighters that launch from
+it. Two craft, three module loadouts each, **8 facings x 6 animations** per loadout,
+plus 2x.
 
-The hull is a long slender spine carrying a stepped stack of armour plate, a chisel
-prow and a forward sensor spar, with the hangar built into the forward mass — no flat
-top deck. Bone plating, crimson paint blocks, amber-lit recesses.
+| Craft     | Cell  | Loadouts                        | Animations |
+|-----------|-------|---------------------------------|------------|
+| `carrier` | 96x96 | mk1, mk2, mk3                   | idle, cruise, bay_open, launch, damage, powerdown |
+| `fighter` | 48x48 | interceptor, bomber, elite      | idle, cruise, boost, fire, damage, destroyed |
 
-The sprites are not drawn frame by frame. The carrier is described once as a small 3D
+The carrier's hull is a long slender spine carrying a stepped stack of armour plate, a
+chisel prow and a forward sensor spar, with the hangar built into the forward mass — no
+flat top deck. The fighter is a broad arrowhead flying wing with a swept delta, a
+dorsal intake and a single centreline nozzle. Bone plating, crimson paint blocks,
+amber-lit recesses on both.
+
+The squadrons in the carrier's `launch` animation **are the fighter model**, scaled
+down and dropped into the carrier's space, so the air wing cannot drift away from the
+sprites it launches as.
+
+The sprites are not drawn frame by frame. Each craft is described once as a small 3D
 model made of primitives — boxes, ellipsoids, cylinders, flat quads — grouped into
 swappable **modules**. Each animation is a function that poses that model for a frame;
 the posed model is then rotated in 45 degree steps to produce all 8 facings from the
@@ -17,15 +29,16 @@ silhouette outline pass and an engine bloom pass finish each frame, and the fram
 tiled into sheets.
 
 Because one model feeds every frame, all 8 facings and all 6 animations agree on
-proportion, lighting and palette by construction. Change the hull and everything
-re-renders — the whole set takes about 8 seconds.
+proportion, lighting and palette by construction. Change a hull and everything
+re-renders — both craft, every loadout, in about 10 seconds.
 
 ## Run it
 
 ```sh
 pip install pillow
-python3 generate_carrier.py                   # all loadouts -> sprites/
-python3 generate_carrier.py --loadout mk1     # just one
+python3 generate_carrier.py                   # every craft and loadout -> sprites/
+python3 generate_carrier.py --craft fighter   # just the fighters
+python3 generate_carrier.py --loadout mk1     # just one loadout
 python3 generate_carrier.py --palette steel   # the cool scheme instead of the livery
 python3 generate_carrier.py --contact         # also write contact sheets for eyeballing
 python3 generate_carrier.py --shadow          # bake a drop shadow (see note below)
@@ -41,20 +54,20 @@ python3 tools/test_preview.py     # Playwright check of the viewer
 
 ## What you get
 
-`sprites/carrier_<loadout>_<animation>.png` — one sheet per animation, plus `@2x`.
+`sprites/<craft>_<loadout>_<animation>.png` — one sheet per animation, plus `@2x`.
 **Rows are the 8 facings, columns are the animation frames.**
 
-| Animation   | Frames | FPS | Playback |
-|-------------|--------|-----|----------|
-| `idle`      | 8      | 10  | loop     |
-| `cruise`    | 8      | 14  | loop     |
-| `bay_open`  | 8      | 12  | once     |
-| `launch`    | 12     | 14  | once     |
-| `damage`    | 8      | 12  | loop     |
-| `powerdown` | 8      | 10  | once     |
+| Carrier     | Frames | FPS | Playback |   | Fighter     | Frames | FPS | Playback |
+|-------------|--------|-----|----------|---|-------------|--------|-----|----------|
+| `idle`      | 8      | 10  | loop     |   | `idle`      | 8      | 10  | loop     |
+| `cruise`    | 8      | 14  | loop     |   | `cruise`    | 8      | 12  | loop     |
+| `bay_open`  | 8      | 12  | once     |   | `boost`     | 8      | 16  | loop     |
+| `launch`    | 12     | 14  | once     |   | `fire`      | 6      | 16  | loop     |
+| `damage`    | 8      | 12  | loop     |   | `damage`    | 8      | 12  | loop     |
+| `powerdown` | 8      | 10  | once     |   | `destroyed` | 10     | 14  | once     |
 
-`sprites/carrier_<loadout>.json` describes one ship, `sprites/carrier_atlas.json`
-describes all of them — frame size, facing table, fps and loop flags per animation.
+`sprites/<craft>_<loadout>.json` describes one craft, `sprites/sprite_atlas.json`
+describes everything — frame size, facing table, fps and loop flags per animation.
 
 Every sheet for a given loadout shares one scale and one long-axis offset, computed
 once from the hull, so the ship sits in the same pixels across every animation and
@@ -83,6 +96,12 @@ classic 2:1 pixel ratio, so these line up with standard isometric tiles.
 | `mk3` | Lancer-class battlecarrier    | 4         | + weapons_pods, armor_belt |
 
 `mk1` is the starting ship: a two-squadron bay built into the forward hull.
+
+| Key           | Fighter                       | Role         | Modules |
+|---------------|-------------------------------|--------------|---------|
+| `interceptor` | Kite-class interceptor        | escort       | airframe, engine_std, cannons_light |
+| `bomber`      | Kite-class strike bomber      | anti-capital | + torpedo_pods |
+| `elite`       | Kite-class heavy interceptor  | superiority  | engine_boosted, cannons_heavy, wingtip_missiles |
 
 ### Paint schemes
 
@@ -141,8 +160,8 @@ def m_shield_ring(st, cfg):
                      (bx - 0.6, sy * (bhy + 0.18), 0.10), 0.09, "armor"))
     return p
 
-MODULES["shield_ring"] = m_shield_ring
-LOADOUTS["mk4"] = {
+CARRIER_MODULES["shield_ring"] = m_shield_ring
+CARRIER_LOADOUTS["mk4"] = {
     "name": "Lancer-class, shielded",
     "modules": ["chassis", "bridge_std", "hangar_large", "engines_uprated", "shield_ring"],
     "squadrons": 4,
@@ -154,8 +173,16 @@ Re-run the generator and every facing and animation of `mk4` exists. Modules rea
 `hull_of(cfg)` to find the fitted bay mass, so armour and turrets follow whichever
 hangar is installed rather than hard-coding positions.
 
-`st` carries the per-frame pose: `throttle`, `door`, `launch`, `damage`, `power`,
-`nav`, `strobe`, `bob`, plus `t` and `frame`. Reading it is what makes a module animate.
+`st` carries the per-frame pose: `throttle`, `door`, `launch`, `fire`, `blast`,
+`damage`, `power`, `nav`, `strobe`, `bob`, plus `t` and `frame`. Reading it is what
+makes a module animate.
+
+## Adding a craft
+
+`CRAFT` is the registry — one row per buildable hull, naming its cell size, loadouts,
+animation list and build function. Everything downstream (fitting, rendering, sheet
+assembly, the atlas) reads from it, so a third hull is a row plus its module
+functions. The fighter was added that way.
 
 ## Notes on the render
 
@@ -165,9 +192,16 @@ hangar is installed rather than hard-coding positions.
   intensity the animation sets, which is how the same geometry reads as powered,
   idling or dead. Those intensities are deliberately capped short of the top step so
   a fully open bay reads as deep amber light rather than a blown-out hole in the hull.
-- **Shading.** Half-lambert against one key light and one fill, quantised into the
-  ramp. Half-lambert rather than plain lambert because at 96px it keeps curved parts
-  reading as balls instead of collapsing to two tones.
+- **Shading.** Half-lambert against one key light and one fill, remapped onto the
+  ramp before quantising. Half-lambert rather than plain lambert because it keeps
+  curved parts reading as balls instead of collapsing to two tones — but on its own it
+  only spans about 0.50..0.96 against this light rig, so the top ramp step swallows
+  every surface within 40 degrees of straight up. `SHADE_LO` / `SHADE_GAIN` stretch
+  the occupied band across the whole ramp. Without that a flat-topped hull like the
+  fighter's wing quantises to a single tone and reads as a pale blob.
+- **Faceting.** The fighter's wing rolls in three broad groups rather than a smooth
+  per-strip ramp. Six evenly-stepped rolls produce six slivers that each round to the
+  same ramp step; three broad facets produce three distinct tones across the span.
 - **Bloom.** Halos use two fixed colours from the active scheme, and only the emitters
   named in its `bloom` set get one. Everything else stays a crisp single pixel, which
   keeps the palette tight.

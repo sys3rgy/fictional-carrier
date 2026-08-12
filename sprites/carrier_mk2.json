@@ -1,4 +1,5 @@
 {
+  "craft": "carrier",
   "loadout": "mk2",
   "display_name": "Lancer-class, expanded bay refit",
   "modules": [
@@ -9,7 +10,6 @@
     "sensor_array"
   ],
   "palette": "crimson",
-  "squadron_capacity": 4,
   "frame_width": 96,
   "frame_height": 96,
   "projection": "orthographic dimetric, yaw 45 deg, pitch 30 deg (2:1)",
@@ -105,5 +105,6 @@
       "sheet": "carrier_mk2_powerdown.png",
       "sheet_2x": "carrier_mk2_powerdown@2x.png"
     }
-  ]
+  ],
+  "squadron_capacity": 4
 }

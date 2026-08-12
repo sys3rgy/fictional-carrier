@@ -140,6 +140,12 @@ CAM_D = vcross(CAM_R, CAM_U)
 LIGHT = vnorm((-0.35, -0.55, 0.86))
 FILL = vnorm((0.62, 0.48, 0.12))
 
+# Half-lambert against this rig only spans roughly 0.50..0.96, so the raw value is
+# remapped onto 0..1 before it is quantised. Without it the ramp's top step swallows
+# every surface within 40 degrees of straight up.
+SHADE_LO = 0.50
+SHADE_GAIN = 1.0 / 0.46
+
 SPRITE = 96  # 1x cell size, in pixels
 MARGIN = 5  # keeps the outline + bloom inside the cell
 FACING_NAMES = ["S", "SE", "E", "NE", "N", "NW", "W", "SW"]
@@ -308,6 +314,16 @@ def cyl(p0, p1, r, mat, power=1.0):
 
 def quad(c, h, mat, axes=None, power=1.0):
     return Prim("quad", c, (h[0], h[1], 0.0), mat, axes, power)
+
+
+def _attach(prims, scale, origin, yaw=0.0):
+    """Scale a sub-craft's primitives and drop them into a parent model's space."""
+    out = []
+    for pr in prims:
+        axes = (yaw_vec(pr.ax, yaw), yaw_vec(pr.ay, yaw), yaw_vec(pr.az, yaw))
+        c = vadd(origin, yaw_vec(vmul(pr.c, scale), yaw))
+        out.append(Prim(pr.kind, c, vmul(pr.h, scale), pr.mat, axes, pr.power))
+    return out
 
 
 # --------------------------------------------------------------------------------------
@@ -631,21 +647,15 @@ def m_fighters(st, cfg):
         # travel is kept short enough that the squadron never leaves the cell
         x = lerp(front_x - 0.06, front_x + 0.75, ease(t))
         z = lerp(bz, bz + 0.38, ease(t))
-        ax = axes_from_euler(pitch=math.radians(-11), yaw=math.radians(4 * (1 if by > 0 else -1)))
-        p.append(ell((x, by, z), (0.22, 0.10, 0.07), "hull_light", ax))
-        for sy in (1.0, -1.0):
-            p.append(
-                quad(
-                    (x - 0.07, by + sy * 0.15, z - 0.01),
-                    (0.13, 0.10),
-                    "hull",
-                    axes_from_euler(roll=math.radians(12 * sy), yaw=math.radians(8 * sy)),
-                )
-            )
-        # lit canopy and a hot thruster: at this size they are what makes a fighter
-        # legible against the hull it is flying over
-        p.append(ell((x + 0.04, by, z + 0.05), (0.06, 0.045, 0.035), "window", power=0.90 * fade))
-        p.append(ell((x - 0.22, by, z), (0.065, 0.055, 0.05), "engine", power=0.60 + 0.40 * fade))
+        # The launching craft is the actual starfighter model, scaled down, so the
+        # carrier's air wing and the fighter sheets cannot drift apart.
+        sub = base_state(st["frame"], 8)
+        sub["throttle"] = 0.85
+        sub["nav"] = fade
+        craft = f_airframe(sub, None, simple=True) + f_engine_std(sub, None)
+        p.extend(
+            _attach(craft, 0.20, (x, by, z), yaw=math.radians(4 * (1 if by > 0 else -1)))
+        )
     return p
 
 
@@ -682,7 +692,7 @@ def m_damage(st, cfg):
     return p
 
 
-MODULES = {
+CARRIER_MODULES = {
     "chassis": m_chassis,
     "bridge_std": m_bridge,
     "hangar_small": m_hangar_small,
@@ -698,7 +708,7 @@ MODULES = {
 BAYS_2 = [(0.30, 1.85, 0.0), (-0.30, 1.85, 0.0)]
 BAYS_4 = [(0.26, 1.98, 0.0), (-0.26, 1.98, 0.0), (0.58, 1.98, 0.0), (-0.58, 1.98, 0.0)]
 
-LOADOUTS = {
+CARRIER_LOADOUTS = {
     "mk1": {
         "name": "Lancer-class escort carrier",
         "modules": ["chassis", "bridge_std", "hangar_small", "engines_basic"],
@@ -728,11 +738,349 @@ LOADOUTS = {
 }
 
 
-def build_model(cfg, st):
+# --------------------------------------------------------------------------------------
+# the starfighter
+#
+# A broad arrowhead flying wing: a swept delta built from chord-wise strips, a dorsal
+# spine carrying a recessed intake grille, a notched trailing edge that leaves an aft
+# prong either side of the engine, and a single nozzle on the centreline. Same
+# primitives, same palette, same camera as the carrier — it is the carrier's air wing,
+# so it has to agree with it by construction.
+# --------------------------------------------------------------------------------------
+
+# (inner y, outer y, leading edge x, trailing edge x, half thickness, z centre, roll deg).
+# The leading edge sweeps hard aft as the strips move outboard; the trailing edge
+# reaches furthest aft at mid span, which is what leaves the two prongs.
+#
+# The roll matters more than it looks. A flying wing seen from 30 degrees of elevation
+# is almost entirely top surface, and axis-aligned strips all share one normal, so the
+# whole planform quantises to a single ramp step and reads as a pale blob. Progressive
+# anhedral gives each strip its own normal, so the wing facets across the span the way
+# the reference does — and the two wings shade differently, which sells the volume.
+# Roll is assigned in three groups rather than ramping per strip: six evenly-stepped
+# rolls just produce six slivers that each round to the same ramp step. Three broad
+# facets — inner, mid, outer — give three distinct tones across the span, which is how
+# the reference reads, while the six chords keep the swept leading edge fine.
+WING_STRIPS = [
+    (0.24, 0.44, 1.05, -0.30, 0.072, 0.008, -4.0),
+    (0.44, 0.62, 0.92, -0.70, 0.066, 0.002, -4.0),
+    (0.62, 0.79, 0.78, -0.92, 0.056, -0.015, -19.0),
+    (0.79, 0.95, 0.62, -0.95, 0.048, -0.035, -19.0),
+    (0.95, 1.09, 0.46, -0.84, 0.040, -0.060, -40.0),
+    (1.09, 1.20, 0.32, -0.66, 0.032, -0.085, -40.0),
+]
+
+
+def f_airframe(st, cfg, simple=False):
+    """Fuselage, swept wings, dorsal spine and intake. The whole silhouette."""
+    p = []
+    pw = st["power"]
+
+    # The airframe sits on the darker `deck` tone with the spine and panelling picked
+    # out in the lighter hull colour. Bone over the whole planform washes out at 48px,
+    # where nearly every visible pixel is top surface.
+    p.append(box((0.18, 0.0, 0.010), (0.86, 0.26, 0.085), "deck"))
+    p.append(box((-0.34, 0.0, 0.000), (0.34, 0.21, 0.072), "deck"))
+    p.append(box((1.14, 0.0, 0.000), (0.20, 0.16, 0.060), "deck"))
+    p.append(box((1.36, 0.0, 0.000), (0.10, 0.085, 0.038), "hull"))
+
+    # Swept delta, one rolled strip at a time. Deliberately no per-strip edge highlight
+    # or seam: repeated across six chords they stop reading as a leading edge and start
+    # reading as corrugation. The three facet rolls carry the form on their own.
+    for sy in (1.0, -1.0):
+        for (yi, yo, xle, xte, hz, cz, roll) in WING_STRIPS:
+            cx, hx = (xle + xte) * 0.5, (xle - xte) * 0.5
+            cy, hy = (yi + yo) * 0.5, (yo - yi) * 0.5
+            p.append(
+                box((cx, sy * cy, cz), (hx, hy, hz), "deck",
+                    axes_from_euler(roll=math.radians(roll * sy)))
+            )
+
+    # dorsal spine and canopy
+    p.append(box((0.08, 0.0, 0.135), (0.60, 0.20, 0.055), "hull"))
+    p.append(box((0.08, 0.0, 0.080), (0.64, 0.235, 0.014), "armor"))
+    p.append(ell((0.60, 0.0, 0.125), (0.20, 0.125, 0.055), "window", power=0.55 * pw))
+
+    if simple:
+        return p
+
+    # recessed intake grille on the spine
+    p.append(box((0.06, 0.0, 0.186), (0.29, 0.175, 0.014), "armor"))
+    for i in range(4):
+        p.append(box((0.06, -0.126 + i * 0.084, 0.196), (0.26, 0.020, 0.010), "hull_dark"))
+
+    for sy in (1.0, -1.0):
+        # one painted flash per wing root, and one marker aft. At 48px a decal is two
+        # or three pixels, so a handful of deliberate ones beats a scatter.
+        p.append(
+            box((0.34, sy * 0.40, 0.082), (0.16, 0.036, 0.008), "plate",
+                axes_from_euler(roll=math.radians(-3.0 * sy)))
+        )
+        p.append(
+            box((-0.42, sy * 0.68, 0.020), (0.10, 0.028, 0.008), "accent",
+                axes_from_euler(roll=math.radians(-14.0 * sy)))
+        )
+        # wingtip navigation light: port red, starboard green
+        p.append(
+            ell((-0.30, sy * 1.18, -0.072), (0.045, 0.045, 0.040),
+                "nav_red" if sy > 0 else "nav_green", power=st["nav"] * pw)
+        )
+
+    # squadron chevron on the port wing root
+    for sy in (1.0, -1.0):
+        p.append(
+            box((-0.04, 0.44 + sy * 0.10, 0.084), (0.15, 0.033, 0.008), "hull_light",
+                axes_from_euler(yaw=math.radians(34 * sy)))
+        )
+    return p
+
+
+def _nozzle(p, x, y, z, r, st, plume_scale=1.0):
+    thr = st["throttle"]
+    p.append(cyl((x + 0.06, y, z), (x, y, z), r, "hull_dark"))
+    p.append(cyl((x, y, z), (x - 0.03, y, z), r * 0.74, "engine", power=0.30 + 0.65 * thr))
+    if thr > 0.02:
+        ln = (0.20 + 0.85 * thr) * st["plume"] * plume_scale
+        core = r * 0.56
+        p.append(cyl((x - 0.03, y, z), (x - ln * 0.50, y, z), core, "engine",
+                     power=0.55 + 0.40 * thr))
+        p.append(cyl((x - ln * 0.45, y, z), (x - ln, y, z), core * 0.62, "engine",
+                     power=0.22 + 0.30 * thr))
+
+
+def f_engine_std(st, cfg):
+    """Single centreline engine block."""
+    p = []
+    p.append(box((-0.60, 0.0, 0.050), (0.26, 0.185, 0.098), "hull"))
+    p.append(box((-0.62, 0.0, 0.158), (0.20, 0.135, 0.020), "armor"))
+    p.append(box((-0.60, 0.0, -0.052), (0.22, 0.150, 0.018), "plate"))
+    _nozzle(p, -0.88, 0.0, 0.045, 0.115, st)
+    return p
+
+
+def f_engine_boosted(st, cfg):
+    """Twin nozzles on a deeper block, for the heavier marks."""
+    p = []
+    p.append(box((-0.58, 0.0, 0.055), (0.30, 0.225, 0.105), "hull"))
+    p.append(box((-0.60, 0.0, 0.170), (0.22, 0.160, 0.022), "armor"))
+    p.append(box((-0.58, 0.0, -0.058), (0.26, 0.185, 0.018), "plate"))
+    for sy in (1.0, -1.0):
+        _nozzle(p, -0.90, sy * 0.115, 0.045, 0.088, st, plume_scale=1.15)
+    return p
+
+
+def f_cannons_light(st, cfg):
+    """A pair of wing-root cannons that flash on the fire animation."""
+    p = []
+    fire = st["fire"]
+    for sy in (1.0, -1.0):
+        p.append(box((0.54, sy * 0.40, -0.048), (0.15, 0.055, 0.034), "hull_dark"))
+        p.append(cyl((0.68, sy * 0.40, -0.048), (0.94, sy * 0.40, -0.048), 0.024, "armor"))
+        if fire > 0.02:
+            p.append(
+                ell((0.99 + 0.06 * fire, sy * 0.40, -0.048),
+                    (0.075 * fire + 0.03, 0.055, 0.050), "spark", power=fire)
+            )
+    return p
+
+
+def f_cannons_heavy(st, cfg):
+    """Four barrels and a chin pod."""
+    p = f_cannons_light(st, cfg)
+    fire = st["fire"]
+    for sy in (1.0, -1.0):
+        p.append(box((0.44, sy * 0.66, -0.052), (0.17, 0.060, 0.032), "hull_dark"))
+        p.append(cyl((0.58, sy * 0.66, -0.052), (0.80, sy * 0.66, -0.052), 0.022, "armor"))
+        if fire > 0.02:
+            p.append(
+                ell((0.85 + 0.05 * fire, sy * 0.66, -0.052),
+                    (0.065 * fire + 0.025, 0.048, 0.044), "spark", power=fire)
+            )
+    p.append(box((0.72, 0.0, -0.070), (0.20, 0.10, 0.040), "armor"))
+    return p
+
+
+def f_torpedo_pods(st, cfg):
+    """Underwing ordnance pods: the bomber's reason for existing."""
+    p = []
+    for sy in (1.0, -1.0):
+        p.append(box((-0.06, sy * 0.62, -0.100), (0.34, 0.100, 0.072), "hull_light"))
+        p.append(ell((0.32, sy * 0.62, -0.100), (0.11, 0.085, 0.070), "hull_light"))
+        p.append(box((-0.06, sy * 0.62, -0.180), (0.30, 0.085, 0.018), "plate"))
+        p.append(box((-0.34, sy * 0.62, -0.100), (0.06, 0.070, 0.055), "hull_dark"))
+    return p
+
+
+def f_wingtip_missiles(st, cfg):
+    """Rail-mounted missiles outboard, plus a sensor pod on the spine."""
+    p = []
+    for sy in (1.0, -1.0):
+        p.append(box((-0.18, sy * 1.06, 0.020), (0.26, 0.055, 0.030), "armor"))
+        for i in range(2):
+            y = sy * (1.02 + i * 0.10)
+            p.append(cyl((0.10, y, 0.052), (-0.34, y, 0.052), 0.034, "hull_light"))
+            p.append(ell((0.14, y, 0.052), (0.055, 0.032, 0.032), "plate"))
+    p.append(box((-0.16, 0.0, 0.215), (0.13, 0.10, 0.030), "hull_dark"))
+    p.append(ell((-0.16, 0.0, 0.250), (0.075, 0.065, 0.030), "window", power=0.60 * st["power"]))
+    return p
+
+
+def f_destruction(st, cfg):
+    """
+    Fireball and tumbling debris. Trajectories come from one fixed seed evaluated at
+    the frame's blast value, so fragments fly on consistent arcs instead of jittering.
+    """
+    b = st["blast"]
+    if b <= 0.0:
+        return []
+    p = []
+    rng = Rng(7)
+    fade = 1.0 - clamp((b - 0.55) / 0.45)
+    if fade > 0.02:
+        r = 0.16 + 0.62 * ease(min(1.0, b * 1.5))
+        for i in range(3):
+            rr = r * (1.0 - i * 0.24)
+            p.append(
+                ell((-0.10 + i * 0.06, 0.0, 0.03), (rr, rr * 0.82, rr * 0.70), "spark",
+                    power=clamp((0.60 + 0.40 * math.sin(i * 2.0 + b * 6.0)) * fade))
+            )
+    for _ in range(8):
+        ang = rng.range(0.0, math.tau)
+        sp = rng.range(0.45, 1.05)
+        d = b * sp
+        s = rng.range(0.06, 0.13)
+        p.append(
+            box(
+                (-0.10 + math.cos(ang) * d, math.sin(ang) * d, 0.03 + rng.range(-0.25, 0.45) * d),
+                (s, s * 0.70, s * 0.35),
+                "hull_dark",
+                axes_from_euler(yaw=ang, roll=b * 4.0, pitch=b * 2.5),
+            )
+        )
+    return p
+
+
+FIGHTER_MODULES = {
+    "airframe": f_airframe,
+    "engine_std": f_engine_std,
+    "engine_boosted": f_engine_boosted,
+    "cannons_light": f_cannons_light,
+    "cannons_heavy": f_cannons_heavy,
+    "torpedo_pods": f_torpedo_pods,
+    "wingtip_missiles": f_wingtip_missiles,
+}
+
+FIGHTER_LOADOUTS = {
+    "interceptor": {
+        "name": "Kite-class interceptor",
+        "modules": ["airframe", "engine_std", "cannons_light"],
+        "role": "escort",
+    },
+    "bomber": {
+        "name": "Kite-class strike bomber",
+        "modules": ["airframe", "engine_std", "cannons_light", "torpedo_pods"],
+        "role": "anti-capital",
+    },
+    "elite": {
+        "name": "Kite-class heavy interceptor",
+        "modules": [
+            "airframe",
+            "engine_boosted",
+            "cannons_heavy",
+            "wingtip_missiles",
+        ],
+        "role": "superiority",
+    },
+}
+
+
+def build_fighter(cfg, st):
+    """Pose the fighter for one frame. Past the mid-point of a kill it is only debris."""
+    if st["blast"] > 0.55:
+        return f_destruction(st, cfg)
+    prims = []
+    for name in cfg["modules"]:
+        prims.extend(FIGHTER_MODULES[name](st, cfg))
+    prims.extend(f_destruction(st, cfg))
+    return prims
+
+
+def f_idle(frame, n):
+    st = base_state(frame, n)
+    ph = st["t"] * math.tau
+    st["throttle"] = 0.20 + 0.06 * math.sin(ph * 2.0)
+    st["nav"] = 0.50 + 0.50 * (0.5 + 0.5 * math.sin(ph))
+    st["bob"] = math.sin(ph) * 0.030
+    return st
+
+
+def f_cruise(frame, n):
+    st = base_state(frame, n)
+    ph = st["t"] * math.tau
+    st["throttle"] = 0.72 + 0.08 * math.sin(ph * 3.0)
+    st["plume"] = 0.92 + 0.08 * math.sin(ph * 4.0 + 0.7)
+    st["nav"] = 0.85
+    return st
+
+
+def f_boost(frame, n):
+    st = base_state(frame, n)
+    ph = st["t"] * math.tau
+    st["throttle"] = 1.0
+    st["plume"] = 1.15 + 0.18 * math.sin(ph * 5.0)
+    st["nav"] = 1.0
+    st["bob"] = math.sin(ph * 2.0) * 0.018
+    return st
+
+
+def f_fire(frame, n):
+    st = base_state(frame, n)
+    st["throttle"] = 0.70
+    # two bursts per cycle, each one frame hot and one frame trailing off
+    st["fire"] = (1.0, 0.45, 0.0, 1.0, 0.45, 0.0)[frame % 6]
+    st["nav"] = 0.9
+    st["bob"] = -0.012 * st["fire"]
+    return st
+
+
+def f_damage(frame, n):
+    st = base_state(frame, n)
+    ph = st["t"] * math.tau
+    flick = 0.5 + 0.5 * math.sin(ph * 5.0)
+    st["throttle"] = 0.34 * flick
+    st["plume"] = 0.55
+    st["damage"] = 0.8
+    st["power"] = 0.35 + 0.65 * (1.0 if frame % 3 else 0.25)
+    st["nav"] = 0.4
+    st["bob"] = math.sin(ph * 3.0) * 0.028
+    return st
+
+
+def f_destroyed(frame, n):
+    st = base_state(frame, n)
+    t = frame / (n - 1.0)
+    st["throttle"] = 0.30 * (1.0 - clamp(t * 3.0))
+    st["power"] = 1.0 - clamp(t * 2.5)
+    st["nav"] = 0.0
+    st["blast"] = t
+    return st
+
+
+FIGHTER_ANIMS = [
+    ("idle", f_idle, 8, 10, True),
+    ("cruise", f_cruise, 8, 12, True),
+    ("boost", f_boost, 8, 16, True),
+    ("fire", f_fire, 6, 16, True),
+    ("damage", f_damage, 8, 12, True),
+    ("destroyed", f_destroyed, 10, 14, False),
+]
+
+
+def build_carrier(cfg, st):
     """Pose the whole ship for one frame, in ship-local space."""
     prims = []
     for name in cfg["modules"]:
-        prims.extend(MODULES[name](st, cfg))
+        prims.extend(CARRIER_MODULES[name](st, cfg))
     prims.extend(m_fighters(st, cfg))
     prims.extend(m_damage(st, cfg))
     return prims
@@ -756,6 +1104,8 @@ def base_state(frame, n):
         "door": 0.0,
         "launch": 0.0,
         "damage": 0.0,
+        "fire": 0.0,
+        "blast": 0.0,
         "power": 1.0,
         "nav": 1.0,
         "strobe": 0.0,
@@ -828,7 +1178,7 @@ def a_powerdown(frame, n):
     return st
 
 
-ANIMATIONS = [
+CARRIER_ANIMS = [
     ("idle", a_idle, 8, 10, True),
     ("cruise", a_cruise, 8, 14, True),
     ("bay_open", a_bay_open, 8, 12, False),
@@ -1010,11 +1360,16 @@ def render_frame(prims, scale, bob, size=SPRITE, shadow=False):
                     pr.ax[1] * nl[0] + pr.ay[1] * nl[1] + pr.az[1] * nl[2],
                     pr.ax[2] * nl[0] + pr.ay[2] * nl[1] + pr.az[2] * nl[2],
                 )
-                # half-lambert keeps curved parts reading as balls at this size
+                # Half-lambert keeps curved parts reading as balls at this size, but on
+                # its own it only ever reaches the top two steps on surfaces facing the
+                # key light — so a flat-topped hull quantises to one tone. Stretching
+                # the band the lighting actually occupies across the full ramp is what
+                # lets a shallow tilt read as a facet.
                 v = 0.5 * vdot(n, LIGHT) + 0.5
                 f = vdot(n, FILL)
                 if f > 0.0:
-                    v += 0.20 * f
+                    v += 0.10 * f
+                v = (v - SHADE_LO) * SHADE_GAIN
                 k = int(v * nramp)
                 px[idx] = ramp[0 if k < 0 else (nramp - 1 if k >= nramp else k)]
                 glow[idx] = 0.0
@@ -1087,19 +1442,48 @@ def _finish(px, glow, w, h, shadow):
 # --------------------------------------------------------------------------------------
 # fitting + sheet assembly
 # --------------------------------------------------------------------------------------
+# craft registry
+#
+# One entry per buildable craft. Everything downstream — fitting, rendering, sheet
+# assembly — reads the craft from here, so adding a third hull means adding a row.
+# --------------------------------------------------------------------------------------
+
+CRAFT = {
+    "carrier": {
+        "display": "Lancer-class carrier",
+        "sprite": 96,
+        "loadouts": CARRIER_LOADOUTS,
+        "animations": CARRIER_ANIMS,
+        "build": build_carrier,
+        "fit_state": {"throttle": 0.55, "door": 1.0},
+    },
+    "fighter": {
+        "display": "Kite-class fighter",
+        "sprite": 48,
+        "loadouts": FIGHTER_LOADOUTS,
+        "animations": FIGHTER_ANIMS,
+        "build": build_fighter,
+        "fit_state": {"throttle": 0.75},
+    },
+}
 
 
-def fit_scale(cfg):
+def margin_for(size):
+    """The outline and bloom need room, but a fixed margin wastes a small cell."""
+    return 3 if size <= 64 else 5
+
+
+def fit_scale(craft_key, cfg):
     """
     One scale and one long-axis offset per loadout, shared by every facing and
-    animation, so sprites stay registered across sheets. The ship is bow-heavy, so
-    it is first slid to centre it on the yaw axis — otherwise half the cell is spent
-    on empty space behind the stern.
+    animation, so sprites stay registered across sheets. A hull is rarely balanced
+    about its own origin, so it is first slid to centre it on the yaw axis —
+    otherwise a chunk of the cell is spent on empty space behind the stern.
     """
+    craft = CRAFT[craft_key]
     st = base_state(0, 8)
-    st["throttle"] = 0.55  # leave room for a moderate plume
-    st["door"] = 1.0
-    prims = build_model(cfg, st)
+    st.update(craft["fit_state"])
+    prims = craft["build"](cfg, st)
 
     xs = [c[0] for pr in prims for c in pr.corners()]
     offx = -(min(xs) + max(xs)) * 0.5
@@ -1112,32 +1496,37 @@ def fit_scale(cfg):
                 sx, sy = project(yaw_vec((c[0] + offx, c[1], c[2]), a))
                 ext_x = max(ext_x, abs(sx))
                 ext_y = max(ext_y, abs(sy))
-    half = SPRITE * 0.5 - MARGIN
+    size = craft["sprite"]
+    half = size * 0.5 - margin_for(size)
     return min(half / ext_x, half / ext_y), offx
 
 
 def render_cell(job):
-    key, cfg, anim_fn, frame, nframes, facing, scale, offx, shadow, palette = job
+    craft_key, cfg, anim_fn, frame, nframes, facing, scale, offx, shadow, palette = job
     # rebound explicitly so the render is identical whether pooled workers are
     # forked (inheriting globals) or spawned (starting from import state)
     use_palette(palette)
+    craft = CRAFT[craft_key]
     st = anim_fn(frame, nframes)
-    prims = build_model(cfg, st)
+    prims = craft["build"](cfg, st)
     a = FACING_YAW0 + facing * math.tau / 8.0
     prims = [p.placed(offx, a) for p in prims]
-    bob = st["bob"] * scale
-    img = render_frame(prims, scale, bob, SPRITE, shadow)
+    size = craft["sprite"]
+    img = render_frame(prims, scale, st["bob"] * scale, size, shadow)
     return (facing, frame, img.tobytes())
 
 
-def build_sheets(loadout_key, outdir, shadow=False, contact=False, jobs=None, palette="crimson"):
-    cfg = LOADOUTS[loadout_key]
-    scale, offx = fit_scale(cfg)
+def build_sheets(craft_key, loadout_key, outdir, shadow=False, contact=False, jobs=None,
+                 palette="crimson"):
+    craft = CRAFT[craft_key]
+    size = craft["sprite"]
+    cfg = craft["loadouts"][loadout_key]
+    scale, offx = fit_scale(craft_key, cfg)
     meta_anims = []
 
-    for (aname, afn, nframes, fps, loop) in ANIMATIONS:
+    for (aname, afn, nframes, fps, loop) in craft["animations"]:
         work = [
-            (loadout_key, cfg, afn, f, nframes, fc, scale, offx, shadow, palette)
+            (craft_key, cfg, afn, f, nframes, fc, scale, offx, shadow, palette)
             for fc in range(8)
             for f in range(nframes)
         ]
@@ -1147,12 +1536,11 @@ def build_sheets(loadout_key, outdir, shadow=False, contact=False, jobs=None, pa
         else:
             results = [render_cell(w) for w in work]
 
-        sheet = Image.new("RGBA", (SPRITE * nframes, SPRITE * 8), (0, 0, 0, 0))
+        sheet = Image.new("RGBA", (size * nframes, size * 8), (0, 0, 0, 0))
         for (facing, frame, raw) in results:
-            cell = Image.frombytes("RGBA", (SPRITE, SPRITE), raw)
-            sheet.paste(cell, (frame * SPRITE, facing * SPRITE))
+            sheet.paste(Image.frombytes("RGBA", (size, size), raw), (frame * size, facing * size))
 
-        base = f"carrier_{loadout_key}_{aname}"
+        base = f"{craft_key}_{loadout_key}_{aname}"
         p1 = os.path.join(outdir, base + ".png")
         p2 = os.path.join(outdir, base + "@2x.png")
         sheet.save(p1)
@@ -1171,48 +1559,55 @@ def build_sheets(loadout_key, outdir, shadow=False, contact=False, jobs=None, pa
         print(f"  {base}: {nframes} frames x 8 facings -> {sheet.width}x{sheet.height}")
 
     meta = {
+        "craft": craft_key,
         "loadout": loadout_key,
         "display_name": cfg["name"],
         "modules": cfg["modules"],
         "palette": palette,
-        "squadron_capacity": cfg["squadrons"],
-        "frame_width": SPRITE,
-        "frame_height": SPRITE,
+        "frame_width": size,
+        "frame_height": size,
         "projection": "orthographic dimetric, yaw 45 deg, pitch 30 deg (2:1)",
         "origin": "cell centre; the hull is registered identically across every sheet",
         "facings": [
-            {"row": i, "name": FACING_NAMES[i], "yaw_deg": round(math.degrees(FACING_YAW0) + i * 45) % 360}
+            {
+                "row": i,
+                "name": FACING_NAMES[i],
+                "yaw_deg": round(math.degrees(FACING_YAW0) + i * 45) % 360,
+            }
             for i in range(8)
         ],
         "animations": meta_anims,
     }
-    with open(os.path.join(outdir, f"carrier_{loadout_key}.json"), "w") as fh:
+    if "squadrons" in cfg:
+        meta["squadron_capacity"] = cfg["squadrons"]
+    if "role" in cfg:
+        meta["role"] = cfg["role"]
+
+    with open(os.path.join(outdir, f"{craft_key}_{loadout_key}.json"), "w") as fh:
         json.dump(meta, fh, indent=2)
 
     if contact:
-        _contact_sheet(loadout_key, outdir, meta_anims)
+        _contact_sheet(craft_key, loadout_key, outdir, meta_anims)
     return meta
 
 
-def _contact_sheet(loadout_key, outdir, meta_anims):
+def _contact_sheet(craft_key, loadout_key, outdir, meta_anims):
     """A single overview image, used for eyeballing changes between tweaks."""
-    rows = []
-    for a in meta_anims:
-        img = Image.open(os.path.join(outdir, a["sheet"])).convert("RGBA")
-        rows.append((a["name"], img))
-    width = max(i.width for _, i in rows)
-    height = sum(i.height for _, i in rows) + 12 * len(rows)
-    sheet = Image.new("RGBA", (width, height), (18, 22, 30, 255))
+    rows = [Image.open(os.path.join(outdir, a["sheet"])).convert("RGBA") for a in meta_anims]
+    width = max(i.width for i in rows)
+    height = sum(i.height for i in rows) + 12 * len(rows)
+    sheet = Image.new("RGBA", (width, height), (18, 16, 14, 255))
     y = 0
-    for _, img in rows:
+    for img in rows:
         sheet.paste(img, (0, y), img)
         y += img.height + 12
-    sheet.save(os.path.join(outdir, f"contact_{loadout_key}.png"))
+    sheet.save(os.path.join(outdir, f"contact_{craft_key}_{loadout_key}.png"))
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--loadout", action="append", choices=sorted(LOADOUTS), help="repeatable")
+    ap.add_argument("--craft", action="append", choices=sorted(CRAFT), help="repeatable")
+    ap.add_argument("--loadout", action="append", help="repeatable; filters within a craft")
     ap.add_argument("--out", default="sprites")
     ap.add_argument("--shadow", action="store_true", help="bake a deck drop shadow")
     ap.add_argument("--contact", action="store_true", help="also write contact sheets")
@@ -1220,22 +1615,29 @@ def main():
     ap.add_argument("--palette", default="crimson", choices=sorted(PALETTES), help="paint scheme")
     args = ap.parse_args()
 
-    keys = args.loadout or list(LOADOUTS)
     os.makedirs(args.out, exist_ok=True)
     use_palette(args.palette)
 
     atlas = []
-    for k in keys:
-        print(f"{k}: {LOADOUTS[k]['name']}")
-        atlas.append(
-            build_sheets(k, args.out, args.shadow, args.contact, args.jobs, args.palette)
-        )
+    for craft_key in (args.craft or list(CRAFT)):
+        craft = CRAFT[craft_key]
+        keys = [k for k in craft["loadouts"] if not args.loadout or k in args.loadout]
+        if not keys:
+            continue
+        entry = {"craft": craft_key, "display": craft["display"],
+                 "sprite_size": craft["sprite"], "loadouts": []}
+        for k in keys:
+            print(f"{craft_key}/{k}: {craft['loadouts'][k]['name']}")
+            entry["loadouts"].append(
+                build_sheets(craft_key, k, args.out, args.shadow, args.contact,
+                             args.jobs, args.palette)
+            )
+        atlas.append(entry)
 
-    with open(os.path.join(args.out, "carrier_atlas.json"), "w") as fh:
-        json.dump(
-            {"sprite_size": SPRITE, "palette": args.palette, "loadouts": atlas}, fh, indent=2
-        )
-    print(f"\nwrote {len(atlas)} loadout(s) to {args.out}/")
+    with open(os.path.join(args.out, "sprite_atlas.json"), "w") as fh:
+        json.dump({"palette": args.palette, "craft": atlas}, fh, indent=2)
+    n = sum(len(e["loadouts"]) for e in atlas)
+    print(f"\nwrote {n} loadout(s) across {len(atlas)} craft to {args.out}/")
 
 
 if __name__ == "__main__":

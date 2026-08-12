@@ -54,7 +54,8 @@ def main():
         assert inked > 500, f"stage looks empty ({inked} lit pixels)"
 
         # every control got built
-        assert page.locator("#loadouts button").count() == 3, "expected 3 loadouts"
+        assert page.locator("#craft-buttons button").count() == 2, "expected 2 craft"
+        assert page.locator("#loadouts button").count() == 3, "expected 3 carrier loadouts"
         assert page.locator("#anim-buttons button").count() == 6, "expected 6 animations"
         assert page.locator("#compass button").count() == 8, "expected 8 facings"
         assert page.locator("#strip figure").count() == 8, "expected 8 strip cells"
@@ -90,6 +91,17 @@ def main():
         assert added == 5, f"expected 5 upgrade modules on mk3, got {added}"
 
         page.screenshot(path=os.path.join(SHOTS, "viewer_mk3.png"), full_page=True)
+
+        # the fighter is a second craft with its own cell size and animation set
+        page.locator("#craft-buttons button").nth(1).click()
+        page.wait_for_timeout(500)
+        assert page.evaluate(INKED) > 200, "fighter stage looks empty"
+        assert page.locator("#loadouts button").count() == 3, "expected 3 fighter loadouts"
+        assert page.locator("#fact-cell").inner_text().strip() == "48\u00d748", "expected a 48px cell"
+        names = page.locator("#anim-buttons").inner_text().lower()
+        assert "destroyed" in names, "expected the fighter's destroyed animation"
+
+        page.screenshot(path=os.path.join(SHOTS, "viewer_fighter.png"), full_page=True)
         browser.close()
 
     if errors:

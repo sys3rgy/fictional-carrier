@@ -26,11 +26,11 @@ def data_uri(path):
 
 
 def main():
-    with open(os.path.join(SPRITES, "carrier_atlas.json")) as fh:
+    with open(os.path.join(SPRITES, "sprite_atlas.json")) as fh:
         atlas = json.load(fh)
 
     assets = {}
-    for loadout in atlas["loadouts"]:
+    for loadout in (l for c in atlas["craft"] for l in c["loadouts"]):
         for anim in loadout["animations"]:
             for key in ("sheet", "sheet_2x"):
                 name = anim[key]
