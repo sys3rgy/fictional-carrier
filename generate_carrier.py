@@ -1055,26 +1055,30 @@ FIGHTER_MODULES = {
     "wingtip_missiles": f_wingtip_missiles,
 }
 
+# The three craft roles of the counter-chain (GDD v4 §3.3). Interceptor beats fighter
+# beats bomber; only the bomber threatens a capital, and nothing beats the interceptor —
+# what disciplines it is that it cannot win an objective on its own.
 FIGHTER_LOADOUTS = {
+    "fighter": {
+        "name": "Kite-class fighter",
+        "modules": ["airframe", "engine_std", "cannons_light"],
+        "role": "generalist",
+        "beats": "bomber",
+        "beaten_by": "interceptor",
+    },
     "interceptor": {
         "name": "Kite-class interceptor",
-        "modules": ["airframe", "engine_std", "cannons_light"],
-        "role": "escort",
+        "modules": ["airframe", "engine_boosted", "cannons_heavy", "wingtip_missiles"],
+        "role": "fighter-killer",
+        "beats": "fighter",
+        "beaten_by": None,
     },
     "bomber": {
         "name": "Kite-class strike bomber",
         "modules": ["airframe", "engine_std", "cannons_light", "torpedo_pods"],
         "role": "anti-capital",
-    },
-    "elite": {
-        "name": "Kite-class heavy interceptor",
-        "modules": [
-            "airframe",
-            "engine_boosted",
-            "cannons_heavy",
-            "wingtip_missiles",
-        ],
-        "role": "superiority",
+        "beats": "capital",
+        "beaten_by": "fighter",
     },
 }
 

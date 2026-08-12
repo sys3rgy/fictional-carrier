@@ -1,12 +1,11 @@
 {
   "craft": "fighter",
-  "loadout": "interceptor",
-  "display_name": "Kite-class interceptor",
+  "loadout": "fighter",
+  "display_name": "Kite-class fighter",
   "modules": [
     "airframe",
-    "engine_boosted",
-    "cannons_heavy",
-    "wingtip_missiles"
+    "engine_std",
+    "cannons_light"
   ],
   "palette": "crimson",
   "frame_width": 48,
@@ -61,49 +60,49 @@
       "frames": 8,
       "fps": 10,
       "loop": true,
-      "sheet": "fighter_interceptor_idle.png",
-      "sheet_2x": "fighter_interceptor_idle@2x.png"
+      "sheet": "fighter_fighter_idle.png",
+      "sheet_2x": "fighter_fighter_idle@2x.png"
     },
     {
       "name": "cruise",
       "frames": 8,
       "fps": 12,
       "loop": true,
-      "sheet": "fighter_interceptor_cruise.png",
-      "sheet_2x": "fighter_interceptor_cruise@2x.png"
+      "sheet": "fighter_fighter_cruise.png",
+      "sheet_2x": "fighter_fighter_cruise@2x.png"
     },
     {
       "name": "boost",
       "frames": 8,
       "fps": 16,
       "loop": true,
-      "sheet": "fighter_interceptor_boost.png",
-      "sheet_2x": "fighter_interceptor_boost@2x.png"
+      "sheet": "fighter_fighter_boost.png",
+      "sheet_2x": "fighter_fighter_boost@2x.png"
     },
     {
       "name": "fire",
       "frames": 6,
       "fps": 16,
       "loop": true,
-      "sheet": "fighter_interceptor_fire.png",
-      "sheet_2x": "fighter_interceptor_fire@2x.png"
+      "sheet": "fighter_fighter_fire.png",
+      "sheet_2x": "fighter_fighter_fire@2x.png"
     },
     {
       "name": "damage",
       "frames": 8,
       "fps": 12,
       "loop": true,
-      "sheet": "fighter_interceptor_damage.png",
-      "sheet_2x": "fighter_interceptor_damage@2x.png"
+      "sheet": "fighter_fighter_damage.png",
+      "sheet_2x": "fighter_fighter_damage@2x.png"
     },
     {
       "name": "destroyed",
       "frames": 10,
       "fps": 14,
       "loop": false,
-      "sheet": "fighter_interceptor_destroyed.png",
-      "sheet_2x": "fighter_interceptor_destroyed@2x.png"
+      "sheet": "fighter_fighter_destroyed.png",
+      "sheet_2x": "fighter_fighter_destroyed@2x.png"
     }
   ],
-  "role": "fighter-killer"
+  "role": "generalist"
 }

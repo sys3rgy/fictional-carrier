@@ -24,6 +24,8 @@ SPRITES = os.path.join(ROOT, "sprites")
 MAPS = os.path.join(ROOT, "maps")
 OUT = os.path.join(ROOT, "dist", "carrier-sprites.html")
 MAP_OUT = os.path.join(ROOT, "dist", "battle-map.html")
+GAME_SRC = os.path.join(ROOT, "game", "index.html")
+GAME_OUT = os.path.join(ROOT, "dist", "last-carrier-flying.html")
 
 
 def data_uri(path):
@@ -63,6 +65,42 @@ def build_map():
           f"{len(data['props'])} props embedded)")
 
 
+def build_game():
+    """
+    The campaign shell only needs the idle layers (for the ship view) and one cruise
+    sheet per craft role (for the wing icons) — not the whole animation set.
+    """
+    layers_json = os.path.join(SPRITES, "layers_carrier.json")
+    if not os.path.exists(layers_json):
+        print("skipping the game — run generate_carrier.py --layers first")
+        return
+    with open(layers_json) as fh:
+        layers = json.load(fh)
+
+    layers = dict(layers)
+    layers["layers"] = [l for l in layers["layers"] if l["animation"] == "idle"]
+
+    art = {}
+    for rec in layers["layers"]:
+        art[rec["sheet"]] = data_uri(os.path.join(SPRITES, rec["sheet"]))
+    for role in ("fighter", "interceptor", "bomber"):
+        name = f"fighter_{role}_cruise.png"
+        path = os.path.join(SPRITES, name)
+        if os.path.exists(path):
+            art[name] = data_uri(path)
+
+    with open(GAME_SRC) as fh:
+        html = fh.read()
+    html = inline(html, "layers", "EMBEDDED_LAYERS", json.dumps(layers, separators=(",", ":")))
+    html = inline(html, "art", "EMBEDDED_ART", json.dumps(art, separators=(",", ":")))
+
+    os.makedirs(os.path.dirname(GAME_OUT), exist_ok=True)
+    with open(GAME_OUT, "w") as fh:
+        fh.write(html)
+    print(f"wrote {GAME_OUT} ({len(html.encode()) / 1e6:.2f} MB, "
+          f"{len(art)} sprites embedded)")
+
+
 def main():
     with open(os.path.join(SPRITES, "sprite_atlas.json")) as fh:
         atlas = json.load(fh)
@@ -98,6 +136,7 @@ def main():
     print(f"wrote {OUT} ({mb:.2f} MB, {len(assets)} sheets embedded)")
 
     build_map()
+    build_game()
 
 
 if __name__ == "__main__":

@@ -301,6 +301,57 @@ map.props.filter(p => distancePointToSegment(p, a, b) < p.radius)
 Open `preview/map.html` to pan and zoom it with the lane, cover, spawn, sun and arena
 overlays drawn from that JSON.
 
+## The game
+
+`game/index.html` is the campaign shell from GDD v4 — everything around the battle.
+Four subsectors, one Control bar live at a time, an anchor to strip and assault, the
+turn economy, the five-slot refit driven by the layered sprites, and pilots that
+persist for a run.
+
+```sh
+python3 -m http.server           # then open /game/
+python3 tools/build_artifact.py  # standalone -> dist/last-carrier-flying.html
+python3 tools/test_game.py       # plays ~84 complete runs in a browser
+```
+
+**The battle is not built here.** It is behind one function:
+
+```js
+resolveBattle(mission, approach) -> { win, log, killed, capDead, downed, rescued, salvage }
+```
+
+The stand-in is deliberately transparent — every line of its report is a thing that
+happened, in order — and it honours the counter-chain: matchups are assigned rather than
+random, an even duel costs ~90% of a magazine, the deck cycles one craft at a time, and
+only an unpinned bomber can touch a capital. Swapping the real engine in is replacing
+that function.
+
+### What the harness measures
+
+`tools/test_game.py` plays whole runs rather than checking a screen renders, because a
+campaign is a state machine whose interesting ends are the failures. It asserts:
+
+- every run terminates, from 24 random-ish policies
+- Control never rises without the clock moving, and never falls inside a subsector
+- pilots persist and their counters only accumulate
+- **law 11**: an all-interceptor wing cannot beat a mission with a capital
+- **the balance envelope**: 3–45% wins under a scripted mediocre player, and at least
+  40% of runs reaching the back half
+
+That envelope is a regression guard, not a target. Building the shell moved it a lot:
+
+| Change | Effect |
+|---|---|
+| First playable | 0/24 wins — every run died in subsector 1 |
+| Only relays raise the permanent rate | rate stopped running away |
+| Airframes purchasable | a bomber became reachable, so anchors could be stripped at all |
+| Assigned matchups | bringing the right tool started meeting the right target |
+| **Rearm cycle added** | the biggest one — without it a mission was a single exchange |
+| Per-subsector pressure curve | deaths moved from the first subsector to the last |
+
+Current: ~10–15% wins under scripted play, most runs ending in the fourth subsector.
+A human reading the board should do better than the script.
+
 ## Notes on the render
 
 - **Palette.** Every surface resolves to a step in one of the ramps of the active

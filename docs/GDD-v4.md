@@ -519,8 +519,28 @@ waves against a survival clock, auto-pause.
 loadouts, 8 facings, 6 animations each — and a procedural battle map with verified lanes,
 cover data and a sun that is a real light source.
 
-**Designed, not built:** the carrier upgrade layer, the subsector board, the approach layer,
-every mission type beyond the two that exist.
+**Built as a campaign shell:** the subsector board with its three card types, the Control
+bar and turn economy, the anchor strip-and-assault loop, the five-slot refit driven by the
+layered sprites, purchasable airframes, the approach choice, and pilots persisting for a
+run. The battle sits behind `resolveBattle()`, the seam the real engine plugs into.
+
+**Designed, not built:** every mission type beyond the shapes the shell generates, and the
+real-time battle's integration with the campaign layer.
+
+### 10.0 What building the shell taught
+
+Three things only showed up once it was playable, and all three are design findings
+rather than bugs:
+
+- **The logistics loop is not optional.** Without a rearm cycle, an even duel costing 90%
+  of a magazine means every craft gets exactly one engagement and a mission is a single
+  exchange. §3.5 reads like flavour; it is load-bearing.
+- **Matchups have to be assigned, not random.** With arbitrary pairing, bringing the right
+  tool did not guarantee it met the right target, which quietly nullified the counter-chain.
+  The player is a commander: assignment is the thing they are doing.
+- **Law 11 has an economic half.** Only bombers strip an anchor, so if airframes cannot be
+  bought, a wing can never make objective progress. "Balance comes from objectives" needs
+  the objective-capable craft to be purchasable, or the law just blocks the player.
 
 **Honest risk, restated:** there is one excellent battle and no game around it. This design
 has pivoted twice and each pivot was correct, but the thing that finishes games is
@@ -555,7 +575,10 @@ finishing, close the loop first.
   load-bearing number. v3 said 70–90 minutes. Into the Breach is ~30–45. A loss at the
   fourth subsector of a 90-minute run is a different emotion from a loss at the fourth
   island of a 40-minute one. Candidates: shorten subsectors, or reduce to three.
-- Turn budget per subsector and how it escalates across the four.
+- ~~Turn budget per subsector and how it escalates across the four.~~ *Answered in the
+  shell: escalation lives in a per-subsector `pressure` multiplier on what a completed
+  operation costs, not in bigger numbers on the cards. Deaths moved from the first
+  subsector to the fourth once it was in.*
 - How many strips an anchor needs before the assault unlocks, and whether that is visible.
 - Whether some operations are **forced** — an ambush that simply happens.
 - Whether the anchor actively hunts you as Control climbs.

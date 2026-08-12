@@ -348,12 +348,121 @@
       "loadouts": [
         {
           "craft": "fighter",
-          "loadout": "interceptor",
-          "display_name": "Kite-class interceptor",
+          "loadout": "fighter",
+          "display_name": "Kite-class fighter",
           "modules": [
             "airframe",
             "engine_std",
             "cannons_light"
+          ],
+          "palette": "crimson",
+          "frame_width": 48,
+          "frame_height": 48,
+          "projection": "orthographic dimetric, yaw 45 deg, pitch 30 deg (2:1)",
+          "origin": "cell centre; the hull is registered identically across every sheet",
+          "facings": [
+            {
+              "row": 0,
+              "name": "S",
+              "yaw_deg": 225
+            },
+            {
+              "row": 1,
+              "name": "SE",
+              "yaw_deg": 270
+            },
+            {
+              "row": 2,
+              "name": "E",
+              "yaw_deg": 315
+            },
+            {
+              "row": 3,
+              "name": "NE",
+              "yaw_deg": 0
+            },
+            {
+              "row": 4,
+              "name": "N",
+              "yaw_deg": 45
+            },
+            {
+              "row": 5,
+              "name": "NW",
+              "yaw_deg": 90
+            },
+            {
+              "row": 6,
+              "name": "W",
+              "yaw_deg": 135
+            },
+            {
+              "row": 7,
+              "name": "SW",
+              "yaw_deg": 180
+            }
+          ],
+          "animations": [
+            {
+              "name": "idle",
+              "frames": 8,
+              "fps": 10,
+              "loop": true,
+              "sheet": "fighter_fighter_idle.png",
+              "sheet_2x": "fighter_fighter_idle@2x.png"
+            },
+            {
+              "name": "cruise",
+              "frames": 8,
+              "fps": 12,
+              "loop": true,
+              "sheet": "fighter_fighter_cruise.png",
+              "sheet_2x": "fighter_fighter_cruise@2x.png"
+            },
+            {
+              "name": "boost",
+              "frames": 8,
+              "fps": 16,
+              "loop": true,
+              "sheet": "fighter_fighter_boost.png",
+              "sheet_2x": "fighter_fighter_boost@2x.png"
+            },
+            {
+              "name": "fire",
+              "frames": 6,
+              "fps": 16,
+              "loop": true,
+              "sheet": "fighter_fighter_fire.png",
+              "sheet_2x": "fighter_fighter_fire@2x.png"
+            },
+            {
+              "name": "damage",
+              "frames": 8,
+              "fps": 12,
+              "loop": true,
+              "sheet": "fighter_fighter_damage.png",
+              "sheet_2x": "fighter_fighter_damage@2x.png"
+            },
+            {
+              "name": "destroyed",
+              "frames": 10,
+              "fps": 14,
+              "loop": false,
+              "sheet": "fighter_fighter_destroyed.png",
+              "sheet_2x": "fighter_fighter_destroyed@2x.png"
+            }
+          ],
+          "role": "generalist"
+        },
+        {
+          "craft": "fighter",
+          "loadout": "interceptor",
+          "display_name": "Kite-class interceptor",
+          "modules": [
+            "airframe",
+            "engine_boosted",
+            "cannons_heavy",
+            "wingtip_missiles"
           ],
           "palette": "crimson",
           "frame_width": 48,
@@ -452,7 +561,7 @@
               "sheet_2x": "fighter_interceptor_destroyed@2x.png"
             }
           ],
-          "role": "escort"
+          "role": "fighter-killer"
         },
         {
           "craft": "fighter",
@@ -562,115 +671,6 @@
             }
           ],
           "role": "anti-capital"
-        },
-        {
-          "craft": "fighter",
-          "loadout": "elite",
-          "display_name": "Kite-class heavy interceptor",
-          "modules": [
-            "airframe",
-            "engine_boosted",
-            "cannons_heavy",
-            "wingtip_missiles"
-          ],
-          "palette": "crimson",
-          "frame_width": 48,
-          "frame_height": 48,
-          "projection": "orthographic dimetric, yaw 45 deg, pitch 30 deg (2:1)",
-          "origin": "cell centre; the hull is registered identically across every sheet",
-          "facings": [
-            {
-              "row": 0,
-              "name": "S",
-              "yaw_deg": 225
-            },
-            {
-              "row": 1,
-              "name": "SE",
-              "yaw_deg": 270
-            },
-            {
-              "row": 2,
-              "name": "E",
-              "yaw_deg": 315
-            },
-            {
-              "row": 3,
-              "name": "NE",
-              "yaw_deg": 0
-            },
-            {
-              "row": 4,
-              "name": "N",
-              "yaw_deg": 45
-            },
-            {
-              "row": 5,
-              "name": "NW",
-              "yaw_deg": 90
-            },
-            {
-              "row": 6,
-              "name": "W",
-              "yaw_deg": 135
-            },
-            {
-              "row": 7,
-              "name": "SW",
-              "yaw_deg": 180
-            }
-          ],
-          "animations": [
-            {
-              "name": "idle",
-              "frames": 8,
-              "fps": 10,
-              "loop": true,
-              "sheet": "fighter_elite_idle.png",
-              "sheet_2x": "fighter_elite_idle@2x.png"
-            },
-            {
-              "name": "cruise",
-              "frames": 8,
-              "fps": 12,
-              "loop": true,
-              "sheet": "fighter_elite_cruise.png",
-              "sheet_2x": "fighter_elite_cruise@2x.png"
-            },
-            {
-              "name": "boost",
-              "frames": 8,
-              "fps": 16,
-              "loop": true,
-              "sheet": "fighter_elite_boost.png",
-              "sheet_2x": "fighter_elite_boost@2x.png"
-            },
-            {
-              "name": "fire",
-              "frames": 6,
-              "fps": 16,
-              "loop": true,
-              "sheet": "fighter_elite_fire.png",
-              "sheet_2x": "fighter_elite_fire@2x.png"
-            },
-            {
-              "name": "damage",
-              "frames": 8,
-              "fps": 12,
-              "loop": true,
-              "sheet": "fighter_elite_damage.png",
-              "sheet_2x": "fighter_elite_damage@2x.png"
-            },
-            {
-              "name": "destroyed",
-              "frames": 10,
-              "fps": 14,
-              "loop": false,
-              "sheet": "fighter_elite_destroyed.png",
-              "sheet_2x": "fighter_elite_destroyed@2x.png"
-            }
-          ],
-          "role": "superiority"
         }
       ]
     }

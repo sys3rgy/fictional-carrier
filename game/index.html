@@ -1,0 +1,1151 @@
+<meta charset="utf-8">
+<title>Last Carrier Flying</title>
+<style>
+  /* Same token set as the sprite and map viewers: one system across the whole project. */
+  :root {
+    --void:#0d0b0a; --void-deep:#080706; --panel:#1a1613; --panel-hi:#241f1a;
+    --rule:#3a322a; --steel:#8b8172; --steel-hi:#b2a795; --ink:#e0d7c8; --ink-dim:#9d9384;
+    --paint:#d4991c; --paint-hi:#f0bb3c; --signal:#3fe07a; --signal-hi:#b8ffd2;
+    --crimson:#c62222; --crimson-hi:#de4038;
+    --mono: ui-monospace,"SF Mono","SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;
+    --sans: system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px;
+  }
+  * { box-sizing:border-box; }
+  body {
+    margin:0; background:var(--void); color:var(--ink); font-family:var(--sans);
+    font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased;
+  }
+  .wrap { max-width:1240px; margin:0 auto; padding:var(--s5) var(--s5) var(--s7); }
+
+  h1 {
+    font-family:var(--mono); font-size:clamp(24px,4vw,38px); font-weight:600;
+    letter-spacing:-0.01em; margin:0 0 var(--s2); color:#f2ece0;
+  }
+  h2 {
+    font-family:var(--mono); font-size:12px; font-weight:600; letter-spacing:0.16em;
+    text-transform:uppercase; color:var(--steel-hi); margin:0 0 var(--s3);
+    padding-bottom:var(--s2); border-bottom:1px solid var(--rule);
+  }
+  .eyebrow {
+    font-family:var(--mono); font-size:11px; letter-spacing:0.18em; text-transform:uppercase;
+    color:var(--steel); margin:0 0 var(--s2);
+  }
+  p.lede { color:var(--ink-dim); max-width:66ch; margin:0 0 var(--s4); }
+
+  button {
+    font-family:var(--mono); font-size:11px; letter-spacing:0.1em; text-transform:uppercase;
+    color:var(--ink-dim); background:var(--panel); border:1px solid var(--rule);
+    border-radius:2px; padding:8px 12px; cursor:pointer;
+    transition:color .12s,border-color .12s,background .12s;
+  }
+  button:hover:not(:disabled) { color:var(--ink); border-color:var(--steel); }
+  button:focus-visible { outline:2px solid var(--signal); outline-offset:2px; }
+  button:disabled { opacity:.38; cursor:not-allowed; }
+  button.primary { background:var(--paint); color:var(--void); border-color:var(--paint); font-weight:600; }
+  button.danger  { background:var(--crimson); color:#fff; border-color:var(--crimson); font-weight:600; }
+  .row { display:flex; flex-wrap:wrap; gap:var(--s2); align-items:center; }
+
+  /* ---- status bar ---- */
+  .status {
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(112px,1fr)); gap:var(--s3);
+    border:1px solid var(--rule); border-radius:3px; background:var(--panel);
+    padding:var(--s3) var(--s4); margin-bottom:var(--s4);
+  }
+  .stat b {
+    display:block; font-family:var(--mono); font-size:19px; font-weight:600;
+    color:var(--signal); font-variant-numeric:tabular-nums; line-height:1.2;
+  }
+  .stat span {
+    font-family:var(--mono); font-size:10px; letter-spacing:0.13em; text-transform:uppercase;
+    color:var(--steel);
+  }
+  .stat.warn b { color:var(--paint-hi); }
+  .stat.bad b  { color:var(--crimson-hi); }
+
+  .control-wrap { margin-bottom:var(--s4); }
+  .control-head {
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-family:var(--mono); font-size:11px; letter-spacing:0.12em; text-transform:uppercase;
+    color:var(--steel); margin-bottom:6px;
+  }
+  .control-head b { color:var(--crimson-hi); font-variant-numeric:tabular-nums; }
+  .bar { height:12px; background:var(--panel); border:1px solid var(--rule); border-radius:2px; overflow:hidden; }
+  .bar i { display:block; height:100%; background:var(--crimson); transition:width .4s; }
+  .bar.calm i { background:var(--paint); }
+
+  /* ---- layout ---- */
+  .cols { display:grid; grid-template-columns:minmax(0,1fr) 330px; gap:var(--s5); align-items:start; }
+  @media (max-width:920px){ .cols { grid-template-columns:minmax(0,1fr); } }
+
+  /* ---- cards ---- */
+  .board { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:var(--s3); }
+  .card {
+    background:var(--panel); border:1px solid var(--rule); border-left:3px solid var(--steel);
+    border-radius:3px; padding:var(--s3); text-align:left; width:100%;
+    font-family:var(--sans); font-size:14px; letter-spacing:0; text-transform:none;
+    color:var(--ink); line-height:1.45; display:flex; flex-direction:column; gap:6px;
+  }
+  .card:hover:not(:disabled) { background:var(--panel-hi); border-color:var(--steel); }
+  .card.threat { border-left-color:var(--crimson); }
+  .card.opportunity { border-left-color:var(--paint); }
+  .card.objective { border-left-color:var(--signal); }
+  .card.assault { border-left-color:var(--signal); background:#1d2418; }
+  .card .kind {
+    font-family:var(--mono); font-size:9.5px; letter-spacing:0.16em; text-transform:uppercase;
+    color:var(--steel);
+  }
+  .card.threat .kind { color:var(--crimson-hi); }
+  .card.opportunity .kind { color:var(--paint-hi); }
+  .card.objective .kind, .card.assault .kind { color:var(--signal); }
+  .card .name { font-weight:600; }
+  .card .desc { color:var(--ink-dim); font-size:13px; }
+  .card .meta {
+    display:flex; gap:var(--s3); margin-top:auto; padding-top:6px;
+    font-family:var(--mono); font-size:11px; color:var(--steel); font-variant-numeric:tabular-nums;
+  }
+  .card .meta .urgent { color:var(--crimson-hi); font-weight:600; }
+
+  /* ---- ship view ---- */
+  .shipview {
+    background:var(--void-deep); border:1px solid var(--rule); border-radius:3px;
+    display:grid; place-items:center; padding:var(--s3); min-height:150px;
+  }
+  #ship { image-rendering:pixelated; display:block; }
+
+  /* ---- slots ---- */
+  .slots { display:flex; flex-direction:column; gap:6px; }
+  .slot { border:1px solid var(--rule); border-radius:2px; background:var(--panel); padding:var(--s3); }
+  .slot .head {
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-family:var(--mono); font-size:10px; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--steel); margin-bottom:4px;
+  }
+  .slot .fitted { font-weight:600; color:var(--ink); font-size:14px; }
+  .slot .opts { display:flex; flex-wrap:wrap; gap:5px; margin-top:8px; }
+  .slot .opts button { font-size:10px; padding:5px 8px; }
+  .slot .opts button.on { background:var(--panel-hi); color:var(--paint-hi); border-color:var(--paint); }
+
+  /* ---- wing + roster ---- */
+  .wing { display:flex; flex-direction:column; gap:5px; }
+  .craft {
+    display:flex; align-items:center; gap:var(--s3); background:var(--panel);
+    border:1px solid var(--rule); border-radius:2px; padding:7px var(--s3);
+    font-family:var(--mono); font-size:12px;
+  }
+  .craft canvas { image-rendering:pixelated; flex:0 0 auto; }
+  .craft .who { flex:1; color:var(--ink); }
+  .craft .who small { display:block; color:var(--steel); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; }
+  .craft .role { color:var(--signal); font-size:10px; letter-spacing:0.12em; text-transform:uppercase; }
+  .craft.lost { opacity:.45; }
+  .craft.lost .role { color:var(--crimson-hi); }
+
+  /* ---- log ---- */
+  .log {
+    background:var(--void-deep); border:1px solid var(--rule); border-radius:3px;
+    padding:var(--s3); font-family:var(--mono); font-size:12px; line-height:1.7;
+    max-height:340px; overflow-y:auto;
+  }
+  .log div { color:var(--ink-dim); }
+  .log div.good { color:var(--signal); }
+  .log div.bad { color:var(--crimson-hi); }
+  .log div.warn { color:var(--paint-hi); }
+  .log div.head { color:var(--steel-hi); margin-top:8px; letter-spacing:0.1em; text-transform:uppercase; font-size:10.5px; }
+  .log div.head:first-child { margin-top:0; }
+
+  .screen { display:none; }
+  .screen.on { display:block; }
+
+  .choices { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:var(--s3); }
+  .choice {
+    background:var(--panel); border:1px solid var(--rule); border-radius:3px; padding:var(--s4);
+    text-align:left; font-family:var(--sans); font-size:14px; letter-spacing:0; text-transform:none;
+    color:var(--ink); line-height:1.5;
+  }
+  .choice:hover:not(:disabled) { border-color:var(--paint); background:var(--panel-hi); }
+  .choice .t { font-weight:600; display:block; margin-bottom:4px; }
+  .choice .but { color:var(--ink-dim); font-size:13px; }
+  .choice .but b { color:var(--crimson-hi); font-weight:600; }
+  .choice .gate {
+    display:block; margin-top:8px; font-family:var(--mono); font-size:10px;
+    letter-spacing:0.12em; text-transform:uppercase; color:var(--steel);
+  }
+
+  footer {
+    margin-top:var(--s6); padding-top:var(--s3); border-top:1px solid var(--rule);
+    font-family:var(--mono); font-size:11px; color:var(--steel);
+  }
+  code { font-family:var(--mono); background:var(--panel-hi); color:var(--paint-hi); padding:1px 5px; border-radius:2px; }
+  @media (prefers-reduced-motion: reduce){ *{transition:none!important;} }
+</style>
+
+<div class="wrap">
+
+<!-- ============================ START ============================ -->
+<section class="screen on" id="s-start">
+  <p class="eyebrow">Roguelite &middot; four subsectors &middot; you will not survive most of them</p>
+  <h1>Last Carrier Flying</h1>
+  <p class="lede">
+    Your fleet is gone. The enemy holds the sector. You cannot win the war &mdash; you can
+    only make the conquest cost more than it should. Pick a hull. Everything bolted on
+    afterwards is scavenged.
+  </p>
+  <div class="choices" id="start-choices"></div>
+</section>
+
+<!-- ============================ BOARD ============================ -->
+<section class="screen" id="s-board">
+  <p class="eyebrow" id="sub-label">Subsector</p>
+  <h1 id="sub-name">&mdash;</h1>
+
+  <div class="control-wrap">
+    <div class="control-head">
+      <span>Enemy control &middot; <span id="drift-note">no standing operations</span></span>
+      <b id="control-pct">0%</b>
+    </div>
+    <div class="bar" id="control-bar"><i style="width:0"></i></div>
+  </div>
+
+  <div class="status" id="status"></div>
+
+  <div class="cols">
+    <div>
+      <h2>The board &mdash; their schedule</h2>
+      <p class="lede" style="font-size:13.5px;margin-bottom:var(--s3)">
+        Every card is an operation already in progress. The number is not how long you have
+        to accept an offer &mdash; it is how long until it <em>completes and pays them</em>.
+      </p>
+      <div class="board" id="board"></div>
+      <div class="row" style="margin-top:var(--s4)">
+        <button id="btn-skip">Hold position (burn 1 turn)</button>
+        <button id="btn-refit">Refit</button>
+      </div>
+    </div>
+
+    <aside>
+      <h2>Your carrier</h2>
+      <div class="shipview"><canvas id="ship" width="96" height="96"></canvas></div>
+      <div style="margin-top:var(--s3)"></div>
+      <h2>Wing</h2>
+      <div class="wing" id="wing"></div>
+      <div style="margin-top:var(--s5)"></div>
+      <h2>Dispatches</h2>
+      <div class="log" id="board-log"></div>
+    </aside>
+  </div>
+</section>
+
+<!-- ============================ APPROACH ============================ -->
+<section class="screen" id="s-approach">
+  <p class="eyebrow">Approach</p>
+  <h1 id="app-mission">&mdash;</h1>
+  <p class="lede" id="app-brief">&mdash;</p>
+  <div class="choices" id="approach-choices"></div>
+</section>
+
+<!-- ============================ BATTLE ============================ -->
+<section class="screen" id="s-battle">
+  <p class="eyebrow">Action report</p>
+  <h1 id="bat-title">&mdash;</h1>
+  <div class="cols">
+    <div>
+      <div class="log" id="battle-log" style="max-height:480px"></div>
+      <div class="row" style="margin-top:var(--s4)">
+        <button class="primary" id="btn-continue">Return to the board</button>
+      </div>
+    </div>
+    <aside>
+      <h2>Outcome</h2>
+      <div class="status" id="bat-stats" style="grid-template-columns:repeat(2,1fr)"></div>
+      <div style="margin-top:var(--s4)"></div>
+      <h2>Wing</h2>
+      <div class="wing" id="bat-wing"></div>
+    </aside>
+  </div>
+</section>
+
+<!-- ============================ REFIT ============================ -->
+<section class="screen" id="s-refit">
+  <p class="eyebrow">Refit &middot; you never add, you always replace</p>
+  <h1>Five slots</h1>
+  <div class="cols">
+    <div>
+      <div class="shipview" style="min-height:240px"><canvas id="ship-refit" width="96" height="96"></canvas></div>
+      <div class="row" style="margin-top:var(--s3);justify-content:space-between">
+        <span style="font-family:var(--mono);font-size:12px;color:var(--steel)" id="refit-desc">&mdash;</span>
+        <button class="primary" id="btn-refit-done">Done</button>
+      </div>
+      <div style="margin-top:var(--s5)"></div>
+      <h2>Pilot roster</h2>
+      <div class="wing" id="roster"></div>
+    </div>
+    <aside>
+      <h2>Salvage &middot; <span id="refit-salvage" style="color:var(--signal)">0</span></h2>
+      <div class="slots" id="slots"></div>
+    </aside>
+  </div>
+</section>
+
+<!-- ============================ END ============================ -->
+<section class="screen" id="s-end">
+  <p class="eyebrow" id="end-eyebrow">Run over</p>
+  <h1 id="end-title">&mdash;</h1>
+  <p class="lede" id="end-body">&mdash;</p>
+  <div class="status" id="end-stats"></div>
+  <div class="log" id="end-log" style="margin-top:var(--s4)"></div>
+  <div class="row" style="margin-top:var(--s4)">
+    <button class="primary" id="btn-again">New run</button>
+  </div>
+</section>
+
+<footer id="foot">
+  Campaign shell built on GDD v4 &middot; the battle is resolved through
+  <code>resolveBattle()</code>, the seam where the real engine plugs in.
+</footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // Replaced by tools/build_artifact.py with inline data for the standalone build.
+  const EMBEDDED_LAYERS = null;  /* build:layers */
+  const EMBEDDED_ART = null;     /* build:art */
+
+  const SPRITES = "../sprites/";
+  const $ = (id) => document.getElementById(id);
+  const artUrl = (n) => (EMBEDDED_ART ? EMBEDDED_ART[n] : SPRITES + n);
+
+  // ---------------------------------------------------------------- rng
+  // Seeded so a run is reproducible and a battle report reads as a readout of
+  // something that happened, not a slot machine.
+  let seed = 1;
+  const srand = (s) => { seed = s >>> 0 || 1; };
+  const rnd = () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296;
+  const ri = (a, b) => a + Math.floor(rnd() * (b - a + 1));
+  const pick = (a) => a[Math.floor(rnd() * a.length)];
+
+  // ---------------------------------------------------------------- content
+  const HULLS = [
+    { key:"patched", name:"Patched hull",
+      blurb:"A civilian bridge, a small bay and engines that were old before the war. Two fighters.",
+      chassis:"chassis", slots:{bridge:"bridge_civilian",hangar:"hangar_small",
+        engines:"engines_basic",turret_a:"turret_a_laser",turret_b:"turret_b_laser"},
+      wing:["fighter","fighter"], salvage:58 },
+    { key:"gunboat", name:"Requisitioned gunboat",
+      blurb:"Someone bolted flak to a freighter. Hits harder, launches less. One fighter, one interceptor.",
+      chassis:"chassis_armoured", slots:{bridge:"bridge_civilian",hangar:"hangar_small",
+        engines:"engines_basic",turret_a:"turret_a_flak",turret_b:"turret_b_flak"},
+      wing:["fighter","interceptor"], salvage:46 },
+    { key:"survey", name:"Survey tender",
+      blurb:"A fleet bridge on a hull with nothing else going for it. Sees everything, kills nothing.",
+      chassis:"chassis", slots:{bridge:"bridge_military",hangar:"hangar_small",
+        engines:"engines_uprated",turret_a:"turret_a_laser",turret_b:"turret_b_missile"},
+      wing:["fighter","bomber"], salvage:52 },
+  ];
+
+  const PART_NAMES = {
+    chassis:"Standard keel", chassis_armoured:"Ablative belt",
+    bridge_civilian:"Civilian bridge", bridge_military:"Fleet bridge",
+    hangar_small:"Small hangar", hangar_large:"Expanded hangar",
+    engines_basic:"Grade 3 engines", engines_uprated:"Uprated engines",
+    turret_a_laser:"Laser turret", turret_a_flak:"Flak battery", turret_a_missile:"Missile cells",
+    turret_b_laser:"Laser turret", turret_b_flak:"Flak battery", turret_b_missile:"Missile cells",
+  };
+  const PART_COST = {
+    chassis:0, chassis_armoured:70,
+    bridge_civilian:0, bridge_military:60,
+    hangar_small:0, hangar_large:80,
+    engines_basic:0, engines_uprated:55,
+    turret_a_laser:0, turret_a_flak:45, turret_a_missile:45,
+    turret_b_laser:0, turret_b_flak:45, turret_b_missile:45,
+  };
+  const PART_EFFECT = {
+    bridge_civilian:"Short detection range. No dark approach.",
+    bridge_military:"Long detection. Unlocks the dark approach.",
+    hangar_small:"3 airframes. Slow deck cycle between sorties.",
+    hangar_large:"5 airframes. Faster deck cycle, more spares.",
+    engines_basic:"Slow. The carrier is where you left it.",
+    engines_uprated:"Reposition freely. Unlocks the dark approach.",
+    turret_a_laser:"Weak at everything.", turret_b_laser:"Weak at everything.",
+    turret_a_flak:"Kills craft inside the umbrella.",
+    turret_b_flak:"Kills craft inside the umbrella.",
+    turret_a_missile:"Stops bomber salvos hitting the hull.",
+    turret_b_missile:"Stops bomber salvos hitting the hull.",
+  };
+
+  const SUBSECTORS = [
+    // `pressure` scales what a completed operation costs you, so the escalation across
+    // the four subsectors lives here rather than in bigger numbers on the cards.
+    { name:"Kestrel Reach", anchor:"Vantage Station",  strips:2, pressure:0.70 },
+    { name:"The Tilt",      anchor:"Flagship Adamant", strips:3, pressure:0.90 },
+    { name:"Gallows Drift", anchor:"Yard Nine",        strips:3, pressure:1.05 },
+    { name:"Harrow",        anchor:"Flagship Redoubt", strips:4, pressure:1.20 },
+  ];
+
+  // Threat templates. `drift` operations permanently raise the rate; `hit` ones are a
+  // one-time jump. That is the whole threat hierarchy — a relay going live is worse than
+  // a convoy arriving even though the convoy is the bigger number.
+  const THREATS = [
+    // Only a minority raise the rate. When most of them did, the rate ran away and the
+    // threat hierarchy had nothing to teach — a relay has to be legibly worse than a
+    // convoy, which needs convoys to be one-time hits.
+    { name:"Supply convoy", desc:"Three freighters running for the anchor.", hit:13, drift:0, cost:1, salvage:26, enemy:{fighter:2,bomber:0,interceptor:0,capital:1} },
+    { name:"Sensor relay",  desc:"Goes live and their whole schedule tightens.", hit:4, drift:1.1, cost:2, salvage:20, enemy:{fighter:2,interceptor:1,bomber:0,capital:1} },
+    { name:"Troop lander",  desc:"Boots on a moon that was neutral this morning.", hit:15, drift:0, cost:2, salvage:30, enemy:{fighter:3,interceptor:0,bomber:0,capital:1} },
+    { name:"Repair tender", desc:"Patching the escorts you already shot.", hit:9, drift:0, cost:1, salvage:22, enemy:{fighter:1,interceptor:1,bomber:0,capital:1} },
+    { name:"Picket line",   desc:"Closing the gap you have been slipping through.", hit:8, drift:0, cost:2, salvage:24, enemy:{fighter:2,interceptor:2,bomber:0,capital:0} },
+    { name:"Forward yard",  desc:"Once it is turning out hulls, everything gets harder.", hit:5, drift:1.3, cost:3, salvage:34, enemy:{fighter:2,interceptor:1,bomber:0,capital:1} },
+  ];
+  const OPPS = [
+    { name:"Drifting hulk",   desc:"A capital that died here. Still has parts.", cost:1, salvage:44, enemy:{fighter:1,interceptor:0,bomber:0,capital:0} },
+    { name:"Stranded pilot",  desc:"A pod on a decaying orbit. Yours if you reach it.", cost:1, salvage:8, pilot:true, enemy:{fighter:2,interceptor:0,bomber:0,capital:0} },
+    { name:"Black market run",desc:"A contact who will not wait, and does not ask.", cost:2, salvage:62, enemy:{fighter:1,interceptor:1,bomber:0,capital:0} },
+    { name:"Abandoned depot", desc:"Ordnance nobody logged. Lightly watched.", cost:1, salvage:38, enemy:{fighter:2,interceptor:0,bomber:0,capital:0} },
+  ];
+  const STRIPS = [
+    { name:"Kill the escort wing", desc:"Every fighter you break here is one that is not over the anchor.", cost:2, salvage:26, enemy:{fighter:2,interceptor:1,bomber:0,capital:0} },
+    { name:"Cut the supply line",  desc:"The anchor eats. Stop feeding it.", cost:2, salvage:32, enemy:{fighter:1,interceptor:0,bomber:0,capital:1} },
+    { name:"Blind the sensors",    desc:"It cannot vector what it cannot see.", cost:2, salvage:28, enemy:{fighter:1,interceptor:1,bomber:0,capital:1} },
+    { name:"Break the yard",       desc:"Where its replacements come from.", cost:3, salvage:38, enemy:{fighter:2,interceptor:0,bomber:0,capital:1} },
+  ];
+
+  // Difficulty comes from the subsector, not from bigger numbers in the card tables.
+  function scaleEnemy(e) {
+    const d = G.subsector;
+    const out = Object.assign({}, e);
+    if (d >= 1) out.fighter = (out.fighter || 0) + 1;
+    if (d >= 2) out.interceptor = (out.interceptor || 0) + 1;
+    if (d >= 3) out.fighter = (out.fighter || 0) + 1;
+    return out;
+  }
+
+  const NAMES = ["Vasquez","Okonjo","Halloran","Reyes","Sato","Brандt","Petrov","Lind",
+                 "Mbeki","Cassar","Novak","Ferreira","Adeyemi","Kowal","Rhodes","Tan"]
+                 .map(n => n.replace(/[^\x00-\x7F]/g, "r"));
+
+  const AIRFRAME_COST = 38;
+  function wingCap() { return G.slots.hangar === "hangar_large" ? 5 : 3; }
+
+  const CRAFT = {
+    fighter:     { label:"Fighter",     sheet:"fighter_fighter_cruise.png",     beats:"bomber",  ord:100 },
+    interceptor: { label:"Interceptor", sheet:"fighter_interceptor_cruise.png", beats:"fighter", ord:100 },
+    bomber:      { label:"Bomber",      sheet:"fighter_bomber_cruise.png",      beats:"capital", ord:100 },
+  };
+
+  // ---------------------------------------------------------------- state
+  let G = null;
+  let layers = null;
+  const imgCache = new Map();
+
+  function img(name) {
+    if (!imgCache.has(name)) {
+      const i = new Image();
+      i.src = artUrl(name);
+      imgCache.set(name, i);
+    }
+    return imgCache.get(name);
+  }
+
+  function newRun(hull) {
+    srand(Date.now() & 0xffff);
+    G = {
+      hull: hull.key,
+      chassis: hull.chassis,
+      slots: Object.assign({}, hull.slots),
+      salvage: hull.salvage,
+      subsector: 0,
+      turn: 0,
+      control: 0,
+      drift: 0,
+      hullDamage: 0,
+      pilots: [],
+      wing: [],
+      spares: 1,
+      board: [],
+      anchor: null,
+      strips: 0,
+      log: [],
+      history: [],
+      missions: 0,
+      over: false,
+    };
+    hull.wing.forEach((t) => addCraft(t));
+    enterSubsector(0);
+  }
+
+  function addCraft(type) {
+    const p = { id: G.pilots.length + 1, name: pick(NAMES.filter(n =>
+      !G.pilots.some(q => q.name === n))) || "Reserve", missions: 0, ejections: 0, alive: true };
+    G.pilots.push(p);
+    G.wing.push({ type, pilot: p.id, alive: true });
+    return p;
+  }
+
+  function sub() { return SUBSECTORS[G.subsector]; }
+  function livingWing() { return G.wing.filter(c => c.alive); }
+  function pilotOf(c) { return G.pilots.find(p => p.id === c.pilot); }
+
+  function note(text, cls) { G.log.unshift({ text, cls: cls || "" }); G.log = G.log.slice(0, 40); }
+
+  // ---------------------------------------------------------------- board
+  function enterSubsector(i) {
+    G.subsector = i;
+    const s = SUBSECTORS[i];
+    G.control = 0;
+    G.drift = 0;
+    G.strips = 0;
+    G.turn = 0;
+    G.anchor = { name: s.anchor, needed: s.strips };
+    G.board = [];
+    for (let k = 0; k < 3; k++) G.board.push(makeThreat());
+    G.board.push(makeOpp());
+    G.board.push(makeStrip());
+    G.board.push(makeStrip());
+    note(`Entered ${s.name}. ${s.anchor} holds the region.`, "head");
+  }
+
+  let cardId = 0;
+  function makeThreat() {
+    const t = pick(THREATS);
+    return { id: ++cardId, kind:"threat", ...t, timer: ri(3, 6) };
+  }
+  function makeOpp() {
+    const o = pick(OPPS);
+    return { id: ++cardId, kind:"opportunity", ...o, timer: ri(2, 5) };
+  }
+  function makeStrip() {
+    const used = G.board.filter(c => c.kind === "objective").map(c => c.name);
+    const avail = STRIPS.filter(s => !used.includes(s.name));
+    const s = avail.length ? pick(avail) : pick(STRIPS);
+    return { id: ++cardId, kind:"objective", ...s, timer: null };
+  }
+  function makeAssault() {
+    const s = sub();
+    return { id: ++cardId, kind:"assault", name:`Assault ${s.anchor}`,
+      desc:"Stripped far enough to be worth killing. This ends the subsector.",
+      cost:3, salvage:70, timer:null,
+      enemy:{ fighter:2, interceptor:1, bomber:0, capital:1, station:true } };
+  }
+
+  function assaultReady() { return G.strips >= G.anchor.needed; }
+
+  // Advance the enemy's schedule. This is the only thing that raises Control.
+  function advance(turns) {
+    for (let t = 0; t < turns; t++) {
+      G.turn++;
+      if (G.drift > 0) {
+        G.control += G.drift;
+        }
+      const done = [];
+      G.board.forEach((c) => {
+        if (c.timer === null) return;
+        c.timer--;
+        if (c.timer <= 0) done.push(c);
+      });
+      done.forEach((c) => {
+        const i = G.board.indexOf(c);
+        if (c.kind === "threat") {
+          const press = sub().pressure;
+          G.control += c.hit * press;
+          if (c.drift) {
+            G.drift += c.drift * press;
+            note(`${c.name} completed. Their tempo is permanently faster now.`, "bad");
+          } else {
+            note(`${c.name} completed. Control +${Math.round(c.hit * press)}.`, "bad");
+          }
+          G.board[i] = makeThreat();
+        } else {
+          note(`${c.name} moved on without you.`, "warn");
+          G.board[i] = rnd() < 0.55 ? makeOpp() : makeThreat();
+        }
+      });
+      if (G.control >= 100) { G.control = 100; return true; }
+    }
+    return false;
+  }
+
+  // ---------------------------------------------------------------- battle
+  //
+  // THE SEAM. The real game resolves this in real time with pause; this stands in for
+  // it and is deliberately transparent — every line of the report is a thing that
+  // happened, in order, so the outcome reads as a readout rather than a dice roll.
+  //
+  // It honours the counter-chain (GDD v4 §3.3): interceptor beats fighter beats bomber,
+  // only bombers threaten a capital, and flak punishes bombers. Which means a wing of
+  // pure interceptors wins every duel and still fails any mission with a hard target —
+  // law 11, balance from objectives rather than from a cycle.
+  function resolveBattle(mission, approach) {
+    const log = [];
+    const say = (t, c) => log.push({ text: t, cls: c || "" });
+
+    const wing = livingWing().map(c => ({
+      ref: c, type: c.type, ord: CRAFT[c.type].ord * (approach.ordnance || 1),
+      alive: true, pilot: pilotOf(c),
+    }));
+    const force = scaleEnemy(mission.enemy);
+    const enemy = [];
+    ["fighter", "interceptor", "bomber"].forEach((t) => {
+      for (let i = 0; i < (force[t] || 0); i++) enemy.push({ type: t, alive: true, ord: 100 });
+    });
+    let capital = force.capital ? { hp: force.station ? 128 : 88 } : null;
+    const needCapital = !!capital;
+
+    const flak = ["turret_a", "turret_b"].map(s => G.slots[s]);
+    const flakGuns = flak.filter(t => t.includes("flak")).length;
+    const missileGuns = flak.filter(t => t.includes("missile")).length;
+    const umbrella = approach.umbrella;
+
+    say(`${mission.name} — ${wing.length} craft against ${enemy.length}` +
+        (capital ? " and a capital" : ""), "head");
+    if (approach.surprise) say("Arrived unseen. One free pass before they react.", "good");
+    if (umbrella) say(`Umbrella over the battle: ${flakGuns} flak, ${missileGuns} missile cells.`, "good");
+    if (!umbrella) say("Carrier held back. No flak cover, long rearm runs.", "warn");
+
+    const beats = (a, b) => CRAFT[a] && CRAFT[a].beats === b;
+
+    // The second loop (GDD v4 §3.5). Without it every craft got exactly one engagement
+    // and a mission was a single exchange — an even duel costs 90% of a magazine, so
+    // combat pulls the wing forward and only the deck can send it back out.
+    const bigDeck = G.slots.hangar === "hangar_large";
+    const rearmTime = (approach.umbrella ? 1 : 2) + (bigDeck ? 0 : 1);
+    let deck = null;
+
+    for (let round = 1; round <= 10; round++) {
+      // the deck cycles one craft at a time: sending one home means another waits
+      if (deck) {
+        if (--deck.rearmLeft <= 0) {
+          deck.ord = CRAFT[deck.type].ord;
+          deck.noted = false;
+          say(`${deck.pilot.name} is back on station, rearmed.`, "good");
+          deck = null;
+        }
+      }
+      if (!deck) {
+        const dry = wing.find(c => c.alive && c.ord <= 0);
+        if (dry) {
+          deck = dry;
+          dry.rearmLeft = rearmTime;
+          say(`${dry.pilot.name} is dry, running for the deck.`, "warn");
+        }
+      }
+
+      const w = wing.filter(c => c.alive && c.ord > 0 && c !== deck);
+      const e = enemy.filter(c => c.alive);
+      if (!w.length && !deck) break;
+      if (!e.length && (!capital || capital.hp <= 0)) break;
+      if (!w.length) { say(`Pass ${round} — nothing on station.`, "head"); continue; }
+
+      say(`Pass ${round}`, "head");
+
+      // You are a commander: matchups are assigned, not random. Each craft takes the
+      // best target left — one it beats, never one that beats it if there is a choice.
+      const free = e.slice();
+      const duels = [];
+      w.forEach((a) => {
+        if (!free.length) return;
+        let j = free.findIndex(b => beats(a.type, b.type));
+        if (j < 0) j = free.findIndex(b => !beats(b.type, a.type));
+        if (j < 0) j = 0;
+        duels.push([a, free.splice(j, 1)[0]]);
+      });
+      // a bomber left unpaired has the clear run its escorts bought it
+      const engaged = new Set(duels.map(d => d[0]));
+
+      for (const [a, b] of duels) {
+        if (!a.alive || !b.alive) continue;
+        const adv = beats(a.type, b.type), dis = beats(b.type, a.type);
+        if (adv) {
+          a.ord -= 25; b.alive = false;
+          say(`${a.pilot.name} (${CRAFT[a.type].label}) executes a ${CRAFT[b.type].label}.`, "good");
+        } else if (dis) {
+          a.ord -= 90;
+          if (rnd() < 0.55 || (approach.surprise && round === 1)) {
+            say(`${a.pilot.name} is pinned by a ${CRAFT[b.type].label} and breaks off dry.`, "warn");
+          } else {
+            a.alive = false; a.ref.alive = false;
+            say(`${a.pilot.name} is shot down by a ${CRAFT[b.type].label}.`, "bad");
+            a.ejected = true;
+          }
+        } else {
+          a.ord -= 90;
+          if (rnd() < 0.5) { b.alive = false; say(`${a.pilot.name} wins a long one. Magazine gone.`, ""); }
+          else say(`${a.pilot.name} and a ${CRAFT[b.type].label} grind to a standstill.`, "");
+        }
+      }
+
+      // bombers work the capital — the only thing that can, and only if not pinned
+      if (capital && capital.hp > 0) {
+        const bombers = w.filter(c => c.alive && c.type === "bomber" && c.ord > 20
+                                      && !engaged.has(c));
+        if (bombers.length) {
+          bombers.forEach((b) => {
+            b.ord -= 35;
+            const dmg = 42;
+            capital.hp -= dmg;
+            say(`${b.pilot.name} puts a salvo into the capital (${Math.max(0, capital.hp)} left).`, "good");
+          });
+        } else if (w.some(c => c.alive && c.type === "bomber")) {
+          say("The bombers are pinned. Nothing is getting through to the capital.", "warn");
+        } else {
+          say("No bomber in the wing. The capital is untouchable.", "bad");
+        }
+      }
+
+      // the carrier's own guns, if she came in close
+      if (umbrella && flakGuns) {
+        const target = enemy.find(c => c.alive);
+        if (target && rnd() < 0.35 * flakGuns + 0.2) {
+          target.alive = false;
+          say(`Flak takes a ${CRAFT[target.type].label} out of the sky.`, "good");
+        }
+      }
+      // enemy bombers going for the hull, and the cells that stop them
+      if (umbrella && force.bomber) {
+        if (missileGuns && rnd() < 0.5 * missileGuns) say("Missile cells swat a salvo off the hull.", "good");
+        else { G.hullDamage += 8; say("A salvo gets through. Hull damage.", "bad"); }
+      }
+
+    }
+
+    const capDead = !capital || capital.hp <= 0;
+    const killed = enemy.filter(c => !c.alive).length;
+    const win = needCapital ? capDead : (killed >= Math.ceil(enemy.length * 0.5));
+
+    say(win ? "Objective met." : "Objective not met.", win ? "good" : "bad");
+    if (needCapital && !capDead) say("The capital survived. Only bombers could have changed that.", "bad");
+
+    // pods: recovery is worse on the long approach, exactly as advertised
+    const downed = wing.filter(c => c.ejected);
+    const rescued = [];
+    downed.forEach((c) => {
+      const chance = approach.recovery * (win ? 1 : 0.6);
+      if (rnd() < chance) {
+        rescued.push(c);
+        say(`${c.pilot.name} recovered from her pod.`, "good");
+      } else {
+        c.pilot.alive = false;
+        say(`${c.pilot.name} was not recovered.`, "bad");
+      }
+    });
+
+    return { win, log, killed, capDead, downed, rescued,
+             salvage: Math.round(mission.salvage * (win ? 1 : 0.35) + killed * 5) };
+  }
+
+  // ---------------------------------------------------------------- sprites
+  function drawShip(canvas, scale) {
+    // Layer sheets load asynchronously, so the first paint has nothing to composite.
+    // Re-run once whatever is still in flight arrives.
+    const ctx = canvas.getContext("2d");
+    const S = layers ? layers.frame_width : 96;
+    canvas.width = S * scale; canvas.height = S * scale;
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (!layers) return;
+    const fitted = [G.chassis].concat(Object.values(G.slots));
+    const facing = 2, frame = 0;
+    let waiting = false;
+    (layers.draw_order[facing] || []).forEach((mod) => {
+      if (!fitted.includes(mod)) return;
+      const rec = layers.layers.find(l => l.module === mod && l.animation === "idle");
+      if (!rec) return;
+      const im = img(rec.sheet);
+      if (!im.complete || !im.naturalWidth) {
+        if (!waiting) {
+          waiting = true;
+          im.addEventListener("load", () => drawShip(canvas, scale), { once: true });
+        }
+        return;
+      }
+      ctx.drawImage(im, frame * S, facing * S, S, S, 0, 0, S * scale, S * scale);
+    });
+  }
+
+  function craftIcon(type) {
+    const c = document.createElement("canvas");
+    c.width = 48; c.height = 24;
+    const ctx = c.getContext("2d");
+    ctx.imageSmoothingEnabled = false;
+    const im = img(CRAFT[type].sheet);
+    const draw = () => ctx.drawImage(im, 0, 2 * 48, 48, 48, 0, -12, 48, 48);
+    if (im.complete && im.naturalWidth) draw(); else im.addEventListener("load", draw);
+    return c;
+  }
+
+  // ---------------------------------------------------------------- render
+  function show(id) {
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("on"));
+    $(id).classList.add("on");
+    window.scrollTo(0, 0);
+  }
+
+  function renderStart() {
+    const el = $("start-choices");
+    el.innerHTML = "";
+    HULLS.forEach((h) => {
+      const b = document.createElement("button");
+      b.className = "choice";
+      b.innerHTML = `<span class="t">${h.name}</span><span class="but">${h.blurb}</span>` +
+        `<span class="gate">${h.wing.map(w => CRAFT[w].label).join(" · ")} · ${h.salvage} salvage</span>`;
+      b.addEventListener("click", () => { newRun(h); renderBoard(); show("s-board"); });
+      el.append(b);
+    });
+  }
+
+  function renderStatus(target) {
+    const s = sub();
+    const dmg = G.hullDamage;
+    const stats = [
+      ["Subsector", `${G.subsector + 1}/4`, ""],
+      ["Turn", G.turn, ""],
+      ["Salvage", G.salvage, ""],
+      ["Strips", `${G.strips}/${G.anchor.needed}`, G.strips >= G.anchor.needed ? "" : "warn"],
+      ["Wing", livingWing().length, livingWing().length <= 1 ? "bad" : ""],
+      ["Hull", `${Math.max(0, 100 - dmg)}%`, dmg > 50 ? "bad" : dmg > 20 ? "warn" : ""],
+    ];
+    target.innerHTML = stats.map(([k, v, c]) =>
+      `<div class="stat ${c}"><b>${v}</b><span>${k}</span></div>`).join("");
+  }
+
+  function renderBoard() {
+    const s = sub();
+    $("sub-label").textContent = `Subsector ${G.subsector + 1} of 4`;
+    $("sub-name").textContent = s.name;
+    $("control-pct").textContent = Math.round(G.control) + "%";
+    const bar = $("control-bar");
+    bar.querySelector("i").style.width = Math.min(100, G.control) + "%";
+    bar.classList.toggle("calm", G.control < 55);
+    $("drift-note").textContent = G.drift > 0
+      ? `standing operations adding ${G.drift.toFixed(1)}% a turn`
+      : "no standing operations";
+    renderStatus($("status"));
+
+    if (assaultReady() && !G.board.some(c => c.kind === "assault")) {
+      const idx = G.board.findIndex(c => c.kind === "objective");
+      if (idx >= 0) G.board[idx] = makeAssault();
+      else G.board.push(makeAssault());
+      note(`${G.anchor.name} is stripped far enough to assault.`, "good");
+    }
+
+    const el = $("board");
+    el.innerHTML = "";
+    G.board.forEach((c) => {
+      const b = document.createElement("button");
+      b.className = "card " + c.kind;
+      const timer = c.timer === null ? "no timer"
+        : `<span class="${c.timer <= 2 ? "urgent" : ""}">completes in ${c.timer}</span>`;
+      const kind = c.kind === "assault" ? "Assault" :
+                   c.kind === "objective" ? "Anchor strip" :
+                   c.kind === "threat" ? "Enemy operation" : "Opportunity";
+      b.innerHTML = `<span class="kind">${kind}</span><span class="name">${c.name}</span>` +
+        `<span class="desc">${c.desc}</span>` +
+        `<span class="meta"><span>${c.cost} turn${c.cost > 1 ? "s" : ""}</span>${timer}` +
+        `<span>+${c.salvage} salv</span></span>`;
+      b.addEventListener("click", () => startMission(c));
+      el.append(b);
+    });
+
+    const wingEl = $("wing");
+    wingEl.innerHTML = "";
+    G.wing.forEach((c) => {
+      const p = pilotOf(c);
+      const d = document.createElement("div");
+      d.className = "craft" + (c.alive ? "" : " lost");
+      d.append(craftIcon(c.type));
+      const who = document.createElement("div");
+      who.className = "who";
+      who.innerHTML = `${p ? p.name : "—"}<small>${p ? p.missions + " missions · " + p.ejections + " ejections" : ""}</small>`;
+      d.append(who);
+      const r = document.createElement("div");
+      r.className = "role";
+      r.textContent = c.alive ? CRAFT[c.type].label : "lost";
+      d.append(r);
+      wingEl.append(d);
+    });
+
+    $("board-log").innerHTML = G.log.map(l => `<div class="${l.cls}">${l.text}</div>`).join("");
+    drawShip($("ship"), 2);
+  }
+
+  // ---------------------------------------------------------------- flow
+  let pending = null;
+
+  function startMission(card) {
+    pending = card;
+    $("app-mission").textContent = card.name;
+    $("app-brief").textContent = card.desc + " " +
+      `Costs ${card.cost} turn${card.cost > 1 ? "s" : ""}; everything on the board moves while you are gone.`;
+    const dark = G.slots.bridge === "bridge_military" || G.slots.engines === "engines_uprated";
+    const opts = [
+      { key:"dark", t:"Warp far, creep in dark",
+        but:"Arrive unseen and pick your moment. <b>But</b> long flights, brutal rearm cycles, and pods drifting out of reach.",
+        gate: dark ? "Unlocked by your bridge or engines" : "Requires a fleet bridge or uprated engines",
+        ok: dark, surprise:true, umbrella:false, ordnance:0.7, recovery:0.45 },
+      { key:"close", t:"Warp close, hit hard",
+        but:"Umbrella over the battle from the first second, short rearm runs. <b>But</b> they see you coming, and the thing you cannot lose is inside their reach.",
+        gate:"Always available", ok:true, surprise:false, umbrella:true, ordnance:1, recovery:0.8 },
+    ];
+    const el = $("approach-choices");
+    el.innerHTML = "";
+    opts.forEach((o) => {
+      const b = document.createElement("button");
+      b.className = "choice";
+      b.disabled = !o.ok;
+      b.innerHTML = `<span class="t">${o.t}</span><span class="but">${o.but}</span><span class="gate">${o.gate}</span>`;
+      b.addEventListener("click", () => runMission(card, o));
+      el.append(b);
+    });
+    show("s-approach");
+  }
+
+  function runMission(card, approach) {
+    const res = resolveBattle(card, approach);
+    G.missions++;
+
+    livingWing().forEach((c) => { const p = pilotOf(c); if (p) p.missions++; });
+    res.rescued.forEach((c) => {
+      c.pilot.ejections++;
+      if (G.spares > 0) { G.spares--; c.ref.alive = true; }
+    });
+    G.wing = G.wing.filter(c => c.alive || !(pilotOf(c) && !pilotOf(c).alive) ? true : true);
+
+    G.salvage += res.salvage;
+    if (res.win) {
+      if (card.kind === "objective") { G.strips++; note(`${card.name}: done. ${G.anchor.name} weakens.`, "good"); }
+      else if (card.kind === "assault") { note(`${G.anchor.name} destroyed.`, "good"); }
+      else if (card.kind === "threat") { note(`${card.name} stopped.`, "good"); }
+      else { note(`${card.name} secured.`, "good"); }
+      if (card.pilot) { const p = addCraft("fighter"); note(`${p.name} joined the wing.`, "good"); }
+      const i = G.board.indexOf(card);
+      if (i >= 0 && card.kind !== "assault") {
+        G.board[i] = card.kind === "objective" ? makeStrip()
+                   : rnd() < 0.6 ? makeThreat() : makeOpp();
+      }
+    } else {
+      note(`${card.name}: failed. The turns are gone anyway.`, "bad");
+    }
+
+    $("bat-title").textContent = (res.win ? "Objective met — " : "Objective not met — ") + card.name;
+    $("battle-log").innerHTML = res.log.map(l => `<div class="${l.cls}">${l.text}</div>`).join("");
+    $("bat-stats").innerHTML = [
+      ["Result", res.win ? "Win" : "Loss", res.win ? "" : "bad"],
+      ["Salvage", "+" + res.salvage, ""],
+      ["Enemy down", res.killed, ""],
+      ["Pods lost", res.downed.length - res.rescued.length, res.downed.length - res.rescued.length ? "bad" : ""],
+    ].map(([k, v, c]) => `<div class="stat ${c}"><b>${v}</b><span>${k}</span></div>`).join("");
+    const bw = $("bat-wing");
+    bw.innerHTML = "";
+    G.wing.forEach((c) => {
+      const p = pilotOf(c);
+      const d = document.createElement("div");
+      d.className = "craft" + (c.alive && p && p.alive ? "" : " lost");
+      d.append(craftIcon(c.type));
+      const who = document.createElement("div");
+      who.className = "who";
+      who.innerHTML = `${p ? p.name : "—"}<small>${p && p.alive ? "ready" : "lost"}</small>`;
+      d.append(who);
+      bw.append(d);
+    });
+
+    const assaultWon = res.win && card.kind === "assault";
+    pending = { card, approach, assaultWon };
+    show("s-battle");
+  }
+
+  function afterBattle() {
+    const filled = advance(pending.card.cost);
+    G.wing = G.wing.filter(c => { const p = pilotOf(c); return !(p && !p.alive); });
+
+    if (pending.assaultWon) {
+      if (G.subsector >= 3) return endRun(true);
+      enterSubsector(G.subsector + 1);
+      G.spares++;
+      renderBoard(); show("s-board"); return;
+    }
+    if (filled || G.control >= 100) return endRun(false, "control");
+    if (!livingWing().length) return endRun(false, "wing");
+    if (G.hullDamage >= 100) return endRun(false, "hull");
+    renderBoard(); show("s-board");
+  }
+
+  // ---------------------------------------------------------------- refit
+  function renderRefit() {
+    $("refit-salvage").textContent = G.salvage;
+    const el = $("slots");
+    el.innerHTML = "";
+    const SLOTS = layers ? layers.slots : {};
+    Object.entries(SLOTS).forEach(([slot, opts]) => {
+      const d = document.createElement("div");
+      d.className = "slot";
+      const fitted = G.slots[slot];
+      d.innerHTML = `<div class="head"><span>${slot.replace("_", " ")}</span></div>` +
+        `<div class="fitted">${PART_NAMES[fitted] || fitted}</div>` +
+        `<div class="desc" style="color:var(--ink-dim);font-size:12.5px">${PART_EFFECT[fitted] || ""}</div>`;
+      const row = document.createElement("div");
+      row.className = "opts";
+      opts.forEach((o) => {
+        const b = document.createElement("button");
+        const cost = PART_COST[o] || 0;
+        const owned = o === fitted;
+        b.className = owned ? "on" : "";
+        b.textContent = (PART_NAMES[o] || o) + (owned ? "" : ` · ${cost}`);
+        b.disabled = owned || cost > G.salvage;
+        b.addEventListener("click", () => {
+          G.salvage -= cost;
+          G.slots[slot] = o;
+          note(`Fitted ${PART_NAMES[o]}.`, "");
+          renderRefit();
+        });
+        row.append(b);
+      });
+      d.append(row);
+      el.append(d);
+    });
+
+    const chassisRow = document.createElement("div");
+    chassisRow.className = "slot";
+    chassisRow.innerHTML = `<div class="head"><span>chassis (not a slot)</span></div>` +
+      `<div class="fitted">${PART_NAMES[G.chassis]}</div>` +
+      `<div class="desc" style="color:var(--ink-dim);font-size:12.5px">Armour is a hull variant, not a sixth slot.</div>`;
+    const crow = document.createElement("div");
+    crow.className = "opts";
+    (layers ? layers.chassis_options : []).forEach((o) => {
+      const b = document.createElement("button");
+      const cost = PART_COST[o] || 0;
+      const owned = o === G.chassis;
+      b.className = owned ? "on" : "";
+      b.textContent = (PART_NAMES[o] || o) + (owned ? "" : ` · ${cost}`);
+      b.disabled = owned || cost > G.salvage;
+      b.addEventListener("click", () => { G.salvage -= cost; G.chassis = o; renderRefit(); });
+      crow.append(b);
+    });
+    chassisRow.append(crow);
+    el.append(chassisRow);
+
+    // Buying airframes is the only route to a bomber, and every anchor strip needs one.
+    // That is law 11 as an economy: the craft that wins duels cannot win objectives, so
+    // the wing composition has to be paid for.
+    const air = document.createElement("div");
+    air.className = "slot";
+    const room = wingCap() - livingWing().length;
+    air.innerHTML = `<div class="head"><span>airframes</span><span>${livingWing().length}/${wingCap()}</span></div>` +
+      `<div class="desc" style="color:var(--ink-dim);font-size:12.5px">` +
+      (room > 0 ? `Room for ${room} more. Only bombers threaten a capital.`
+                : `Deck is full. A bigger hangar is the only way to field more.`) + `</div>`;
+    const arow = document.createElement("div");
+    arow.className = "opts";
+    Object.keys(CRAFT).forEach((t) => {
+      const b = document.createElement("button");
+      b.textContent = `${CRAFT[t].label} · ${AIRFRAME_COST}`;
+      b.disabled = room <= 0 || G.salvage < AIRFRAME_COST;
+      b.addEventListener("click", () => {
+        G.salvage -= AIRFRAME_COST;
+        const p = addCraft(t);
+        note(`${p.name} joined the wing flying a ${CRAFT[t].label.toLowerCase()}.`, "good");
+        renderRefit();
+      });
+      arow.append(b);
+    });
+    air.append(arow);
+    el.append(air);
+
+    const hangar = G.slots.hangar;
+    $("refit-desc").textContent =
+      `${wingCap()} airframes · ${G.spares} spare airframe${G.spares === 1 ? "" : "s"}`;
+
+    const r = $("roster");
+    r.innerHTML = "";
+    G.pilots.forEach((p) => {
+      const d = document.createElement("div");
+      d.className = "craft" + (p.alive ? "" : " lost");
+      const who = document.createElement("div");
+      who.className = "who";
+      who.innerHTML = `${p.name}<small>${p.missions} missions · ${p.ejections} ejections</small>`;
+      d.append(who);
+      const role = document.createElement("div");
+      role.className = "role";
+      role.textContent = p.alive ? "ready" : "lost";
+      d.append(role);
+      r.append(d);
+    });
+
+    drawShip($("ship-refit"), 3);
+  }
+
+  // ---------------------------------------------------------------- end
+  function endRun(won, why) {
+    G.over = true;
+    $("end-eyebrow").textContent = won ? "Sector cleared" : "Run over";
+    $("end-title").textContent = won ? "You disrupted them" : "The last carrier is gone";
+    $("end-body").textContent = won
+      ? "Four subsectors broken. Relief reached you because the spine of the sector was broken — which is the only way it was ever going to. This is not the expected outcome."
+      : why === "control" ? `${sub().name} fell while you were busy. Their operations kept completing and the readout kept climbing.`
+      : why === "wing" ? "The wing is gone. A carrier with nothing to launch is a target."
+      : "The hull could not take another salvo.";
+    $("end-stats").innerHTML = [
+      ["Subsectors", `${won ? 4 : G.subsector}/4`, won ? "" : "warn"],
+      ["Missions", G.missions, ""],
+      ["Turns", G.turn, ""],
+      ["Pilots lost", G.pilots.filter(p => !p.alive).length, ""],
+      ["Salvage", G.salvage, ""],
+    ].map(([k, v, c]) => `<div class="stat ${c}"><b>${v}</b><span>${k}</span></div>`).join("");
+    $("end-log").innerHTML = G.pilots.map(p =>
+      `<div class="${p.alive ? "good" : "bad"}">${p.name} — ${p.missions} missions, ` +
+      `${p.ejections} ejections — ${p.alive ? "walked away" : "lost"}</div>`).join("");
+    show("s-end");
+  }
+
+  // ---------------------------------------------------------------- wiring
+  $("btn-skip").addEventListener("click", () => {
+    note("Held position. The board moved anyway.", "warn");
+    const filled = advance(1);
+    if (filled) return endRun(false, "control");
+    renderBoard();
+  });
+  $("btn-refit").addEventListener("click", () => { renderRefit(); show("s-refit"); });
+  $("btn-refit-done").addEventListener("click", () => { renderBoard(); show("s-board"); });
+  $("btn-continue").addEventListener("click", afterBattle);
+  $("btn-again").addEventListener("click", () => { renderStart(); show("s-start"); });
+
+  // expose for the harness
+  window.__game = {
+    get state() { return G; },
+    start: (i) => { newRun(HULLS[i || 0]); renderBoard(); show("s-board"); },
+    board: () => G.board,
+    buy: (slot, part) => {
+      const cost = PART_COST[part] || 0;
+      if (G.salvage < cost) return false;
+      G.salvage -= cost;
+      if (slot === "chassis") G.chassis = part; else G.slots[slot] = part;
+      return true;
+    },
+    buyCraft: (type) => {
+      if (livingWing().length >= wingCap() || G.salvage < AIRFRAME_COST) return false;
+      G.salvage -= AIRFRAME_COST; addCraft(type); return true;
+    },
+    wingTypes: () => livingWing().map(c => c.type),
+    play: (idx, approachKey) => {
+      const card = G.board[idx];
+      startMission(card);
+      const btns = $("approach-choices").querySelectorAll("button");
+      const b = approachKey === "dark" && !btns[0].disabled ? btns[0] : btns[1];
+      b.click();
+      afterBattle();
+      return G.over ? "over" : "ok";
+    },
+  };
+
+  function boot(l) {
+    layers = l;
+    renderStart();
+  }
+  if (EMBEDDED_LAYERS) boot(EMBEDDED_LAYERS);
+  else {
+    fetch(SPRITES + "layers_carrier.json").then(r => r.json()).then(boot).catch(() => {
+      $("foot").textContent = "Could not load sprites/layers_carrier.json — run " +
+        "generate_carrier.py --layers, then serve the repo root over http.";
+    });
+  }
+})();
+</script>
