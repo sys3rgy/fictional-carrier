@@ -2,23 +2,32 @@
 """
 generate_map.py — procedural isometric battle map for the Lancer fleet.
 
-Builds a symmetric two-carrier arena: a backlit starfield, a sun that is an actual
-light source rather than a painted highlight, dense asteroid and wreckage fields whose
-gaps form three navigable lanes end to end, and scattered cover inside those lanes.
+The arena is a square in world space, which the camera projects as a diamond: the
+playfield itself is isometric, not just the things standing on it. A tactical grid is
+drawn on the ecliptic plane along the world axes, so the diamond reads as ground.
+
+Spawns sit at opposing corners of the diamond. Three routes connect them, and they run
+along the isometric axes rather than across the screen:
+
+    centre  the straight diagonal, shortest and most exposed
+    north   out along one diamond edge, round the top corner, in along the next
+    south   the same around the bottom corner
+
+Dense asteroid and wreckage bands flank every lane, filling the ground between them.
 
 Props are rendered with the same primitive rasteriser as the ships (generate_carrier),
 so the map and the units on it share a camera, a palette and a light model. Each prop
-variant is baked once per light direction — eight azimuth buckets, exactly the way a
-ship is baked once per facing — and placed with the bucket nearest the true direction
-to the sun. That is what makes the sun read as lighting the field.
+variant is baked once per light direction (eight azimuths) and per falloff tier, then
+placed with the pair matching its true bearing and distance to the sun — the same trick
+that bakes a ship once per facing.
 
-The layout has 180 degree rotational symmetry about the map centre, so neither side
-gets the better ground.
+The layout has 180 degree rotational symmetry about the centre, which maps each spawn
+corner onto the other, so neither side gets the better ground.
 
 Outputs:
-    sprites/prop_<kind>.png     variant columns x light-bucket rows
+    sprites/prop_<kind>.png     variant columns x (light bucket, falloff tier) rows
     maps/battle_map.png         the composited map
-    maps/battle_map.json        game data: bounds, spawns, lanes, props, sun
+    maps/battle_map.json        game data: arena, grid, spawns, lanes, props, sun
 
 Usage:
     python3 generate_map.py
@@ -34,53 +43,52 @@ import math
 import os
 import sys
 
-from PIL import Image
+from PIL import Image, ImageDraw
 
 from generate_carrier import (
-    CAM_PITCH, FACING_NAMES, MATERIALS, Rng, axes_from_euler, box, cyl, ell,
-    render_frame, use_palette, vnorm, PALETTES,
+    FACING_NAMES, PALETTES, Rng, axes_from_euler, box, cyl, ell, project,
+    render_frame, use_palette, vnorm,
 )
 
 # --------------------------------------------------------------------------------------
-# map frame
+# arena
 #
-# The camera compresses world space to screen 1:1 along u (screen horizontal) and 2:1
-# along v (screen vertical), so the map is authored directly in (u, v) and converted to
-# world only where the lighting needs a real direction.
+# The playfield is the world square |x| <= N, |y| <= N. Under this camera that projects
+# to a 2:1 diamond, so lanes laid along the world axes run along the diamond's edges.
 # --------------------------------------------------------------------------------------
 
-MAP_W, MAP_H = 1920, 1000
+MAP_W, MAP_H = 2800, 1440
 MAP_SCALE = 12.9  # px per world unit, matching the ships' own fit scale
 
-HALF_U = (MAP_W * 0.5) / MAP_SCALE            # 74.4
-HALF_V = (MAP_H * 0.5) / (0.5 * MAP_SCALE)    # 155.0 of v maps to 1000px
+# Arena half-extent. Sized against the lanes, not picked for a nice canvas: three
+# corridors of half-width H crossing a diamond of half-extent N take up roughly
+# 4.3 * H / N of the playfield, so a 52-unit arena with 12-unit lanes left only 16%
+# of the ground for the fields that are supposed to be walling those lanes in.
+ARENA_N = 76.0
+TILE = 4.0      # tactical grid pitch, world units
+MAJOR = 4       # every Nth grid line is drawn brighter
 
-PLAY_U, PLAY_V = 66.0, 60.0  # the playable area, inset from the canvas
-LANE_V = (-46.0, 0.0, 46.0)  # lane centrelines
-LANE_HALF = 11.0             # navigable half width
-WALL_V = (-23.0, 23.0, -69.0, 69.0)  # the dense bands that create the lanes
-WALL_HALF = 9.0
+SPAWN_INSET = 9.0
+CORNER_INSET = 12.0
+# Navigable half width. This has to be generous: the centre lane runs along the screen
+# horizontal, whose perpendicular is the very axis the camera compresses 2:1, so a
+# corridor there reads about half as wide on screen as the same corridor on a flank.
+LANE_HALF = 10.0
+WALL_BAND = 13.0     # dense field flanking each lane
 
-SUN_U, SUN_V = -68.0, 84.0
-SUN_R = 108          # disc radius in px
-SUN_CORONA = 300     # glow reach in px
+SUN_XY = (3.3, 110.7)  # outside the arena, up and to the left on screen
+SUN_R = 112
+SUN_CORONA = 330
 
 LIGHT_BUCKETS = 8
 SUN_ELEVATION = math.radians(38.0)
-# Falloff tiers. Direction alone barely reads on a lumpy rock; what sells a sun is
-# near rocks being bright and far ones sinking towards the background.
 FALLOFF_TIERS = 3
-FALLOFF_EDGES = (66.0, 118.0)
+FALLOFF_EDGES = (95.0, 165.0)
 
 
-def uv_to_screen(u, v):
-    return (MAP_W * 0.5 + u * MAP_SCALE, MAP_H * 0.5 - v * 0.5 * MAP_SCALE)
-
-
-def uv_to_world(u, v):
-    """u runs along world (1,-1), v along world (1,1); both normalised."""
-    k = 1.0 / math.sqrt(2.0)
-    return ((u + v) * k, (v - u) * k)
+def to_screen(x, y, z=0.0):
+    sx, sy = project((x, y, z))
+    return (MAP_W * 0.5 + sx * MAP_SCALE, MAP_H * 0.5 + sy * MAP_SCALE)
 
 
 def light_for_bucket(k):
@@ -90,22 +98,124 @@ def light_for_bucket(k):
                   math.sin(SUN_ELEVATION)))
 
 
-def bucket_towards_sun(u, v):
-    """Which baked light direction best matches the true bearing to the sun."""
-    px, py = uv_to_world(u, v)
-    sx, sy = uv_to_world(SUN_U, SUN_V)
-    az = math.atan2(sy - py, sx - px)
+def bucket_towards_sun(x, y):
+    az = math.atan2(SUN_XY[1] - y, SUN_XY[0] - x)
     return int(round(az / (math.tau / LIGHT_BUCKETS))) % LIGHT_BUCKETS
 
 
-def falloff_tier(u, v):
-    """(u, v) is an orthonormal frame, so plain distance here is world distance."""
-    d = math.hypot(u - SUN_U, v - SUN_V)
+def falloff_tier(x, y):
+    d = math.hypot(x - SUN_XY[0], y - SUN_XY[1])
     return 0 if d < FALLOFF_EDGES[0] else (1 if d < FALLOFF_EDGES[1] else 2)
 
 
 def sheet_row(bucket, tier):
     return bucket * FALLOFF_TIERS + tier
+
+
+# The diamond's corners, in world space.
+CORNER_N = (ARENA_N, ARENA_N)     # screen top
+CORNER_E = (ARENA_N, -ARENA_N)    # screen right
+CORNER_S = (-ARENA_N, -ARENA_N)   # screen bottom
+CORNER_W = (-ARENA_N, ARENA_N)    # screen left
+
+SPAWN_W = (-ARENA_N + SPAWN_INSET, ARENA_N - SPAWN_INSET)
+SPAWN_E = (ARENA_N - SPAWN_INSET, -ARENA_N + SPAWN_INSET)
+
+
+def in_arena(x, y, pad=0.0):
+    return abs(x) <= ARENA_N - pad and abs(y) <= ARENA_N - pad
+
+
+# --------------------------------------------------------------------------------------
+# lanes
+# --------------------------------------------------------------------------------------
+
+
+def _resample(points, n):
+    """Even arc-length resample of a polyline."""
+    segs = [(points[i], points[i + 1]) for i in range(len(points) - 1)]
+    lens = [math.dist(a, b) for a, b in segs]
+    total = sum(lens) or 1.0
+    out = []
+    for i in range(n):
+        want = total * i / (n - 1)
+        acc = 0.0
+        for j, ((a, b), L) in enumerate(zip(segs, lens)):
+            if acc + L >= want or j == len(segs) - 1:
+                t = 0.0 if L == 0 else min(1.0, (want - acc) / L)
+                out.append((a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t))
+                break
+            acc += L
+    return out
+
+
+def _smooth(points, passes=3):
+    """Round the corner where a flank lane turns from one diamond edge onto the next."""
+    pts = list(points)
+    for _ in range(passes):
+        nxt = [pts[0]]
+        for i in range(1, len(pts) - 1):
+            nxt.append((
+                (pts[i - 1][0] + 2 * pts[i][0] + pts[i + 1][0]) * 0.25,
+                (pts[i - 1][1] + 2 * pts[i][1] + pts[i + 1][1]) * 0.25,
+            ))
+        nxt.append(pts[-1])
+        pts = nxt
+    return pts
+
+
+def build_lanes():
+    """
+    Three routes between the spawn corners. The flanks are deliberately axis-aligned:
+    each runs out along one edge of the diamond, rounds a corner and comes back in
+    along the next, so movement follows the isometric grid rather than cutting across
+    it. The centre is the diagonal — shortest, and with the least to hide behind.
+    """
+    ci = ARENA_N - CORNER_INSET
+    routes = {
+        "centre": ([SPAWN_W, (0.0, 0.0), SPAWN_E], 1),
+        "north": ([SPAWN_W, (ci * 0.15, ci), (ci, ci), (ci, -ci * 0.15), SPAWN_E], 5),
+        "south": ([SPAWN_W, (-ci, ci * 0.15), (-ci, -ci), (-ci * 0.15, -ci), SPAWN_E], 5),
+    }
+    return [{"name": n, "path": _smooth(_resample(pts, 44), sm)}
+            for n, (pts, sm) in routes.items()]
+
+
+def seg_distance(p, a, b):
+    ax, ay = a
+    dx, dy = b[0] - ax, b[1] - ay
+    L2 = dx * dx + dy * dy
+    if L2 <= 1e-9:
+        return math.dist(p, a)
+    t = max(0.0, min(1.0, ((p[0] - ax) * dx + (p[1] - ay) * dy) / L2))
+    return math.dist(p, (ax + dx * t, ay + dy * t))
+
+
+def dist_to_lanes(p, lanes):
+    best = 1e9
+    for lane in lanes:
+        path = lane["path"]
+        for i in range(len(path) - 1):
+            best = min(best, seg_distance(p, path[i], path[i + 1]))
+    return best
+
+
+def lane_band(path, half):
+    """
+    Offset the centreline perpendicular in *world* space, then project. Offsetting in
+    screen space would be wrong: the camera compresses vertically 2:1, so a fixed
+    screen offset is a different world width depending on which way the lane runs.
+    """
+    left, right = [], []
+    for i, p in enumerate(path):
+        a = path[max(0, i - 1)]
+        b = path[min(len(path) - 1, i + 1)]
+        dx, dy = b[0] - a[0], b[1] - a[1]
+        L = math.hypot(dx, dy) or 1.0
+        nx, ny = -dy / L * half, dx / L * half
+        left.append(to_screen(p[0] + nx, p[1] + ny))
+        right.append(to_screen(p[0] - nx, p[1] - ny))
+    return [[round(x, 1), round(y, 1)] for x, y in left + right[::-1]]
 
 
 # --------------------------------------------------------------------------------------
@@ -116,13 +226,12 @@ def sheet_row(bucket, tier):
 def build_asteroid(seed, size):
     """
     A rock is one core ellipsoid with knobs welded on and craters sunk into the top.
-    The knobs matter: a single smooth ellipsoid quantises into two or three broad
-    bands and reads as a blob, whereas a knobbly surface throws its normals across
-    the whole ramp and looks like rock.
+    The knobs matter: a single smooth ellipsoid quantises into two or three broad bands
+    and reads as a blob, whereas a knobbly surface throws its normals across the whole
+    ramp and looks like rock.
     """
     rng = Rng(seed)
     p = [ell((0.0, 0.0, 0.0), (size * 0.60, size * 0.56, size * 0.44), "rock")]
-
     # large lobes that break the silhouette
     for _ in range(3 + int(rng.range(0.0, 3.0))):
         f = rng.range(0.30, 0.52)
@@ -186,8 +295,7 @@ def build_debris(seed, size):
             (-math.cos(a) * size * 0.42, -math.sin(a) * size * 0.42, size * 0.16),
             size * 0.05, "armor")
     )
-    # A minority of wrecks still carry hull paint. Putting it on every chunk turns the
-    # whole field into red confetti at map scale.
+    # A minority of wrecks still carry hull paint; on every chunk it becomes confetti.
     if rng.next() > 0.72:
         p.append(
             box((rng.range(-0.25, 0.25) * size, rng.range(-0.25, 0.25) * size,
@@ -209,7 +317,6 @@ PROP_KINDS = {
 
 
 def render_prop_sheets(outdir):
-    """One sheet per kind: variant columns, light-bucket rows."""
     meta = {}
     for kind, (cell, _r, nvar, _cov, builder, msize) in PROP_KINDS.items():
         rows = LIGHT_BUCKETS * FALLOFF_TIERS
@@ -231,99 +338,217 @@ def render_prop_sheets(outdir):
     return meta
 
 
-# --------------------------------------------------------------------------------------
-# layout
-# --------------------------------------------------------------------------------------
-
-
-def lane_offset(v_centre, u):
-    """Lanes bow gently rather than running dead straight."""
-    return v_centre + math.sin(u * 0.045) * 4.5 + math.sin(u * 0.017 + 1.3) * 3.0
-
-
-def dist_to_lanes(u, v):
-    return min(abs(v - lane_offset(c, u)) for c in LANE_V)
-
-
-def place_props(seed):
+def place_props(seed, lanes):
     """
-    Scatter the field across the left half, then rotate it 180 degrees onto the right.
-    Density comes from which band a candidate lands in; anything that would choke a
-    lane is rejected outright, so the three routes always stay open end to end.
+    Scatter across the half of the diamond behind the west spawn, then rotate 180
+    degrees onto the other half. Density comes from how far a candidate sits from the
+    nearest lane; anything that would choke a lane is rejected outright, so all three
+    routes stay open corner to corner.
     """
     rng = Rng(seed)
     heavy = ("asteroid_lg", "asteroid_md", "debris_lg")
     light = ("asteroid_sm", "debris_sm", "asteroid_md")
+    # the half-plane split runs perpendicular to the centre lane, through the origin
+    ax, ay = SPAWN_E[0] - SPAWN_W[0], SPAWN_E[1] - SPAWN_W[1]
+    alen = math.hypot(ax, ay)
+    ax, ay = ax / alen, ay / alen
+
+    # A coarse spatial hash keeps the overlap test near O(1); the arena holds enough
+    # rock that checking every placed prop each time gets slow.
+    CELL = 8.0
+    grid = {}
+
+    def clear_of_neighbours(x, y, radius):
+        cx, cy = int(x // CELL), int(y // CELL)
+        for gx in range(cx - 1, cx + 2):
+            for gy in range(cy - 1, cy + 2):
+                for (ox, oy, orad) in grid.get((gx, gy), ()):
+                    if math.dist((x, y), (ox, oy)) < (radius + orad) * 0.82:
+                        return False
+        return True
+
     half = []
+    in_lane = []
+    for _ in range(34000):
+        x = rng.range(-ARENA_N, ARENA_N)
+        y = rng.range(-ARENA_N, ARENA_N)
+        if x * ax + y * ay > -2.0:          # keep to one side of centre
+            continue
+        if not in_arena(x, y, pad=1.5):
+            continue
 
-    for _ in range(2600):
-        u = rng.range(-PLAY_U, -0.5)
-        v = rng.range(-PLAY_V - 12.0, PLAY_V + 12.0)
-
-        lane_d = dist_to_lanes(u, v)
-        wall_d = min(abs(v - w) for w in WALL_V)
-
-        if wall_d < WALL_HALF:
-            # the thick bands that make the lanes; densest at their centre
-            if rng.next() > 0.30 + 0.55 * (wall_d / WALL_HALF):
-                kind = heavy[int(rng.range(0.0, 3.0)) % 3]
-            else:
+        # The field is thick everywhere; the lanes are what is carved out of it.
+        # Density peaks right against a lane edge so the walls have a defined face.
+        d = dist_to_lanes((x, y), lanes)
+        if d < LANE_HALF:
+            if rng.next() > 0.035:
                 continue
-        elif lane_d < LANE_HALF:
-            # cover inside a lane, sparse enough to leave a driving line
-            if rng.next() > 0.055:
+            # Cover inside a lane is kept well spaced from other in-lane cover. Two
+            # rocks that are each individually legal still plug the corridor if they
+            # land beside each other.
+            if any(math.dist((x, y), c) < 13.0 for c in in_lane):
                 continue
             kind = light[int(rng.range(0.0, 3.0)) % 3]
         else:
-            if rng.next() > 0.10:
+            t = min(1.0, (d - LANE_HALF) / WALL_BAND)
+            if rng.next() > 0.80 - 0.30 * t:
                 continue
-            kind = light[int(rng.range(0.0, 3.0)) % 3]
+            kind = heavy[int(rng.range(0.0, 3.0)) % 3] if rng.next() > 0.25 \
+                else light[int(rng.range(0.0, 3.0)) % 3]
 
         _c, radius, nvar, cover, _b, _m = PROP_KINDS[kind]
 
-        # never block a lane: a prop must leave a gap wide enough to fly through
-        if lane_d < LANE_HALF and lane_d + radius > LANE_HALF - 1.5:
+        # Never choke a lane. Testing the prop's edge rather than its centre matters:
+        # a large rock centred just outside a lane still spills its whole sprite in.
+        if d < LANE_HALF and (radius > 2.5 or d + radius > LANE_HALF - 1.5):
             continue
-        if lane_d < LANE_HALF and radius > 2.5:
+        if d >= LANE_HALF and d - radius < LANE_HALF - 1.0:
             continue
-        # keep clear of the spawns
-        if math.hypot(u + PLAY_U * 0.94, v) < 22.0:
+        if math.dist((x, y), SPAWN_W) < 22.0 or math.dist((x, y), SPAWN_E) < 22.0:
             continue
-        # no overlaps
-        if any(math.hypot(u - o["u"], v - o["v"]) < (radius + o["radius"]) * 0.82 for o in half):
+        if not clear_of_neighbours(x, y, radius):
             continue
 
-        half.append({
-            "kind": kind, "variant": int(rng.range(0.0, nvar)) % nvar,
-            "u": round(u, 2), "v": round(v, 2), "radius": radius, "cover": cover,
-        })
+        grid.setdefault((int(x // CELL), int(y // CELL)), []).append((x, y, radius))
+        if d < LANE_HALF:
+            in_lane.append((x, y))
+        half.append({"kind": kind, "variant": int(rng.range(0.0, nvar)) % nvar,
+                     "x": x, "y": y, "radius": radius, "cover": cover})
 
     props = []
-    for i, o in enumerate(half):
+    for o in half:
         for sign in (1.0, -1.0):
-            q = dict(o)
-            q["u"], q["v"] = round(o["u"] * sign, 2), round(o["v"] * sign, 2)
-            q["side"] = "west" if sign > 0 else "east"
-            q["light_bucket"] = bucket_towards_sun(q["u"], q["v"])
-            q["falloff_tier"] = falloff_tier(q["u"], q["v"])
-            sx, sy = uv_to_screen(q["u"], q["v"])
-            q["screen"] = [round(sx, 1), round(sy, 1)]
-            props.append(q)
+            x, y = o["x"] * sign, o["y"] * sign
+            sx, sy = to_screen(x, y)
+            props.append({
+                "kind": o["kind"], "variant": o["variant"],
+                "x": round(x, 2), "y": round(y, 2),
+                "radius": o["radius"], "cover": o["cover"],
+                "side": "west" if sign > 0 else "east",
+                "light_bucket": bucket_towards_sun(x, y),
+                "falloff_tier": falloff_tier(x, y),
+                "screen": [round(sx, 1), round(sy, 1)],
+            })
     return props
 
 
-def lane_data():
-    lanes = []
-    for name, c in zip(("north", "centre", "south"), LANE_V):
-        pts = []
-        for i in range(25):
-            u = -PLAY_U + (2.0 * PLAY_U) * i / 24.0
-            v = lane_offset(c, u)
-            sx, sy = uv_to_screen(u, v)
-            pts.append({"u": round(u, 2), "v": round(v, 2),
-                        "screen": [round(sx, 1), round(sy, 1)]})
-        lanes.append({"name": name, "half_width": LANE_HALF, "waypoints": pts})
-    return lanes
+CRAFT_RADIUS = 2.0  # what has to fit down a lane: a fighter plus a little margin
+
+
+def _corridor_cells(lane):
+    """Integer cells within the lane's half width. Fixed by the path, so cache it."""
+    path = lane["path"]
+    cells = []
+    n = int(ARENA_N)
+    for i in range(-n, n + 1):
+        for j in range(-n, n + 1):
+            if not in_arena(float(i), float(j)):
+                continue
+            for k in range(len(path) - 1):
+                if seg_distance((float(i), float(j)), path[k], path[k + 1]) <= LANE_HALF:
+                    cells.append((i, j))
+                    break
+    return cells
+
+
+def _occupancy(props, craft_radius):
+    cell = 8.0
+    buckets = {}
+    for p in props:
+        buckets.setdefault((int(p["x"] // cell), int(p["y"] // cell)), []).append(p)
+
+    def blocked(x, y):
+        cx, cy = int(x // cell), int(y // cell)
+        for gx in range(cx - 1, cx + 2):
+            for gy in range(cy - 1, cy + 2):
+                for p in buckets.get((gx, gy), ()):
+                    if math.hypot(x - p["x"], y - p["y"]) < p["radius"] + craft_radius:
+                        return True
+        return False
+
+    return blocked
+
+
+def _flood(open_cells, start):
+    seen = {start} if start in open_cells else set()
+    queue = list(seen)
+    while queue:
+        i, j = queue.pop()
+        for di, dj in ((1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)):
+            nb = (i + di, j + dj)
+            if nb in open_cells and nb not in seen:
+                seen.add(nb)
+                queue.append(nb)
+    return seen
+
+
+def clear_lanes(props, lanes, craft_radius=CRAFT_RADIUS, max_passes=40):
+    """
+    Guarantee every lane is flyable end to end, and repair it if not.
+
+    Rejecting bad candidates during scatter is not the same claim as a lane being open:
+    several individually legal props can still close a corridor between them, which is
+    exactly what happened here. So the corridors are flood filled from spawn to spawn
+    and, where the fill stalls, the in-lane cover around the pinch is removed — in
+    mirrored pairs, so the map stays symmetric — until the route opens.
+    """
+    start = (round(SPAWN_W[0]), round(SPAWN_W[1]))
+    goal = (round(SPAWN_E[0]), round(SPAWN_E[1]))
+    corridors = {lane["name"]: _corridor_cells(lane) for lane in lanes}
+    removed = 0
+
+    for lane in lanes:
+        cells = corridors[lane["name"]]
+        for _ in range(max_passes):
+            blocked = _occupancy(props, craft_radius)
+            open_cells = {c for c in cells if not blocked(float(c[0]), float(c[1]))}
+            seen = _flood(open_cells, start)
+            if goal in seen:
+                break
+
+            # first waypoint the fill could not get near: the pinch
+            pinch = None
+            for w in lane["path"]:
+                if not any(math.hypot(w[0] - c[0], w[1] - c[1]) < 3.0 for c in seen):
+                    pinch = w
+                    break
+            if pinch is None:
+                break
+
+            # Only in-lane cover is eligible: the flanking walls are what define the
+            # lane, so removing those would dissolve the map rather than repair it.
+            near = [p for p in props
+                    if math.hypot(p["x"] - pinch[0], p["y"] - pinch[1]) < 9.0
+                    and dist_to_lanes((p["x"], p["y"]), lanes) < LANE_HALF]
+            if not near:
+                break
+            worst = min(near, key=lambda p: dist_to_lanes((p["x"], p["y"]), lanes))
+            # take its 180 degree partner with it, so symmetry survives the repair
+            doomed = {(round(worst["x"], 2), round(worst["y"], 2)),
+                      (round(-worst["x"], 2), round(-worst["y"], 2))}
+            before = len(props)
+            props[:] = [p for p in props
+                        if (round(p["x"], 2), round(p["y"], 2)) not in doomed]
+            if len(props) == before:
+                break
+            removed += before - len(props)
+
+    return removed
+
+
+def verify_lanes(props, lanes, craft_radius=CRAFT_RADIUS):
+    """Final check that every corridor connects spawn to spawn."""
+    start = (round(SPAWN_W[0]), round(SPAWN_W[1]))
+    goal = (round(SPAWN_E[0]), round(SPAWN_E[1]))
+    blocked = _occupancy(props, craft_radius)
+    results = []
+    for lane in lanes:
+        open_cells = {c for c in _corridor_cells(lane)
+                      if not blocked(float(c[0]), float(c[1]))}
+        seen = _flood(open_cells, start)
+        results.append({"name": lane["name"], "passable": goal in seen,
+                        "craft_radius": craft_radius, "open_cells": len(open_cells)})
+    return results
 
 
 # --------------------------------------------------------------------------------------
@@ -345,13 +570,12 @@ def paint_background(palette):
     qw, qh = MAP_W // 4, MAP_H // 4
     field = Image.new("RGB", (qw, qh), deep)
     fpx = field.load()
-    sx, sy = uv_to_screen(SUN_U, SUN_V)
+    sx, sy = to_screen(*SUN_XY)
     qsx, qsy = sx / 4.0, sy / 4.0
     reach = SUN_CORONA * 2.6 / 4.0
     for y in range(qh):
         for x in range(qw):
-            d = math.hypot(x - qsx, y - qsy) / reach
-            t = max(0.0, 1.0 - d)
+            t = max(0.0, 1.0 - math.hypot(x - qsx, y - qsy) / reach)
             fpx[x, y] = steps[min(len(steps) - 1, int(t * t * len(steps)))]
     img = field.resize((MAP_W, MAP_H), Image.NEAREST).convert("RGBA")
 
@@ -359,20 +583,17 @@ def paint_background(palette):
     rng = Rng(4242)
     tiers = ([(70, 58, 46), (120, 102, 80), (186, 166, 132), (240, 226, 196)] if warm
              else [(52, 62, 80), (92, 106, 130), (150, 168, 196), (226, 236, 250)])
-    for _ in range(2300):
+    for _ in range(2400):
         x, y = int(rng.range(0, MAP_W)), int(rng.range(0, MAP_H))
         t = int(rng.range(0.0, 4.0)) % 4
-        # stars thin out into the sun's glare
         if math.hypot(x - sx, y - sy) < SUN_CORONA * (0.5 + 0.4 * t):
             continue
-        c = tiers[t] + (255,)
-        px[x, y] = c
+        px[x, y] = tiers[t] + (255,)
         if t == 3:
             for (dx, dy) in ((1, 0), (-1, 0), (0, 1), (0, -1)):
                 if 0 <= x + dx < MAP_W and 0 <= y + dy < MAP_H:
                     px[x + dx, y + dy] = tiers[1] + (255,)
 
-    # the sun: quantised corona rings, then the disc
     corona = ([(96, 58, 24), (140, 84, 30), (198, 122, 40)] if warm
               else [(52, 74, 104), (78, 108, 148), (116, 152, 196)])
     disc = ([(255, 190, 92), (255, 226, 150), (255, 248, 214)] if warm
@@ -389,53 +610,71 @@ def paint_background(palette):
                 k = int(t * t * len(corona))
                 if k <= 0:
                     continue
-                base = px[x, y]
+                b = px[x, y]
                 c = corona[min(len(corona) - 1, k)]
-                px[x, y] = (max(base[0], c[0]), max(base[1], c[1]), max(base[2], c[2]), 255)
+                px[x, y] = (max(b[0], c[0]), max(b[1], c[1]), max(b[2], c[2]), 255)
             else:
                 t = d / SUN_R
                 px[x, y] = disc[min(len(disc) - 1, int(t * t * len(disc)))] + (255,)
     return img
 
 
+def paint_grid(img, palette):
+    """The tactical plane: grid lines along the world axes, so the diamond reads as ground."""
+    d = ImageDraw.Draw(img, "RGBA")
+    minor = (150, 132, 104, 18) if palette == "crimson" else (108, 132, 168, 18)
+    major = (176, 156, 122, 38) if palette == "crimson" else (128, 156, 198, 38)
+    edge = (206, 184, 142, 105) if palette == "crimson" else (150, 180, 220, 105)
+
+    steps = int(ARENA_N / TILE)
+    for i in range(-steps, steps + 1):
+        c = i * TILE
+        col = major if i % MAJOR == 0 else minor
+        d.line([to_screen(c, -ARENA_N), to_screen(c, ARENA_N)], fill=col, width=1)
+        d.line([to_screen(-ARENA_N, c), to_screen(ARENA_N, c)], fill=col, width=1)
+
+    corners = [to_screen(*CORNER_N), to_screen(*CORNER_E),
+               to_screen(*CORNER_S), to_screen(*CORNER_W)]
+    d.line(corners + [corners[0]], fill=edge, width=2)
+    return img
+
+
 def paste_prop(canvas, sheets, prop):
-    kind = prop["kind"]
-    cell = PROP_KINDS[kind][0]
-    src = sheets[kind]
-    cx, cy = prop["screen"]
+    cell = PROP_KINDS[prop["kind"]][0]
     row = sheet_row(prop["light_bucket"], prop["falloff_tier"])
-    tile = src.crop((prop["variant"] * cell, row * cell,
-                     (prop["variant"] + 1) * cell, (row + 1) * cell))
+    v = prop["variant"]
+    tile = sheets[prop["kind"]].crop((v * cell, row * cell, (v + 1) * cell, (row + 1) * cell))
+    cx, cy = prop["screen"]
     canvas.alpha_composite(tile, (int(cx - cell / 2), int(cy - cell / 2)))
 
 
-def paste_units(canvas, spritedir):
-    """Drop the actual carrier and fighter sprites in, facing each other."""
+def paste_units(canvas, spritedir, lanes):
     placed = []
     try:
         carrier = Image.open(os.path.join(spritedir, "carrier_mk3_idle.png")).convert("RGBA")
-        fighter = Image.open(os.path.join(spritedir, "fighter_interceptor_cruise.png")).convert("RGBA")
+        fighter = Image.open(
+            os.path.join(spritedir, "fighter_interceptor_cruise.png")).convert("RGBA")
     except FileNotFoundError:
         print("  (no ship sheets yet — run generate_carrier.py for units on the map)")
         return placed
 
-    for (u, v, row, name) in ((-PLAY_U * 0.94, 0.0, 2, "west"), (PLAY_U * 0.94, 0.0, 6, "east")):
-        sx, sy = uv_to_screen(u, v)
+    for (spawn, row, name) in ((SPAWN_W, 2, "west"), (SPAWN_E, 6, "east")):
+        sx, sy = to_screen(*spawn)
         cell = 96
-        tile = carrier.crop((0, row * cell, cell, (row + 1) * cell))
-        canvas.alpha_composite(tile, (int(sx - cell / 2), int(sy - cell / 2)))
+        canvas.alpha_composite(carrier.crop((0, row * cell, cell, (row + 1) * cell)),
+                               (int(sx - cell / 2), int(sy - cell / 2)))
         placed.append({"side": name, "craft": "carrier", "loadout": "mk3",
                        "facing_row": row, "facing": FACING_NAMES[row],
-                       "u": round(u, 2), "v": round(v, 2),
+                       "x": round(spawn[0], 2), "y": round(spawn[1], 2),
                        "screen": [round(sx, 1), round(sy, 1)]})
-        # a small escort wing spread across the lane mouths
-        for i, lv in enumerate(LANE_V):
-            fu = u + (9.0 if u < 0 else -9.0)
-            fv = lane_offset(lv, fu) * 0.34
-            fx, fy = uv_to_screen(fu + i * 0.0, fv)
+        # an escort standing off the mouth of each lane
+        for lane in lanes:
+            path = lane["path"] if name == "west" else lane["path"][::-1]
+            p = path[4]
+            fx, fy = to_screen(p[0], p[1])
             fc = 48
-            ft = fighter.crop((0, row * fc, fc, (row + 1) * fc))
-            canvas.alpha_composite(ft, (int(fx - fc / 2), int(fy - fc / 2)))
+            canvas.alpha_composite(fighter.crop((0, row * fc, fc, (row + 1) * fc)),
+                                   (int(fx - fc / 2), int(fy - fc / 2)))
     return placed
 
 
@@ -458,22 +697,29 @@ def main():
     print("props:")
     prop_meta = render_prop_sheets(args.sprites)
 
-    props = place_props(args.seed)
-    # far props first so nearer ones overlap them correctly
-    props.sort(key=lambda o: (o["v"], o["u"]))
+    lanes = build_lanes()
+    props = place_props(args.seed, lanes)
+    reopened = clear_lanes(props, lanes)
+    passable = verify_lanes(props, lanes)
+    if reopened:
+        print(f"  cleared {reopened} props to reopen pinched lanes")
+    # Painter's order: larger x + y sits higher on screen and is further from the
+    # camera, so the far side of the field has to go down first.
+    props.sort(key=lambda o: -(o["x"] + o["y"]))
 
     canvas = paint_background(args.palette)
+    paint_grid(canvas, args.palette)
     sheets = {k: Image.open(os.path.join(args.sprites, m["sheet"])).convert("RGBA")
               for k, m in prop_meta.items()}
     for prop in props:
         paste_prop(canvas, sheets, prop)
 
-    units = [] if args.no_units else paste_units(canvas, args.sprites)
+    units = [] if args.no_units else paste_units(canvas, args.sprites, lanes)
 
     img_path = os.path.join(args.out, "battle_map.png")
     canvas.convert("RGB").save(img_path)
 
-    sun_sx, sun_sy = uv_to_screen(SUN_U, SUN_V)
+    sun_sx, sun_sy = to_screen(*SUN_XY)
     data = {
         "name": "Kestrel Reach",
         "palette": args.palette,
@@ -482,30 +728,59 @@ def main():
         "width": MAP_W, "height": MAP_H,
         "scale_px_per_unit": MAP_SCALE,
         "projection": "orthographic dimetric, yaw 45 deg, pitch 30 deg (2:1)",
-        "axes": {
-            "u": "screen horizontal, world (1,-1) normalised, 1 unit = 1 px * scale",
-            "v": "screen vertical, world (1,1) normalised, compressed 2:1 on screen",
+        "arena": {
+            "shape": "world square |x|,|y| <= half_extent, projected as a screen diamond",
+            "half_extent": ARENA_N,
+            "tile": TILE,
+            "grid_major_every": MAJOR,
+            "corners": {
+                n: {"x": c[0], "y": c[1],
+                    "screen": [round(to_screen(*c)[0], 1), round(to_screen(*c)[1], 1)]}
+                for n, c in (("north", CORNER_N), ("east", CORNER_E),
+                             ("south", CORNER_S), ("west", CORNER_W))
+            },
         },
-        "bounds": {"u": [-PLAY_U, PLAY_U], "v": [-PLAY_V, PLAY_V]},
-        "symmetry": "180 degree rotation about (0,0)",
+        "symmetry": "180 degree rotation about (0,0); maps each spawn corner onto the other",
+        "draw_order": "descending (x + y): larger is further from the camera",
         "sun": {
-            "u": SUN_U, "v": SUN_V,
+            "x": SUN_XY[0], "y": SUN_XY[1],
             "screen": [round(sun_sx, 1), round(sun_sy, 1)],
             "radius_px": SUN_R,
             "elevation_deg": round(math.degrees(SUN_ELEVATION), 1),
             "light_buckets": LIGHT_BUCKETS,
-            "note": "props are baked per light bucket and placed with the bucket "
-                    "nearest their true bearing to the sun",
+            "falloff_tiers": FALLOFF_TIERS,
+            "note": "props are baked per light bucket and falloff tier, then placed with "
+                    "the pair matching their true bearing and distance to the sun",
         },
         "spawns": [
-            {"side": "west", "u": -PLAY_U * 0.94, "v": 0.0, "facing_row": 2, "facing": "E",
-             "screen": [round(uv_to_screen(-PLAY_U * 0.94, 0.0)[0], 1),
-                        round(uv_to_screen(-PLAY_U * 0.94, 0.0)[1], 1)]},
-            {"side": "east", "u": PLAY_U * 0.94, "v": 0.0, "facing_row": 6, "facing": "W",
-             "screen": [round(uv_to_screen(PLAY_U * 0.94, 0.0)[0], 1),
-                        round(uv_to_screen(PLAY_U * 0.94, 0.0)[1], 1)]},
+            {"side": "west", "corner": "west", "x": SPAWN_W[0], "y": SPAWN_W[1],
+             "facing_row": 2, "facing": "E",
+             "screen": [round(to_screen(*SPAWN_W)[0], 1), round(to_screen(*SPAWN_W)[1], 1)]},
+            {"side": "east", "corner": "east", "x": SPAWN_E[0], "y": SPAWN_E[1],
+             "facing_row": 6, "facing": "W",
+             "screen": [round(to_screen(*SPAWN_E)[0], 1), round(to_screen(*SPAWN_E)[1], 1)]},
         ],
-        "lanes": lane_data(),
+        "lanes": [
+            {
+                "name": lane["name"],
+                "half_width": LANE_HALF,
+                "length": round(sum(math.dist(lane["path"][i], lane["path"][i + 1])
+                                    for i in range(len(lane["path"]) - 1)), 1),
+                "waypoints": [{"x": round(p[0], 2), "y": round(p[1], 2),
+                               "screen": [round(to_screen(*p)[0], 1),
+                                          round(to_screen(*p)[1], 1)]}
+                              for p in lane["path"]],
+                "band": lane_band(lane["path"], LANE_HALF),
+                "passable": next(r["passable"] for r in passable if r["name"] == lane["name"]),
+            }
+            for lane in lanes
+        ],
+        "traversal_check": {
+            "craft_radius": passable[0]["craft_radius"],
+            "props_cleared_to_reopen": reopened,
+            "method": "occupancy grid flood fill along each corridor, spawn to spawn",
+            "results": passable,
+        },
         "prop_kinds": {k: {**v, "world_radius": PROP_KINDS[k][1], "cover": PROP_KINDS[k][3]}
                        for k, v in prop_meta.items()},
         "props": props,
@@ -516,7 +791,13 @@ def main():
 
     kb = os.path.getsize(img_path) / 1024
     print(f"\n{img_path}  {MAP_W}x{MAP_H}  {kb:.0f} KB")
-    print(f"{len(props)} props, {len(data['lanes'])} lanes, {len(units)} units placed")
+    print(f"{len(props)} props, {len(lanes)} lanes, {len(units)} units placed")
+    for lane in data["lanes"]:
+        ok = "open" if lane["passable"] else "BLOCKED"
+        print(f"  lane {lane['name']:<7} {lane['length']:>6.1f} units  {ok}")
+    if not all(l["passable"] for l in data["lanes"]):
+        print("\nA lane is not traversable — reduce density or widen LANE_HALF.")
+        return 1
 
 
 if __name__ == "__main__":

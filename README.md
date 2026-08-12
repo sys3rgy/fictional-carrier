@@ -194,37 +194,59 @@ functions. The fighter was added that way.
 
 ## The battle map
 
-`generate_map.py` builds **Kestrel Reach**: a symmetric two-carrier arena, 1920x1000,
-at the same px-per-unit as the ships so a carrier sprite drops straight onto it.
+`generate_map.py` builds **Kestrel Reach**, at the same px-per-unit as the ships so a
+carrier sprite drops straight onto it.
 
-- **Two spawns** at opposite ends, facing each other.
-- **Three lanes** running end to end. Dense asteroid and wreckage bands wall them off;
-  the lane corridors are kept clear by rejecting any prop that would narrow one below
-  a flyable width, so all three routes are always open.
-- **Cover** scattered inside the lanes — every prop carries a world radius and a cover
-  value in the JSON.
+The arena is a **square in world space**, which this camera projects as a diamond — the
+playfield is isometric, not just the things standing on it. A tactical grid is drawn on
+the ecliptic plane along the world axes so the diamond reads as ground.
+
+- **Spawns at opposing diamond corners**, facing each other.
+- **Three lanes running along the isometric axes.** `centre` cuts the diagonal —
+  shortest and most exposed. `north` and `south` each run out along one diamond edge,
+  round a corner and come back in along the next, so movement follows the iso grid
+  rather than cutting across it.
+- **Asteroid and wreckage fields** wall the corridors in; looser cover sits inside
+  them. Every prop carries a world radius and cover value in the JSON.
 - **A sun that actually lights the field.** Each prop variant is baked once per light
   direction (8 azimuths) and per falloff tier (3), and placed with the pair matching
   its real bearing and distance to the sun. Dimming shifts the ramp index rather than
-  scaling colour, so a distant rock stays inside the palette instead of inventing new
-  tones. This is the same trick that bakes a ship once per facing.
-- **Backlit starfield**, with a quantised glow field radiating from the sun, painted at
+  scaling colour, so a distant rock stays inside the palette. Same trick that bakes a
+  ship once per facing.
+- **Backlit starfield**, a quantised glow field radiating from the sun, painted at
   quarter resolution and upscaled nearest so it stays as blocky as the sprites.
-- **180 degree rotational symmetry** about the centre — the left half is generated and
-  rotated onto the right, so neither side gets the better ground.
+- **180 degree rotational symmetry** about the centre, which maps each spawn corner
+  onto the other, so neither side gets the better ground.
 
-`maps/battle_map.json` is the map, not a description of the picture: bounds, both
-spawns, lane waypoints, and every prop with position, collision radius, cover value and
-which light bake it uses.
+### Lanes are verified, not assumed
+
+Rejecting bad candidates during scatter is *not* the same claim as a lane being open:
+several individually legal props can still close a corridor between them, which is
+exactly what happened on the first build. So after placement each corridor is flood
+filled on an occupancy grid from spawn to spawn, with a craft radius of 2.0 units. If
+the fill stalls, the in-lane cover at the pinch is removed — in mirrored pairs, so the
+map stays symmetric — until the route opens. The generator exits non-zero if any lane
+is still blocked, and `traversal_check` in the JSON records the result.
+
+Sizing follows from the same check. Three corridors of half-width `H` crossing a
+diamond of half-extent `N` occupy roughly `4.3 * H / N` of the playfield; at the
+original 52-unit arena with 12-unit lanes that was 84%, leaving almost no ground for
+the fields meant to be walling them in. The arena is now 76 units with 10-unit lanes,
+which leaves 43%.
+
+`maps/battle_map.json` is the map, not a description of the picture: arena and grid,
+both spawns, lane waypoints plus a precomputed screen band per lane, the traversal
+result, and every prop with world position, collision radius, cover value and which
+light bake it uses.
 
 ```js
-// which props does a shot from A to B pass behind?
+// how much cover does a shot from A to B pass behind?
 map.props.filter(p => distancePointToSegment(p, a, b) < p.radius)
          .reduce((acc, p) => Math.max(acc, p.cover), 0);
 ```
 
-Open `preview/map.html` to pan and zoom it with the lane, cover, spawn and sun overlays
-drawn from that JSON.
+Open `preview/map.html` to pan and zoom it with the lane, cover, spawn, sun and arena
+overlays drawn from that JSON.
 
 ## Notes on the render
 

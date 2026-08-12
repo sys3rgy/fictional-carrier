@@ -77,7 +77,7 @@
     border: 1px solid var(--rule);
     border-radius: 3px;
     overflow: hidden;
-    aspect-ratio: 1920 / 1000;
+    aspect-ratio: 2800 / 1440;
     cursor: grab;
     touch-action: none;
   }
@@ -149,15 +149,20 @@
 
 <div class="wrap">
   <header>
-    <p class="eyebrow">Battle map &middot; two carriers &middot; three lanes</p>
+    <p class="eyebrow">Isometric battle map &middot; two carriers &middot; three lanes</p>
     <h1>Kestrel Reach</h1>
     <p class="lede">
-      A symmetric two-carrier arena. Asteroid and wreckage fields pack tightly enough to wall
-      off three navigable lanes end to end, with looser cover scattered inside them. The sun is
-      an <strong>actual light source</strong>, not a painted highlight: every prop is baked once
-      per light direction and per falloff tier, then placed with the pair that matches its real
-      bearing and distance to the sun &mdash; the same trick that bakes a ship once per facing.
-      The layout has 180&deg; rotational symmetry, so neither side gets the better ground.
+      The arena is a square in world space, so the camera projects it as a <strong>diamond</strong>
+      &mdash; the playfield is isometric, not just the things standing on it. Carriers spawn at
+      opposing corners, and the three routes between them run along the isometric axes: the centre
+      cuts the diagonal, while each flank runs out along one diamond edge, rounds a corner and
+      comes back in along the next. Asteroid and wreckage fields wall those corridors in.
+      <br><br>
+      The sun is an <strong>actual light source</strong>, not a painted highlight: every prop is
+      baked once per light direction and per falloff tier, then placed with the pair matching its
+      real bearing and distance to the sun &mdash; the same trick that bakes a ship once per
+      facing. The layout has 180&deg; rotational symmetry about the centre, which maps each spawn
+      corner onto the other.
     </p>
     <div class="facts">
       <div class="fact"><b id="f-size">&mdash;</b><span>Map, px</span></div>
@@ -165,6 +170,7 @@
       <div class="fact"><b id="f-lanes">&mdash;</b><span>Lanes</span></div>
       <div class="fact"><b id="f-kinds">&mdash;</b><span>Prop kinds</span></div>
       <div class="fact"><b id="f-buckets">&mdash;</b><span>Light bakes</span></div>
+      <div class="fact"><b id="f-arena">&mdash;</b><span>Arena, units</span></div>
     </div>
   </header>
 
@@ -190,10 +196,11 @@
           <thead>
             <tr>
               <th scope="col">Lane</th>
-              <th scope="col">Centreline v</th>
+              <th scope="col">Length</th>
               <th scope="col">Half width</th>
               <th scope="col">Waypoints</th>
               <th scope="col">Cover in lane</th>
+              <th scope="col">Traversal</th>
             </tr>
           </thead>
           <tbody id="lane-rows"></tbody>
@@ -288,17 +295,15 @@
   // map px -> css px
   function tx(p) { return (p * view.fit * view.z) + view.x; }
 
+  // The generator offsets each lane in world space and projects the result, so the
+  // band is already correct for a corridor running in any direction. Offsetting here
+  // in screen space would make diagonal lanes the wrong width.
   function laneBand(lane) {
-    const half = lane.half_width * data.scale_px_per_unit * 0.5; // v is 2:1 on screen
     ctx.beginPath();
-    lane.waypoints.forEach((w, i) => {
-      const x = tx(w.screen[0]), y = tx(w.screen[1] - half);
+    lane.band.forEach((p, i) => {
+      const x = tx(p[0]), y = tx(p[1]);
       i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
     });
-    for (let i = lane.waypoints.length - 1; i >= 0; i--) {
-      const w = lane.waypoints[i];
-      ctx.lineTo(tx(w.screen[0]), tx(w.screen[1] + half));
-    }
     ctx.closePath();
   }
 
@@ -317,13 +322,17 @@
     ctx.drawImage(img, view.x, view.y, data.width * s, data.height * s);
 
     if (show.bounds) {
-      const b = data.bounds, sc = data.scale_px_per_unit;
-      const x0 = data.width / 2 + b.u[0] * sc, x1 = data.width / 2 + b.u[1] * sc;
-      const y0 = data.height / 2 - b.v[1] * sc * 0.5, y1 = data.height / 2 - b.v[0] * sc * 0.5;
-      ctx.strokeStyle = "rgba(155,146,132,0.85)";
+      const c = data.arena.corners;
+      ctx.beginPath();
+      [c.north, c.east, c.south, c.west].forEach((k, i) => {
+        const x = tx(k.screen[0]), y = tx(k.screen[1]);
+        i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+      });
+      ctx.closePath();
+      ctx.strokeStyle = "rgba(176,164,142,0.9)";
       ctx.setLineDash([8, 6]);
       ctx.lineWidth = 1.5;
-      ctx.strokeRect(tx(x0), tx(y0), (x1 - x0) * s, (y1 - y0) * s);
+      ctx.stroke();
       ctx.setLineDash([]);
     }
 
@@ -462,28 +471,25 @@
     $("k-lanes").textContent = "±" + data.lanes[0].half_width;
     $("k-cover").textContent = data.props.length;
     $("k-sun").textContent = k0.light_buckets + "×" + k0.falloff_tiers;
+    $("f-arena").textContent = (data.arena.half_extent * 2) + "²";
 
-    const inLane = (p) =>
-      data.lanes.some((l) => {
-        let best = 1e9;
-        l.waypoints.forEach((w) => {
-          best = Math.min(best, Math.abs(p.v - w.v) + Math.abs(p.u - w.u) * 0.001);
-        });
-        return best < l.half_width;
+    // props count as "in lane" if they sit within the corridor half-width
+    const nearLane = (p, l) => {
+      let best = 1e9;
+      l.waypoints.forEach((w) => {
+        best = Math.min(best, Math.hypot(p.x - w.x, p.y - w.y));
       });
+      return best < l.half_width;
+    };
 
     $("lane-rows").innerHTML = data.lanes.map((l) => {
-      const n = data.props.filter((p) => {
-        let best = 1e9;
-        l.waypoints.forEach((w) => {
-          if (Math.abs(p.u - w.u) < 4) best = Math.min(best, Math.abs(p.v - w.v));
-        });
-        return best < l.half_width;
-      }).length;
-      const mid = l.waypoints[Math.floor(l.waypoints.length / 2)];
-      return "<tr><td class='name'>" + l.name + "</td><td>" + mid.v.toFixed(1) +
-             "</td><td>±" + l.half_width + "</td><td>" + l.waypoints.length +
-             "</td><td>" + n + "</td></tr>";
+      const n = data.props.filter((p) => nearLane(p, l)).length;
+      const ok = l.passable
+        ? '<span style="color:var(--signal)">open</span>'
+        : '<span style="color:var(--crimson-hi)">blocked</span>';
+      return "<tr><td class='name'>" + l.name + "</td><td>" + l.length +
+             "</td><td>\u00b1" + l.half_width + "</td><td>" + l.waypoints.length +
+             "</td><td>" + n + "</td><td>" + ok + "</td></tr>";
     }).join("");
 
     $("prop-rows").innerHTML = kinds.map((k) => {
