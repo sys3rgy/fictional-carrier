@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """
-build_artifact.py — turn preview/index.html into a single self-contained page.
+build_artifact.py — turn the preview pages into single self-contained files.
 
-The viewer normally fetches sprites/carrier_atlas.json and the PNGs at runtime.
-This inlines the atlas and every sheet as data URIs so the page works with no
-network access at all, which is what an Artifact needs. Everything else about
-the page is untouched: one viewer, two delivery modes.
+The viewers normally fetch their JSON and PNGs at runtime. This inlines them as
+data URIs so each page works with no network access at all, which is what an
+Artifact needs. Everything else about the pages is untouched: one viewer, two
+delivery modes.
+
+Builds dist/carrier-sprites.html (the sprite viewer) and dist/battle-map.html
+(the map viewer).
 """
 
 import base64
@@ -16,13 +19,48 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "preview", "index.html")
+MAP_SRC = os.path.join(ROOT, "preview", "map.html")
 SPRITES = os.path.join(ROOT, "sprites")
+MAPS = os.path.join(ROOT, "maps")
 OUT = os.path.join(ROOT, "dist", "carrier-sprites.html")
+MAP_OUT = os.path.join(ROOT, "dist", "battle-map.html")
 
 
 def data_uri(path):
     with open(path, "rb") as fh:
         return "data:image/png;base64," + base64.b64encode(fh.read()).decode("ascii")
+
+
+def inline(html, marker, name, value):
+    html, n = re.subn(
+        r"const " + name + r" = null;\s*/\* build:" + marker + r" \*/",
+        "const " + name + " = " + value + ";",
+        html,
+    )
+    if n != 1:
+        sys.exit(f"build marker {marker!r} not found (matched {n})")
+    return html
+
+
+def build_map():
+    map_json = os.path.join(MAPS, "battle_map.json")
+    if not os.path.exists(map_json):
+        print("skipping the map page — run generate_map.py first")
+        return
+    with open(map_json) as fh:
+        data = json.load(fh)
+
+    with open(MAP_SRC) as fh:
+        html = fh.read()
+    html = inline(html, "map", "EMBEDDED_MAP", json.dumps(data, separators=(",", ":")))
+    html = inline(html, "image", "EMBEDDED_IMAGE",
+                  json.dumps(data_uri(os.path.join(MAPS, data["image"]))))
+
+    os.makedirs(os.path.dirname(MAP_OUT), exist_ok=True)
+    with open(MAP_OUT, "w") as fh:
+        fh.write(html)
+    print(f"wrote {MAP_OUT} ({len(html.encode()) / 1e6:.2f} MB, "
+          f"{len(data['props'])} props embedded)")
 
 
 def main():
@@ -58,6 +96,8 @@ def main():
 
     mb = len(html.encode()) / 1e6
     print(f"wrote {OUT} ({mb:.2f} MB, {len(assets)} sheets embedded)")
+
+    build_map()
 
 
 if __name__ == "__main__":

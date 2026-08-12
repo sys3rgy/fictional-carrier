@@ -15,6 +15,7 @@ from playwright.sync_api import sync_playwright
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PAGE = os.path.join(ROOT, "dist", "carrier-sprites.html")
+MAP_PAGE = os.path.join(ROOT, "dist", "battle-map.html")
 SHOTS = os.path.join(ROOT, "tools", "shots")
 
 # Use the pre-installed Chromium when there is one, rather than downloading a browser.
@@ -27,6 +28,17 @@ INKED = """() => {
   let n = 0;
   for (let i = 0; i < d.length; i += 4) {
     if (d[i] > 90 || d[i + 1] > 90 || d[i + 2] > 110) n++;
+  }
+  return n;
+}"""
+
+
+MAP_INKED = """() => {
+  const c = document.getElementById('map');
+  const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+  let n = 0;
+  for (let i = 0; i < d.length; i += 4) {
+    if (d[i] > 40 || d[i + 1] > 40 || d[i + 2] > 40) n++;
   }
   return n;
 }"""
@@ -102,6 +114,30 @@ def main():
         assert "destroyed" in names, "expected the fighter's destroyed animation"
 
         page.screenshot(path=os.path.join(SHOTS, "viewer_fighter.png"), full_page=True)
+
+        # ---- the battle map page ------------------------------------------------
+        if os.path.exists(MAP_PAGE):
+            page.goto("file://" + MAP_PAGE)
+            page.wait_for_selector("#lane-rows tr")
+            page.wait_for_timeout(700)
+
+            assert page.locator("#lane-rows tr").count() == 3, "expected 3 lanes"
+            assert page.locator("#prop-rows tr").count() == 5, "expected 5 prop kinds"
+            props = int(page.locator("#f-props").inner_text())
+            assert props > 100, f"expected a populated field, got {props} props"
+            # every prop mirrors onto the other side, so the count must be even
+            assert props % 2 == 0, f"map is not symmetric: {props} props"
+
+            drawn = page.evaluate(MAP_INKED)
+            assert drawn > 5000, f"map canvas looks empty ({drawn} lit pixels)"
+
+            # overlays actually change the canvas
+            page.click("#t-cover")
+            page.wait_for_timeout(250)
+            assert page.evaluate(MAP_INKED) != drawn, "cover overlay drew nothing"
+
+            page.screenshot(path=os.path.join(SHOTS, "map.png"), full_page=True)
+
         browser.close()
 
     if errors:

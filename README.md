@@ -44,12 +44,20 @@ python3 generate_carrier.py --contact         # also write contact sheets for ey
 python3 generate_carrier.py --shadow          # bake a drop shadow (see note below)
 ```
 
+Build the battle map (needs the ship sheets first, for the units on it):
+
+```sh
+python3 generate_map.py                   # -> maps/battle_map.png + .json
+python3 generate_map.py --seed 7          # a different field, same rules
+python3 generate_map.py --no-units        # terrain only
+```
+
 Preview them:
 
 ```sh
-python3 -m http.server            # then open /preview/
-python3 tools/build_artifact.py   # standalone page -> dist/carrier-sprites.html
-python3 tools/test_preview.py     # Playwright check of the viewer
+python3 -m http.server            # then open /preview/ and /preview/map.html
+python3 tools/build_artifact.py   # standalone pages -> dist/
+python3 tools/test_preview.py     # Playwright check of both viewers
 ```
 
 ## What you get
@@ -183,6 +191,40 @@ makes a module animate.
 animation list and build function. Everything downstream (fitting, rendering, sheet
 assembly, the atlas) reads from it, so a third hull is a row plus its module
 functions. The fighter was added that way.
+
+## The battle map
+
+`generate_map.py` builds **Kestrel Reach**: a symmetric two-carrier arena, 1920x1000,
+at the same px-per-unit as the ships so a carrier sprite drops straight onto it.
+
+- **Two spawns** at opposite ends, facing each other.
+- **Three lanes** running end to end. Dense asteroid and wreckage bands wall them off;
+  the lane corridors are kept clear by rejecting any prop that would narrow one below
+  a flyable width, so all three routes are always open.
+- **Cover** scattered inside the lanes — every prop carries a world radius and a cover
+  value in the JSON.
+- **A sun that actually lights the field.** Each prop variant is baked once per light
+  direction (8 azimuths) and per falloff tier (3), and placed with the pair matching
+  its real bearing and distance to the sun. Dimming shifts the ramp index rather than
+  scaling colour, so a distant rock stays inside the palette instead of inventing new
+  tones. This is the same trick that bakes a ship once per facing.
+- **Backlit starfield**, with a quantised glow field radiating from the sun, painted at
+  quarter resolution and upscaled nearest so it stays as blocky as the sprites.
+- **180 degree rotational symmetry** about the centre — the left half is generated and
+  rotated onto the right, so neither side gets the better ground.
+
+`maps/battle_map.json` is the map, not a description of the picture: bounds, both
+spawns, lane waypoints, and every prop with position, collision radius, cover value and
+which light bake it uses.
+
+```js
+// which props does a shot from A to B pass behind?
+map.props.filter(p => distancePointToSegment(p, a, b) < p.radius)
+         .reduce((acc, p) => Math.max(acc, p.cover), 0);
+```
+
+Open `preview/map.html` to pan and zoom it with the lane, cover, spawn and sun overlays
+drawn from that JSON.
 
 ## Notes on the render
 

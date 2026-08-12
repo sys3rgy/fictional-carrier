@@ -1,0 +1,5023 @@
+{
+  "name": "Kestrel Reach",
+  "palette": "crimson",
+  "seed": 1337,
+  "image": "battle_map.png",
+  "width": 1920,
+  "height": 1000,
+  "scale_px_per_unit": 12.9,
+  "projection": "orthographic dimetric, yaw 45 deg, pitch 30 deg (2:1)",
+  "axes": {
+    "u": "screen horizontal, world (1,-1) normalised, 1 unit = 1 px * scale",
+    "v": "screen vertical, world (1,1) normalised, compressed 2:1 on screen"
+  },
+  "bounds": {
+    "u": [
+      -66.0,
+      66.0
+    ],
+    "v": [
+      -60.0,
+      60.0
+    ]
+  },
+  "symmetry": "180 degree rotation about (0,0)",
+  "sun": {
+    "u": -68.0,
+    "v": 84.0,
+    "screen": [
+      82.8,
+      -41.8
+    ],
+    "radius_px": 108,
+    "elevation_deg": 38.0,
+    "light_buckets": 8,
+    "note": "props are baked per light bucket and placed with the bucket nearest their true bearing to the sun"
+  },
+  "spawns": [
+    {
+      "side": "west",
+      "u": -62.04,
+      "v": 0.0,
+      "facing_row": 2,
+      "facing": "E",
+      "screen": [
+        159.7,
+        500.0
+      ]
+    },
+    {
+      "side": "east",
+      "u": 62.04,
+      "v": 0.0,
+      "facing_row": 6,
+      "facing": "W",
+      "screen": [
+        1760.3,
+        500.0
+      ]
+    }
+  ],
+  "lanes": [
+    {
+      "name": "north",
+      "half_width": 11.0,
+      "waypoints": [
+        {
+          "u": -66.0,
+          "v": -46.24,
+          "screen": [
+            108.6,
+            798.2
+          ]
+        },
+        {
+          "u": -60.5,
+          "v": -47.03,
+          "screen": [
+            179.5,
+            803.3
+          ]
+        },
+        {
+          "u": -55.0,
+          "v": -47.71,
+          "screen": [
+            250.5,
+            807.7
+          ]
+        },
+        {
+          "u": -49.5,
+          "v": -48.24,
+          "screen": [
+            321.4,
+            811.1
+          ]
+        },
+        {
+          "u": -44.0,
+          "v": -48.56,
+          "screen": [
+            392.4,
+            813.2
+          ]
+        },
+        {
+          "u": -38.5,
+          "v": -48.64,
+          "screen": [
+            463.3,
+            813.7
+          ]
+        },
+        {
+          "u": -33.0,
+          "v": -48.46,
+          "screen": [
+            534.3,
+            812.6
+          ]
+        },
+        {
+          "u": -27.5,
+          "v": -48.03,
+          "screen": [
+            605.2,
+            809.8
+          ]
+        },
+        {
+          "u": -22.0,
+          "v": -47.36,
+          "screen": [
+            676.2,
+            805.5
+          ]
+        },
+        {
+          "u": -16.5,
+          "v": -46.49,
+          "screen": [
+            747.1,
+            799.8
+          ]
+        },
+        {
+          "u": -11.0,
+          "v": -45.45,
+          "screen": [
+            818.1,
+            793.1
+          ]
+        },
+        {
+          "u": -5.5,
+          "v": -44.3,
+          "screen": [
+            889.0,
+            785.7
+          ]
+        },
+        {
+          "u": 0.0,
+          "v": -43.11,
+          "screen": [
+            960.0,
+            778.1
+          ]
+        },
+        {
+          "u": 5.5,
+          "v": -41.94,
+          "screen": [
+            1031.0,
+            770.5
+          ]
+        },
+        {
+          "u": 11.0,
+          "v": -40.87,
+          "screen": [
+            1101.9,
+            763.6
+          ]
+        },
+        {
+          "u": 16.5,
+          "v": -39.96,
+          "screen": [
+            1172.8,
+            757.7
+          ]
+        },
+        {
+          "u": 22.0,
+          "v": -39.25,
+          "screen": [
+            1243.8,
+            753.2
+          ]
+        },
+        {
+          "u": 27.5,
+          "v": -38.81,
+          "screen": [
+            1314.8,
+            750.3
+          ]
+        },
+        {
+          "u": 33.0,
+          "v": -38.64,
+          "screen": [
+            1385.7,
+            749.2
+          ]
+        },
+        {
+          "u": 38.5,
+          "v": -38.78,
+          "screen": [
+            1456.7,
+            750.1
+          ]
+        },
+        {
+          "u": 44.0,
+          "v": -39.21,
+          "screen": [
+            1527.6,
+            752.9
+          ]
+        },
+        {
+          "u": 49.5,
+          "v": -39.91,
+          "screen": [
+            1598.6,
+            757.4
+          ]
+        },
+        {
+          "u": 55.0,
+          "v": -40.86,
+          "screen": [
+            1669.5,
+            763.5
+          ]
+        },
+        {
+          "u": 60.5,
+          "v": -41.99,
+          "screen": [
+            1740.5,
+            770.8
+          ]
+        },
+        {
+          "u": 66.0,
+          "v": -43.25,
+          "screen": [
+            1811.4,
+            779.0
+          ]
+        }
+      ]
+    },
+    {
+      "name": "centre",
+      "half_width": 11.0,
+      "waypoints": [
+        {
+          "u": -66.0,
+          "v": -0.24,
+          "screen": [
+            108.6,
+            501.5
+          ]
+        },
+        {
+          "u": -60.5,
+          "v": -1.03,
+          "screen": [
+            179.5,
+            506.6
+          ]
+        },
+        {
+          "u": -55.0,
+          "v": -1.71,
+          "screen": [
+            250.5,
+            511.0
+          ]
+        },
+        {
+          "u": -49.5,
+          "v": -2.24,
+          "screen": [
+            321.4,
+            514.4
+          ]
+        },
+        {
+          "u": -44.0,
+          "v": -2.56,
+          "screen": [
+            392.4,
+            516.5
+          ]
+        },
+        {
+          "u": -38.5,
+          "v": -2.64,
+          "screen": [
+            463.3,
+            517.0
+          ]
+        },
+        {
+          "u": -33.0,
+          "v": -2.46,
+          "screen": [
+            534.3,
+            515.9
+          ]
+        },
+        {
+          "u": -27.5,
+          "v": -2.03,
+          "screen": [
+            605.2,
+            513.1
+          ]
+        },
+        {
+          "u": -22.0,
+          "v": -1.36,
+          "screen": [
+            676.2,
+            508.8
+          ]
+        },
+        {
+          "u": -16.5,
+          "v": -0.49,
+          "screen": [
+            747.1,
+            503.1
+          ]
+        },
+        {
+          "u": -11.0,
+          "v": 0.55,
+          "screen": [
+            818.1,
+            496.4
+          ]
+        },
+        {
+          "u": -5.5,
+          "v": 1.7,
+          "screen": [
+            889.0,
+            489.0
+          ]
+        },
+        {
+          "u": 0.0,
+          "v": 2.89,
+          "screen": [
+            960.0,
+            481.4
+          ]
+        },
+        {
+          "u": 5.5,
+          "v": 4.06,
+          "screen": [
+            1031.0,
+            473.8
+          ]
+        },
+        {
+          "u": 11.0,
+          "v": 5.13,
+          "screen": [
+            1101.9,
+            466.9
+          ]
+        },
+        {
+          "u": 16.5,
+          "v": 6.04,
+          "screen": [
+            1172.8,
+            461.0
+          ]
+        },
+        {
+          "u": 22.0,
+          "v": 6.75,
+          "screen": [
+            1243.8,
+            456.5
+          ]
+        },
+        {
+          "u": 27.5,
+          "v": 7.19,
+          "screen": [
+            1314.8,
+            453.6
+          ]
+        },
+        {
+          "u": 33.0,
+          "v": 7.36,
+          "screen": [
+            1385.7,
+            452.5
+          ]
+        },
+        {
+          "u": 38.5,
+          "v": 7.22,
+          "screen": [
+            1456.7,
+            453.4
+          ]
+        },
+        {
+          "u": 44.0,
+          "v": 6.79,
+          "screen": [
+            1527.6,
+            456.2
+          ]
+        },
+        {
+          "u": 49.5,
+          "v": 6.09,
+          "screen": [
+            1598.6,
+            460.7
+          ]
+        },
+        {
+          "u": 55.0,
+          "v": 5.14,
+          "screen": [
+            1669.5,
+            466.8
+          ]
+        },
+        {
+          "u": 60.5,
+          "v": 4.01,
+          "screen": [
+            1740.5,
+            474.1
+          ]
+        },
+        {
+          "u": 66.0,
+          "v": 2.75,
+          "screen": [
+            1811.4,
+            482.3
+          ]
+        }
+      ]
+    },
+    {
+      "name": "south",
+      "half_width": 11.0,
+      "waypoints": [
+        {
+          "u": -66.0,
+          "v": 45.76,
+          "screen": [
+            108.6,
+            204.8
+          ]
+        },
+        {
+          "u": -60.5,
+          "v": 44.97,
+          "screen": [
+            179.5,
+            209.9
+          ]
+        },
+        {
+          "u": -55.0,
+          "v": 44.29,
+          "screen": [
+            250.5,
+            214.3
+          ]
+        },
+        {
+          "u": -49.5,
+          "v": 43.76,
+          "screen": [
+            321.4,
+            217.7
+          ]
+        },
+        {
+          "u": -44.0,
+          "v": 43.44,
+          "screen": [
+            392.4,
+            219.8
+          ]
+        },
+        {
+          "u": -38.5,
+          "v": 43.36,
+          "screen": [
+            463.3,
+            220.3
+          ]
+        },
+        {
+          "u": -33.0,
+          "v": 43.54,
+          "screen": [
+            534.3,
+            219.2
+          ]
+        },
+        {
+          "u": -27.5,
+          "v": 43.97,
+          "screen": [
+            605.2,
+            216.4
+          ]
+        },
+        {
+          "u": -22.0,
+          "v": 44.64,
+          "screen": [
+            676.2,
+            212.1
+          ]
+        },
+        {
+          "u": -16.5,
+          "v": 45.51,
+          "screen": [
+            747.1,
+            206.4
+          ]
+        },
+        {
+          "u": -11.0,
+          "v": 46.55,
+          "screen": [
+            818.1,
+            199.7
+          ]
+        },
+        {
+          "u": -5.5,
+          "v": 47.7,
+          "screen": [
+            889.0,
+            192.3
+          ]
+        },
+        {
+          "u": 0.0,
+          "v": 48.89,
+          "screen": [
+            960.0,
+            184.7
+          ]
+        },
+        {
+          "u": 5.5,
+          "v": 50.06,
+          "screen": [
+            1031.0,
+            177.1
+          ]
+        },
+        {
+          "u": 11.0,
+          "v": 51.13,
+          "screen": [
+            1101.9,
+            170.2
+          ]
+        },
+        {
+          "u": 16.5,
+          "v": 52.04,
+          "screen": [
+            1172.8,
+            164.3
+          ]
+        },
+        {
+          "u": 22.0,
+          "v": 52.75,
+          "screen": [
+            1243.8,
+            159.8
+          ]
+        },
+        {
+          "u": 27.5,
+          "v": 53.19,
+          "screen": [
+            1314.8,
+            156.9
+          ]
+        },
+        {
+          "u": 33.0,
+          "v": 53.36,
+          "screen": [
+            1385.7,
+            155.8
+          ]
+        },
+        {
+          "u": 38.5,
+          "v": 53.22,
+          "screen": [
+            1456.7,
+            156.7
+          ]
+        },
+        {
+          "u": 44.0,
+          "v": 52.79,
+          "screen": [
+            1527.6,
+            159.5
+          ]
+        },
+        {
+          "u": 49.5,
+          "v": 52.09,
+          "screen": [
+            1598.6,
+            164.0
+          ]
+        },
+        {
+          "u": 55.0,
+          "v": 51.14,
+          "screen": [
+            1669.5,
+            170.1
+          ]
+        },
+        {
+          "u": 60.5,
+          "v": 50.01,
+          "screen": [
+            1740.5,
+            177.4
+          ]
+        },
+        {
+          "u": 66.0,
+          "v": 48.75,
+          "screen": [
+            1811.4,
+            185.6
+          ]
+        }
+      ]
+    }
+  ],
+  "prop_kinds": {
+    "asteroid_lg": {
+      "sheet": "prop_asteroid_lg.png",
+      "cell": 96,
+      "variants": 3,
+      "light_buckets": 8,
+      "falloff_tiers": 3,
+      "row": "light_bucket * falloff_tiers + falloff_tier",
+      "world_radius": 3.4,
+      "cover": 0.85
+    },
+    "asteroid_md": {
+      "sheet": "prop_asteroid_md.png",
+      "cell": 64,
+      "variants": 4,
+      "light_buckets": 8,
+      "falloff_tiers": 3,
+      "row": "light_bucket * falloff_tiers + falloff_tier",
+      "world_radius": 2.2,
+      "cover": 0.6
+    },
+    "asteroid_sm": {
+      "sheet": "prop_asteroid_sm.png",
+      "cell": 40,
+      "variants": 4,
+      "light_buckets": 8,
+      "falloff_tiers": 3,
+      "row": "light_bucket * falloff_tiers + falloff_tier",
+      "world_radius": 1.3,
+      "cover": 0.35
+    },
+    "debris_lg": {
+      "sheet": "prop_debris_lg.png",
+      "cell": 80,
+      "variants": 3,
+      "light_buckets": 8,
+      "falloff_tiers": 3,
+      "row": "light_bucket * falloff_tiers + falloff_tier",
+      "world_radius": 2.8,
+      "cover": 0.55
+    },
+    "debris_sm": {
+      "sheet": "prop_debris_sm.png",
+      "cell": 44,
+      "variants": 4,
+      "light_buckets": 8,
+      "falloff_tiers": 3,
+      "row": "light_bucket * falloff_tiers + falloff_tier",
+      "world_radius": 1.5,
+      "cover": 0.3
+    }
+  },
+  "props": [
+    {
+      "kind": "asteroid_md",
+      "variant": 0,
+      "u": -10.45,
+      "v": -71.88,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 2,
+      "screen": [
+        825.2,
+        963.6
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 2,
+      "u": 53.36,
+      "v": -71.68,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1648.3,
+        962.3
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 2,
+      "u": -45.02,
+      "v": -71.65,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 2,
+      "screen": [
+        379.2,
+        962.1
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 2,
+      "u": -61.52,
+      "v": -71.64,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 2,
+      "screen": [
+        166.4,
+        962.1
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 2,
+      "u": 8.44,
+      "v": -71.47,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1068.9,
+        961.0
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 0,
+      "u": -31.78,
+      "v": -71.26,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 2,
+      "screen": [
+        550.0,
+        959.6
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 1,
+      "u": -24.53,
+      "v": -70.95,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 2,
+      "screen": [
+        643.6,
+        957.6
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 1,
+      "u": -6.48,
+      "v": -70.84,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 2,
+      "screen": [
+        876.4,
+        956.9
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 0,
+      "u": 21.62,
+      "v": -70.77,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1238.9,
+        956.5
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 0,
+      "u": -52.01,
+      "v": -70.68,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 2,
+      "screen": [
+        289.1,
+        955.9
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 0,
+      "u": -16.63,
+      "v": -70.03,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 2,
+      "screen": [
+        745.5,
+        951.7
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 2,
+      "u": -65.38,
+      "v": -69.55,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 2,
+      "screen": [
+        116.6,
+        948.6
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 0,
+      "u": 33.13,
+      "v": -69.42,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1387.4,
+        947.8
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 1,
+      "u": 25.04,
+      "v": -68.72,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1283.0,
+        943.2
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 0,
+      "u": 48.62,
+      "v": -68.64,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1587.2,
+        942.7
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 1,
+      "u": -39.34,
+      "v": -67.77,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 2,
+      "screen": [
+        452.5,
+        937.1
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 0,
+      "u": 3.89,
+      "v": -67.59,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1010.2,
+        936.0
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 1,
+      "u": -1.84,
+      "v": -67.5,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        936.3,
+        935.4
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 1,
+      "u": -44.29,
+      "v": -67.26,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 2,
+      "screen": [
+        388.7,
+        933.8
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": 55.68,
+      "v": -67.22,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1678.3,
+        933.6
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 1,
+      "u": -33.97,
+      "v": -67.18,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 2,
+      "screen": [
+        521.8,
+        933.3
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 1,
+      "u": 63.15,
+      "v": -67.09,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1774.6,
+        932.7
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 0,
+      "u": 38.29,
+      "v": -66.79,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1453.9,
+        930.8
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 0,
+      "u": 17.48,
+      "v": -66.28,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1185.5,
+        927.5
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 1,
+      "u": -8.2,
+      "v": -66.21,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 2,
+      "screen": [
+        854.2,
+        927.1
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 1,
+      "u": -27.18,
+      "v": -65.91,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 2,
+      "screen": [
+        609.4,
+        925.1
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 1,
+      "u": -56.74,
+      "v": -65.85,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 2,
+      "screen": [
+        228.1,
+        924.7
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 0,
+      "u": -19.44,
+      "v": -65.53,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 2,
+      "screen": [
+        709.2,
+        922.7
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 1,
+      "u": -48.59,
+      "v": -65.03,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 2,
+      "screen": [
+        333.2,
+        919.4
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 1,
+      "u": -61.8,
+      "v": -65.02,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 2,
+      "screen": [
+        162.8,
+        919.4
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 2,
+      "u": 10.54,
+      "v": -64.97,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1096.0,
+        919.1
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 0,
+      "u": 43.38,
+      "v": -64.62,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1519.6,
+        916.8
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 0,
+      "u": 31.0,
+      "v": -64.17,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1359.9,
+        913.9
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": 23.11,
+      "v": -64.08,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1258.1,
+        913.3
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 0,
+      "u": -4.93,
+      "v": -63.23,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        896.4,
+        907.8
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 0,
+      "u": 1.97,
+      "v": -63.03,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        985.4,
+        906.5
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 1,
+      "u": -12.46,
+      "v": -61.99,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 2,
+      "screen": [
+        799.3,
+        899.8
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": 55.45,
+      "v": -61.65,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1675.3,
+        897.6
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 0,
+      "u": -40.66,
+      "v": -61.32,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 2,
+      "screen": [
+        435.5,
+        895.5
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 0,
+      "u": 65.51,
+      "v": -60.99,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1805.1,
+        893.4
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 2,
+      "u": -53.45,
+      "v": -60.95,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 2,
+      "screen": [
+        270.5,
+        893.1
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 1,
+      "u": 15.39,
+      "v": -60.73,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1158.5,
+        891.7
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 2,
+      "u": -19.4,
+      "v": -60.49,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 2,
+      "screen": [
+        709.7,
+        890.2
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 0,
+      "u": 32.44,
+      "v": -60.22,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1378.5,
+        888.4
+      ]
+    },
+    {
+      "kind": "asteroid_sm",
+      "variant": 3,
+      "u": 59.52,
+      "v": -58.99,
+      "radius": 1.3,
+      "cover": 0.35,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1727.8,
+        880.5
+      ]
+    },
+    {
+      "kind": "asteroid_sm",
+      "variant": 3,
+      "u": 19.1,
+      "v": -58.9,
+      "radius": 1.3,
+      "cover": 0.35,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1206.4,
+        879.9
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 2,
+      "u": -61.84,
+      "v": -58.86,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 2,
+      "screen": [
+        162.3,
+        879.6
+      ]
+    },
+    {
+      "kind": "asteroid_sm",
+      "variant": 2,
+      "u": 29.89,
+      "v": -58.49,
+      "radius": 1.3,
+      "cover": 0.35,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1345.6,
+        877.3
+      ]
+    },
+    {
+      "kind": "asteroid_sm",
+      "variant": 0,
+      "u": 38.06,
+      "v": -56.59,
+      "radius": 1.3,
+      "cover": 0.35,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1451.0,
+        865.0
+      ]
+    },
+    {
+      "kind": "debris_sm",
+      "variant": 2,
+      "u": -36.32,
+      "v": -56.08,
+      "radius": 1.5,
+      "cover": 0.3,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 2,
+      "screen": [
+        491.5,
+        861.7
+      ]
+    },
+    {
+      "kind": "debris_sm",
+      "variant": 3,
+      "u": -61.13,
+      "v": -52.96,
+      "radius": 1.5,
+      "cover": 0.3,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 2,
+      "screen": [
+        171.4,
+        841.6
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 1,
+      "u": -20.43,
+      "v": -52.53,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 2,
+      "screen": [
+        696.5,
+        838.8
+      ]
+    },
+    {
+      "kind": "debris_sm",
+      "variant": 1,
+      "u": -51.87,
+      "v": -52.45,
+      "radius": 1.5,
+      "cover": 0.3,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 2,
+      "screen": [
+        290.9,
+        838.3
+      ]
+    },
+    {
+      "kind": "asteroid_sm",
+      "variant": 2,
+      "u": -4.0,
+      "v": -51.4,
+      "radius": 1.3,
+      "cover": 0.35,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        908.4,
+        831.5
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 1,
+      "u": -37.69,
+      "v": -50.84,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 2,
+      "screen": [
+        473.8,
+        827.9
+      ]
+    },
+    {
+      "kind": "asteroid_sm",
+      "variant": 3,
+      "u": 1.19,
+      "v": -49.79,
+      "radius": 1.3,
+      "cover": 0.35,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        975.4,
+        821.1
+      ]
+    },
+    {
+      "kind": "asteroid_sm",
+      "variant": 1,
+      "u": -5.45,
+      "v": -48.09,
+      "radius": 1.3,
+      "cover": 0.35,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        889.7,
+        810.2
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 2,
+      "u": 64.11,
+      "v": -47.59,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1787.0,
+        807.0
+      ]
+    },
+    {
+      "kind": "asteroid_sm",
+      "variant": 0,
+      "u": 6.24,
+      "v": -45.51,
+      "radius": 1.3,
+      "cover": 0.35,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1040.5,
+        793.5
+      ]
+    },
+    {
+      "kind": "debris_sm",
+      "variant": 0,
+      "u": -18.77,
+      "v": -44.83,
+      "radius": 1.5,
+      "cover": 0.3,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 2,
+      "screen": [
+        717.9,
+        789.2
+      ]
+    },
+    {
+      "kind": "asteroid_sm",
+      "variant": 2,
+      "u": 61.37,
+      "v": -44.65,
+      "radius": 1.3,
+      "cover": 0.35,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1751.7,
+        788.0
+      ]
+    },
+    {
+      "kind": "asteroid_sm",
+      "variant": 3,
+      "u": 20.62,
+      "v": -44.32,
+      "radius": 1.3,
+      "cover": 0.35,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1226.0,
+        785.9
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": -26.58,
+      "v": -44.21,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 2,
+      "screen": [
+        617.1,
+        785.2
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 2,
+      "u": 3.1,
+      "v": -43.24,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1000.0,
+        778.9
+      ]
+    },
+    {
+      "kind": "debris_sm",
+      "variant": 3,
+      "u": 23.47,
+      "v": -41.34,
+      "radius": 1.5,
+      "cover": 0.3,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1262.8,
+        766.6
+      ]
+    },
+    {
+      "kind": "debris_sm",
+      "variant": 1,
+      "u": -59.89,
+      "v": -40.43,
+      "radius": 1.5,
+      "cover": 0.3,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 2,
+      "screen": [
+        187.4,
+        760.8
+      ]
+    },
+    {
+      "kind": "asteroid_sm",
+      "variant": 2,
+      "u": 34.17,
+      "v": -40.15,
+      "radius": 1.3,
+      "cover": 0.35,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1400.8,
+        759.0
+      ]
+    },
+    {
+      "kind": "asteroid_sm",
+      "variant": 2,
+      "u": 5.7,
+      "v": -40.05,
+      "radius": 1.3,
+      "cover": 0.35,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1033.5,
+        758.3
+      ]
+    },
+    {
+      "kind": "debris_sm",
+      "variant": 3,
+      "u": 17.89,
+      "v": -40.04,
+      "radius": 1.5,
+      "cover": 0.3,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1190.8,
+        758.3
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": 26.36,
+      "v": -39.68,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1300.0,
+        755.9
+      ]
+    },
+    {
+      "kind": "debris_sm",
+      "variant": 0,
+      "u": 15.49,
+      "v": -38.83,
+      "radius": 1.5,
+      "cover": 0.3,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1159.8,
+        750.5
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": -49.2,
+      "v": -36.98,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 2,
+      "screen": [
+        325.3,
+        738.5
+      ]
+    },
+    {
+      "kind": "debris_sm",
+      "variant": 2,
+      "u": -43.5,
+      "v": -36.69,
+      "radius": 1.5,
+      "cover": 0.3,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 2,
+      "screen": [
+        398.9,
+        736.7
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 0,
+      "u": 37.56,
+      "v": -36.51,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1444.5,
+        735.5
+      ]
+    },
+    {
+      "kind": "debris_sm",
+      "variant": 0,
+      "u": 32.39,
+      "v": -36.45,
+      "radius": 1.5,
+      "cover": 0.3,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1377.8,
+        735.1
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 0,
+      "u": -29.36,
+      "v": -36.26,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 2,
+      "screen": [
+        581.3,
+        733.9
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 2,
+      "u": -32.77,
+      "v": -34.89,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 2,
+      "screen": [
+        537.3,
+        725.0
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": -18.83,
+      "v": -34.51,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        717.1,
+        722.6
+      ]
+    },
+    {
+      "kind": "asteroid_sm",
+      "variant": 3,
+      "u": 64.81,
+      "v": -33.26,
+      "radius": 1.3,
+      "cover": 0.35,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1796.0,
+        714.5
+      ]
+    },
+    {
+      "kind": "debris_sm",
+      "variant": 1,
+      "u": -57.6,
+      "v": -32.02,
+      "radius": 1.5,
+      "cover": 0.3,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 1,
+      "screen": [
+        217.0,
+        706.5
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": 58.23,
+      "v": -31.48,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1711.2,
+        703.0
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 1,
+      "u": 26.79,
+      "v": -31.17,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1305.6,
+        701.0
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 0,
+      "u": -10.02,
+      "v": -30.91,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        830.7,
+        699.4
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": 17.53,
+      "v": -30.19,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1186.1,
+        694.7
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 2,
+      "u": -32.48,
+      "v": -30.03,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 2,
+      "screen": [
+        541.0,
+        693.7
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 2,
+      "u": 7.34,
+      "v": -30.01,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1054.7,
+        693.6
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": 35.93,
+      "v": -29.23,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1423.5,
+        688.5
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": -50.8,
+      "v": -28.11,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 1,
+      "screen": [
+        304.7,
+        681.3
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 2,
+      "u": -36.85,
+      "v": -27.9,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 1,
+      "screen": [
+        484.6,
+        680.0
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 0,
+      "u": -44.25,
+      "v": -27.84,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 1,
+      "screen": [
+        389.2,
+        679.6
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 1,
+      "u": 44.34,
+      "v": -27.52,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1532.0,
+        677.5
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 0,
+      "u": -20.35,
+      "v": -27.43,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        697.5,
+        676.9
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 0,
+      "u": 63.82,
+      "v": -27.2,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1783.3,
+        675.4
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 0,
+      "u": -65.94,
+      "v": -26.7,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 1,
+      "screen": [
+        109.4,
+        672.2
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 1,
+      "u": 18.13,
+      "v": -26.4,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1193.9,
+        670.3
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 2,
+      "u": 57.59,
+      "v": -26.39,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1702.9,
+        670.2
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 2,
+      "u": -59.83,
+      "v": -25.95,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 1,
+      "screen": [
+        188.2,
+        667.4
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 1,
+      "u": -1.27,
+      "v": -25.57,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        943.6,
+        664.9
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 0,
+      "u": 3.62,
+      "v": -25.47,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1006.7,
+        664.3
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 0,
+      "u": 50.23,
+      "v": -25.18,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1608.0,
+        662.4
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 1,
+      "u": 22.14,
+      "v": -24.98,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1245.6,
+        661.1
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 1,
+      "u": -28.79,
+      "v": -24.88,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 1,
+      "screen": [
+        588.6,
+        660.5
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 0,
+      "u": 13.35,
+      "v": -24.44,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1132.2,
+        657.6
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 0,
+      "u": 33.78,
+      "v": -23.58,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1395.8,
+        652.1
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": -55.51,
+      "v": -23.44,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 1,
+      "screen": [
+        243.9,
+        651.2
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 0,
+      "u": 41.41,
+      "v": -23.32,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1494.2,
+        650.4
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 1,
+      "u": 9.55,
+      "v": -23.24,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1083.2,
+        649.9
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": 45.61,
+      "v": -22.71,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1548.4,
+        646.5
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 1,
+      "u": -16.86,
+      "v": -22.64,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        742.5,
+        646.0
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 0,
+      "u": -11.3,
+      "v": -22.34,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        814.2,
+        644.1
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": 55.25,
+      "v": -22.23,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1672.7,
+        643.4
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 1,
+      "u": -43.98,
+      "v": -22.22,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 1,
+      "screen": [
+        392.7,
+        643.3
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 2,
+      "u": 28.49,
+      "v": -22.06,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1327.5,
+        642.3
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 1,
+      "u": -50.16,
+      "v": -21.56,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 1,
+      "screen": [
+        312.9,
+        639.1
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 2,
+      "u": -31.19,
+      "v": -21.54,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 1,
+      "screen": [
+        557.6,
+        638.9
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": -37.74,
+      "v": -20.91,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 1,
+      "screen": [
+        473.2,
+        634.9
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 1,
+      "u": -25.73,
+      "v": -20.08,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 1,
+      "screen": [
+        628.1,
+        629.5
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 2,
+      "u": 22.96,
+      "v": -20.06,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1256.2,
+        629.4
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 2,
+      "u": 16.12,
+      "v": -19.67,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1167.9,
+        626.9
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 0,
+      "u": 37.64,
+      "v": -19.52,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1445.6,
+        625.9
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": -19.18,
+      "v": -19.2,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        712.6,
+        623.8
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": 47.85,
+      "v": -18.23,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1577.3,
+        617.6
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 1,
+      "u": 11.23,
+      "v": -17.85,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1104.9,
+        615.1
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 0,
+      "u": -1.15,
+      "v": -17.6,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        945.2,
+        613.5
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 0,
+      "u": 27.05,
+      "v": -16.46,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1308.9,
+        606.2
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": -43.32,
+      "v": -16.44,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 1,
+      "screen": [
+        401.2,
+        606.0
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 1,
+      "u": 32.93,
+      "v": -16.36,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1384.8,
+        605.5
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 2,
+      "u": 0.58,
+      "v": -16.0,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        967.5,
+        603.2
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 1,
+      "u": -38.0,
+      "v": -15.56,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 1,
+      "screen": [
+        469.8,
+        600.4
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 0,
+      "u": -12.72,
+      "v": -15.36,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        795.9,
+        599.1
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": 37.13,
+      "v": -14.93,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1439.0,
+        596.3
+      ]
+    },
+    {
+      "kind": "asteroid_sm",
+      "variant": 2,
+      "u": -15.05,
+      "v": -13.14,
+      "radius": 1.3,
+      "cover": 0.35,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        765.9,
+        584.8
+      ]
+    },
+    {
+      "kind": "asteroid_sm",
+      "variant": 0,
+      "u": 39.39,
+      "v": -12.09,
+      "radius": 1.3,
+      "cover": 0.35,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1468.1,
+        578.0
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 1,
+      "u": 27.47,
+      "v": -11.41,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1314.4,
+        573.6
+      ]
+    },
+    {
+      "kind": "debris_sm",
+      "variant": 1,
+      "u": -19.08,
+      "v": -7.9,
+      "radius": 1.5,
+      "cover": 0.3,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        713.9,
+        551.0
+      ]
+    },
+    {
+      "kind": "asteroid_sm",
+      "variant": 1,
+      "u": -13.46,
+      "v": -7.37,
+      "radius": 1.3,
+      "cover": 0.35,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        786.4,
+        547.5
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 2,
+      "u": -9.38,
+      "v": -4.95,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        839.0,
+        531.9
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 0,
+      "u": -39.82,
+      "v": -4.81,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 1,
+      "screen": [
+        446.3,
+        531.0
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 2,
+      "u": 31.63,
+      "v": -4.47,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1368.0,
+        528.8
+      ]
+    },
+    {
+      "kind": "asteroid_sm",
+      "variant": 1,
+      "u": 10.79,
+      "v": -3.37,
+      "radius": 1.3,
+      "cover": 0.35,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        1099.2,
+        521.7
+      ]
+    },
+    {
+      "kind": "debris_sm",
+      "variant": 2,
+      "u": 5.5,
+      "v": -2.18,
+      "radius": 1.5,
+      "cover": 0.3,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        1031.0,
+        514.1
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": 21.65,
+      "v": -0.44,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1239.3,
+        502.8
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": -21.65,
+      "v": 0.44,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        680.7,
+        497.2
+      ]
+    },
+    {
+      "kind": "debris_sm",
+      "variant": 2,
+      "u": -5.5,
+      "v": 2.18,
+      "radius": 1.5,
+      "cover": 0.3,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        889.0,
+        485.9
+      ]
+    },
+    {
+      "kind": "asteroid_sm",
+      "variant": 1,
+      "u": -10.79,
+      "v": 3.37,
+      "radius": 1.3,
+      "cover": 0.35,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        820.8,
+        478.3
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 2,
+      "u": -31.63,
+      "v": 4.47,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        552.0,
+        471.2
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 0,
+      "u": 39.82,
+      "v": 4.81,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1473.7,
+        469.0
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 2,
+      "u": 9.38,
+      "v": 4.95,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        1081.0,
+        468.1
+      ]
+    },
+    {
+      "kind": "asteroid_sm",
+      "variant": 1,
+      "u": 13.46,
+      "v": 7.37,
+      "radius": 1.3,
+      "cover": 0.35,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        1133.6,
+        452.5
+      ]
+    },
+    {
+      "kind": "debris_sm",
+      "variant": 1,
+      "u": 19.08,
+      "v": 7.9,
+      "radius": 1.5,
+      "cover": 0.3,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        1206.1,
+        449.0
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 1,
+      "u": -27.47,
+      "v": 11.41,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        605.6,
+        426.4
+      ]
+    },
+    {
+      "kind": "asteroid_sm",
+      "variant": 0,
+      "u": -39.39,
+      "v": 12.09,
+      "radius": 1.3,
+      "cover": 0.35,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 1,
+      "screen": [
+        451.9,
+        422.0
+      ]
+    },
+    {
+      "kind": "asteroid_sm",
+      "variant": 2,
+      "u": 15.05,
+      "v": 13.14,
+      "radius": 1.3,
+      "cover": 0.35,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        1154.1,
+        415.2
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": -37.13,
+      "v": 14.93,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        481.0,
+        403.7
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 0,
+      "u": 12.72,
+      "v": 15.36,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        1124.1,
+        400.9
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 1,
+      "u": 38.0,
+      "v": 15.56,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1450.2,
+        399.6
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 2,
+      "u": -0.58,
+      "v": 16.0,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        952.5,
+        396.8
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 1,
+      "u": -32.93,
+      "v": 16.36,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        535.2,
+        394.5
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": 43.32,
+      "v": 16.44,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1518.8,
+        394.0
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 0,
+      "u": -27.05,
+      "v": 16.46,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        611.1,
+        393.8
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 0,
+      "u": 1.15,
+      "v": 17.6,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        974.8,
+        386.5
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 1,
+      "u": -11.23,
+      "v": 17.85,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        815.1,
+        384.9
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": -47.85,
+      "v": 18.23,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 1,
+      "screen": [
+        342.7,
+        382.4
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": 19.18,
+      "v": 19.2,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        1207.4,
+        376.2
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 0,
+      "u": -37.64,
+      "v": 19.52,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        474.4,
+        374.1
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 2,
+      "u": -16.12,
+      "v": 19.67,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        752.1,
+        373.1
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 2,
+      "u": -22.96,
+      "v": 20.06,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        663.8,
+        370.6
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 1,
+      "u": 25.73,
+      "v": 20.08,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        1291.9,
+        370.5
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": 37.74,
+      "v": 20.91,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1446.8,
+        365.1
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 2,
+      "u": 31.19,
+      "v": 21.54,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        1362.4,
+        361.1
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 1,
+      "u": 50.16,
+      "v": 21.56,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1607.1,
+        360.9
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 2,
+      "u": -28.49,
+      "v": 22.06,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        592.5,
+        357.7
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 1,
+      "u": 43.98,
+      "v": 22.22,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1527.3,
+        356.7
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": -55.25,
+      "v": 22.23,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 0,
+      "screen": [
+        247.3,
+        356.6
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 0,
+      "u": 11.3,
+      "v": 22.34,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        1105.8,
+        355.9
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 1,
+      "u": 16.86,
+      "v": 22.64,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        1177.5,
+        354.0
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": -45.61,
+      "v": 22.71,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 0,
+      "screen": [
+        371.6,
+        353.5
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 1,
+      "u": -9.55,
+      "v": 23.24,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        836.8,
+        350.1
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 0,
+      "u": -41.41,
+      "v": 23.32,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        425.8,
+        349.6
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": 55.51,
+      "v": 23.44,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1676.1,
+        348.8
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 0,
+      "u": -33.78,
+      "v": 23.58,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        524.2,
+        347.9
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 0,
+      "u": -13.35,
+      "v": 24.44,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        787.8,
+        342.4
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 1,
+      "u": 28.79,
+      "v": 24.88,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        1331.4,
+        339.5
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 1,
+      "u": -22.14,
+      "v": 24.98,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        674.4,
+        338.9
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 0,
+      "u": -50.23,
+      "v": 25.18,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 0,
+      "screen": [
+        312.0,
+        337.6
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 0,
+      "u": -3.62,
+      "v": 25.47,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        913.3,
+        335.7
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 1,
+      "u": 1.27,
+      "v": 25.57,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        976.4,
+        335.1
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 2,
+      "u": 59.83,
+      "v": 25.95,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1731.8,
+        332.6
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 2,
+      "u": -57.59,
+      "v": 26.39,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 0,
+      "screen": [
+        217.1,
+        329.8
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 1,
+      "u": -18.13,
+      "v": 26.4,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        726.1,
+        329.7
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 0,
+      "u": 65.94,
+      "v": 26.7,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1810.6,
+        327.8
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 0,
+      "u": -63.82,
+      "v": 27.2,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 0,
+      "screen": [
+        136.7,
+        324.6
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 0,
+      "u": 20.35,
+      "v": 27.43,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        1222.5,
+        323.1
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 1,
+      "u": -44.34,
+      "v": 27.52,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 0,
+      "screen": [
+        388.0,
+        322.5
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 0,
+      "u": 44.25,
+      "v": 27.84,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1530.8,
+        320.4
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 2,
+      "u": 36.85,
+      "v": 27.9,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1435.4,
+        320.0
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": 50.8,
+      "v": 28.11,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1615.3,
+        318.7
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": -35.93,
+      "v": 29.23,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 0,
+      "screen": [
+        496.5,
+        311.5
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 2,
+      "u": -7.34,
+      "v": 30.01,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        865.3,
+        306.4
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 2,
+      "u": 32.48,
+      "v": 30.03,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        1379.0,
+        306.3
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": -17.53,
+      "v": 30.19,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        733.9,
+        305.3
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 0,
+      "u": 10.02,
+      "v": 30.91,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        1089.3,
+        300.6
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 1,
+      "u": -26.79,
+      "v": 31.17,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        614.4,
+        299.0
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": -58.23,
+      "v": 31.48,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 0,
+      "screen": [
+        208.8,
+        297.0
+      ]
+    },
+    {
+      "kind": "debris_sm",
+      "variant": 1,
+      "u": 57.6,
+      "v": 32.02,
+      "radius": 1.5,
+      "cover": 0.3,
+      "side": "east",
+      "light_bucket": 3,
+      "falloff_tier": 2,
+      "screen": [
+        1703.0,
+        293.5
+      ]
+    },
+    {
+      "kind": "asteroid_sm",
+      "variant": 3,
+      "u": -64.81,
+      "v": 33.26,
+      "radius": 1.3,
+      "cover": 0.35,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 0,
+      "screen": [
+        124.0,
+        285.5
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": 18.83,
+      "v": 34.51,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        1202.9,
+        277.4
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 2,
+      "u": 32.77,
+      "v": 34.89,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        1382.7,
+        275.0
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 0,
+      "u": 29.36,
+      "v": 36.26,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        1338.7,
+        266.1
+      ]
+    },
+    {
+      "kind": "debris_sm",
+      "variant": 0,
+      "u": -32.39,
+      "v": 36.45,
+      "radius": 1.5,
+      "cover": 0.3,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 0,
+      "screen": [
+        542.2,
+        264.9
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 0,
+      "u": -37.56,
+      "v": 36.51,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 0,
+      "screen": [
+        475.5,
+        264.5
+      ]
+    },
+    {
+      "kind": "debris_sm",
+      "variant": 2,
+      "u": 43.5,
+      "v": 36.69,
+      "radius": 1.5,
+      "cover": 0.3,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 2,
+      "screen": [
+        1521.2,
+        263.3
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": 49.2,
+      "v": 36.98,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 3,
+      "falloff_tier": 2,
+      "screen": [
+        1594.7,
+        261.5
+      ]
+    },
+    {
+      "kind": "debris_sm",
+      "variant": 0,
+      "u": -15.49,
+      "v": 38.83,
+      "radius": 1.5,
+      "cover": 0.3,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        760.2,
+        249.5
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": -26.36,
+      "v": 39.68,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 0,
+      "screen": [
+        620.0,
+        244.1
+      ]
+    },
+    {
+      "kind": "debris_sm",
+      "variant": 3,
+      "u": -17.89,
+      "v": 40.04,
+      "radius": 1.5,
+      "cover": 0.3,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        729.2,
+        241.7
+      ]
+    },
+    {
+      "kind": "asteroid_sm",
+      "variant": 2,
+      "u": -5.7,
+      "v": 40.05,
+      "radius": 1.3,
+      "cover": 0.35,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        886.5,
+        241.7
+      ]
+    },
+    {
+      "kind": "asteroid_sm",
+      "variant": 2,
+      "u": -34.17,
+      "v": 40.15,
+      "radius": 1.3,
+      "cover": 0.35,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 0,
+      "screen": [
+        519.2,
+        241.0
+      ]
+    },
+    {
+      "kind": "debris_sm",
+      "variant": 1,
+      "u": 59.89,
+      "v": 40.43,
+      "radius": 1.5,
+      "cover": 0.3,
+      "side": "east",
+      "light_bucket": 3,
+      "falloff_tier": 2,
+      "screen": [
+        1732.6,
+        239.2
+      ]
+    },
+    {
+      "kind": "debris_sm",
+      "variant": 3,
+      "u": -23.47,
+      "v": 41.34,
+      "radius": 1.5,
+      "cover": 0.3,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 0,
+      "screen": [
+        657.2,
+        233.4
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 2,
+      "u": -3.1,
+      "v": 43.24,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        920.0,
+        221.1
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": 26.58,
+      "v": 44.21,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        1302.9,
+        214.8
+      ]
+    },
+    {
+      "kind": "asteroid_sm",
+      "variant": 3,
+      "u": -20.62,
+      "v": 44.32,
+      "radius": 1.3,
+      "cover": 0.35,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 0,
+      "screen": [
+        694.0,
+        214.1
+      ]
+    },
+    {
+      "kind": "asteroid_sm",
+      "variant": 2,
+      "u": -61.37,
+      "v": 44.65,
+      "radius": 1.3,
+      "cover": 0.35,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 0,
+      "screen": [
+        168.3,
+        212.0
+      ]
+    },
+    {
+      "kind": "debris_sm",
+      "variant": 0,
+      "u": 18.77,
+      "v": 44.83,
+      "radius": 1.5,
+      "cover": 0.3,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        1202.1,
+        210.8
+      ]
+    },
+    {
+      "kind": "asteroid_sm",
+      "variant": 0,
+      "u": -6.24,
+      "v": 45.51,
+      "radius": 1.3,
+      "cover": 0.35,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        879.5,
+        206.5
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 2,
+      "u": -64.11,
+      "v": 47.59,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 0,
+      "screen": [
+        133.0,
+        193.0
+      ]
+    },
+    {
+      "kind": "asteroid_sm",
+      "variant": 1,
+      "u": 5.45,
+      "v": 48.09,
+      "radius": 1.3,
+      "cover": 0.35,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        1030.3,
+        189.8
+      ]
+    },
+    {
+      "kind": "asteroid_sm",
+      "variant": 3,
+      "u": -1.19,
+      "v": 49.79,
+      "radius": 1.3,
+      "cover": 0.35,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        944.6,
+        178.9
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 1,
+      "u": 37.69,
+      "v": 50.84,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 3,
+      "falloff_tier": 1,
+      "screen": [
+        1446.2,
+        172.1
+      ]
+    },
+    {
+      "kind": "asteroid_sm",
+      "variant": 2,
+      "u": 4.0,
+      "v": 51.4,
+      "radius": 1.3,
+      "cover": 0.35,
+      "side": "east",
+      "light_bucket": 2,
+      "falloff_tier": 1,
+      "screen": [
+        1011.6,
+        168.5
+      ]
+    },
+    {
+      "kind": "debris_sm",
+      "variant": 1,
+      "u": 51.87,
+      "v": 52.45,
+      "radius": 1.5,
+      "cover": 0.3,
+      "side": "east",
+      "light_bucket": 3,
+      "falloff_tier": 2,
+      "screen": [
+        1629.1,
+        161.7
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 1,
+      "u": 20.43,
+      "v": 52.53,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 3,
+      "falloff_tier": 1,
+      "screen": [
+        1223.5,
+        161.2
+      ]
+    },
+    {
+      "kind": "debris_sm",
+      "variant": 3,
+      "u": 61.13,
+      "v": 52.96,
+      "radius": 1.5,
+      "cover": 0.3,
+      "side": "east",
+      "light_bucket": 3,
+      "falloff_tier": 2,
+      "screen": [
+        1748.6,
+        158.4
+      ]
+    },
+    {
+      "kind": "debris_sm",
+      "variant": 2,
+      "u": 36.32,
+      "v": 56.08,
+      "radius": 1.5,
+      "cover": 0.3,
+      "side": "east",
+      "light_bucket": 3,
+      "falloff_tier": 1,
+      "screen": [
+        1428.5,
+        138.3
+      ]
+    },
+    {
+      "kind": "asteroid_sm",
+      "variant": 0,
+      "u": -38.06,
+      "v": 56.59,
+      "radius": 1.3,
+      "cover": 0.35,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 0,
+      "screen": [
+        469.0,
+        135.0
+      ]
+    },
+    {
+      "kind": "asteroid_sm",
+      "variant": 2,
+      "u": -29.89,
+      "v": 58.49,
+      "radius": 1.3,
+      "cover": 0.35,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 0,
+      "screen": [
+        574.4,
+        122.7
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 2,
+      "u": 61.84,
+      "v": 58.86,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 3,
+      "falloff_tier": 2,
+      "screen": [
+        1757.7,
+        120.4
+      ]
+    },
+    {
+      "kind": "asteroid_sm",
+      "variant": 3,
+      "u": -19.1,
+      "v": 58.9,
+      "radius": 1.3,
+      "cover": 0.35,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 0,
+      "screen": [
+        713.6,
+        120.1
+      ]
+    },
+    {
+      "kind": "asteroid_sm",
+      "variant": 3,
+      "u": -59.52,
+      "v": 58.99,
+      "radius": 1.3,
+      "cover": 0.35,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 0,
+      "screen": [
+        192.2,
+        119.5
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 0,
+      "u": -32.44,
+      "v": 60.22,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 0,
+      "screen": [
+        541.5,
+        111.6
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 2,
+      "u": 19.4,
+      "v": 60.49,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 3,
+      "falloff_tier": 1,
+      "screen": [
+        1210.3,
+        109.8
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 1,
+      "u": -15.39,
+      "v": 60.73,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 0,
+      "screen": [
+        761.5,
+        108.3
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 2,
+      "u": 53.45,
+      "v": 60.95,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "east",
+      "light_bucket": 3,
+      "falloff_tier": 2,
+      "screen": [
+        1649.5,
+        106.9
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 0,
+      "u": -65.51,
+      "v": 60.99,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 0,
+      "screen": [
+        114.9,
+        106.6
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 0,
+      "u": 40.66,
+      "v": 61.32,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "east",
+      "light_bucket": 3,
+      "falloff_tier": 1,
+      "screen": [
+        1484.5,
+        104.5
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": -55.45,
+      "v": 61.65,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 0,
+      "screen": [
+        244.7,
+        102.4
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 1,
+      "u": 12.46,
+      "v": 61.99,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "east",
+      "light_bucket": 3,
+      "falloff_tier": 1,
+      "screen": [
+        1120.7,
+        100.2
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 0,
+      "u": -1.97,
+      "v": 63.03,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "west",
+      "light_bucket": 3,
+      "falloff_tier": 1,
+      "screen": [
+        934.6,
+        93.5
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 0,
+      "u": 4.93,
+      "v": 63.23,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 3,
+      "falloff_tier": 1,
+      "screen": [
+        1023.6,
+        92.2
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": -23.11,
+      "v": 64.08,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 0,
+      "screen": [
+        661.9,
+        86.7
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 0,
+      "u": -31.0,
+      "v": 64.17,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 0,
+      "screen": [
+        560.1,
+        86.1
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 0,
+      "u": -43.38,
+      "v": 64.62,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 0,
+      "screen": [
+        400.4,
+        83.2
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 2,
+      "u": -10.54,
+      "v": 64.97,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "west",
+      "light_bucket": 3,
+      "falloff_tier": 0,
+      "screen": [
+        824.0,
+        80.9
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 1,
+      "u": 61.8,
+      "v": 65.02,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "east",
+      "light_bucket": 3,
+      "falloff_tier": 2,
+      "screen": [
+        1757.2,
+        80.6
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 1,
+      "u": 48.59,
+      "v": 65.03,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "east",
+      "light_bucket": 3,
+      "falloff_tier": 2,
+      "screen": [
+        1586.8,
+        80.6
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 0,
+      "u": 19.44,
+      "v": 65.53,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 3,
+      "falloff_tier": 1,
+      "screen": [
+        1210.8,
+        77.3
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 1,
+      "u": 56.74,
+      "v": 65.85,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 3,
+      "falloff_tier": 2,
+      "screen": [
+        1691.9,
+        75.3
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 1,
+      "u": 27.18,
+      "v": 65.91,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "east",
+      "light_bucket": 3,
+      "falloff_tier": 1,
+      "screen": [
+        1310.6,
+        74.9
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 1,
+      "u": 8.2,
+      "v": 66.21,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 3,
+      "falloff_tier": 1,
+      "screen": [
+        1065.8,
+        72.9
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 0,
+      "u": -17.48,
+      "v": 66.28,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "west",
+      "light_bucket": 3,
+      "falloff_tier": 0,
+      "screen": [
+        734.5,
+        72.5
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 0,
+      "u": -38.29,
+      "v": 66.79,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 0,
+      "screen": [
+        466.1,
+        69.2
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 1,
+      "u": -63.15,
+      "v": 67.09,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "west",
+      "light_bucket": 1,
+      "falloff_tier": 0,
+      "screen": [
+        145.4,
+        67.3
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 1,
+      "u": 33.97,
+      "v": 67.18,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 3,
+      "falloff_tier": 1,
+      "screen": [
+        1398.2,
+        66.7
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 3,
+      "u": -55.68,
+      "v": 67.22,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 0,
+      "screen": [
+        241.7,
+        66.4
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 1,
+      "u": 44.29,
+      "v": 67.26,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 3,
+      "falloff_tier": 1,
+      "screen": [
+        1531.3,
+        66.2
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 1,
+      "u": 1.84,
+      "v": 67.5,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "east",
+      "light_bucket": 3,
+      "falloff_tier": 1,
+      "screen": [
+        983.7,
+        64.6
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 0,
+      "u": -3.89,
+      "v": 67.59,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 3,
+      "falloff_tier": 1,
+      "screen": [
+        909.8,
+        64.0
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 1,
+      "u": 39.34,
+      "v": 67.77,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "east",
+      "light_bucket": 3,
+      "falloff_tier": 1,
+      "screen": [
+        1467.5,
+        62.9
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 0,
+      "u": -48.62,
+      "v": 68.64,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 0,
+      "screen": [
+        332.8,
+        57.3
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 1,
+      "u": -25.04,
+      "v": 68.72,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 3,
+      "falloff_tier": 0,
+      "screen": [
+        637.0,
+        56.8
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 0,
+      "u": -33.13,
+      "v": 69.42,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 0,
+      "screen": [
+        532.6,
+        52.2
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 2,
+      "u": 65.38,
+      "v": 69.55,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "east",
+      "light_bucket": 3,
+      "falloff_tier": 2,
+      "screen": [
+        1803.4,
+        51.4
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 0,
+      "u": 16.63,
+      "v": 70.03,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "east",
+      "light_bucket": 3,
+      "falloff_tier": 1,
+      "screen": [
+        1174.5,
+        48.3
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 0,
+      "u": 52.01,
+      "v": 70.68,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "east",
+      "light_bucket": 3,
+      "falloff_tier": 2,
+      "screen": [
+        1630.9,
+        44.1
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 0,
+      "u": -21.62,
+      "v": 70.77,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 3,
+      "falloff_tier": 0,
+      "screen": [
+        681.1,
+        43.5
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 1,
+      "u": 6.48,
+      "v": 70.84,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "east",
+      "light_bucket": 3,
+      "falloff_tier": 1,
+      "screen": [
+        1043.6,
+        43.1
+      ]
+    },
+    {
+      "kind": "debris_lg",
+      "variant": 1,
+      "u": 24.53,
+      "v": 70.95,
+      "radius": 2.8,
+      "cover": 0.55,
+      "side": "east",
+      "light_bucket": 3,
+      "falloff_tier": 1,
+      "screen": [
+        1276.4,
+        42.4
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 0,
+      "u": 31.78,
+      "v": 71.26,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 3,
+      "falloff_tier": 1,
+      "screen": [
+        1370.0,
+        40.4
+      ]
+    },
+    {
+      "kind": "asteroid_lg",
+      "variant": 2,
+      "u": -8.44,
+      "v": 71.47,
+      "radius": 3.4,
+      "cover": 0.85,
+      "side": "west",
+      "light_bucket": 3,
+      "falloff_tier": 0,
+      "screen": [
+        851.1,
+        39.0
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 2,
+      "u": 61.52,
+      "v": 71.64,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 3,
+      "falloff_tier": 2,
+      "screen": [
+        1753.6,
+        37.9
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 2,
+      "u": 45.02,
+      "v": 71.65,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 3,
+      "falloff_tier": 1,
+      "screen": [
+        1540.8,
+        37.9
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 2,
+      "u": -53.36,
+      "v": 71.68,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "west",
+      "light_bucket": 2,
+      "falloff_tier": 0,
+      "screen": [
+        271.7,
+        37.7
+      ]
+    },
+    {
+      "kind": "asteroid_md",
+      "variant": 0,
+      "u": 10.45,
+      "v": 71.88,
+      "radius": 2.2,
+      "cover": 0.6,
+      "side": "east",
+      "light_bucket": 3,
+      "falloff_tier": 1,
+      "screen": [
+        1094.8,
+        36.4
+      ]
+    }
+  ],
+  "units": [
+    {
+      "side": "west",
+      "craft": "carrier",
+      "loadout": "mk3",
+      "facing_row": 2,
+      "facing": "E",
+      "u": -62.04,
+      "v": 0.0,
+      "screen": [
+        159.7,
+        500.0
+      ]
+    },
+    {
+      "side": "east",
+      "craft": "carrier",
+      "loadout": "mk3",
+      "facing_row": 6,
+      "facing": "W",
+      "u": 62.04,
+      "v": 0.0,
+      "screen": [
+        1760.3,
+        500.0
+      ]
+    }
+  ]
+}

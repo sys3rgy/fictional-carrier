@@ -195,6 +195,8 @@ PALETTES = {
             "nav_red": _ramp("2a0a0a", "6b1414", "b62020", "ff3b3b", "ffa0a0"),
             "nav_green": _ramp("07240f", "0f5a24", "1c9440", "3fe07a", "b8ffd2"),
             "spark": _ramp("30160a", "8a3c10", "e0731c", "ffb055", "fff0c8"),
+            "rock": _ramp("3a3129", "5c4f3f", "82705a", "ab9679", "d0bb99"),
+            "rock_dark": _ramp("241e19", "3a3129", "544738", "6f5f4b", "8d7a61"),
         },
     },
     # The original cool scheme: steel blue hull, cyan bay lighting.
@@ -221,6 +223,8 @@ PALETTES = {
             "nav_red": _ramp("2a0a0a", "6b1414", "b62020", "ff3b3b", "ffa0a0"),
             "nav_green": _ramp("07240f", "0f5a24", "1c9440", "4dff8a", "b8ffd2"),
             "spark": _ramp("30160a", "8a3c10", "e0731c", "ffb055", "fff0c8"),
+            "rock": _ramp("1a1f27", "2a323d", "3d4757", "525f72", "6b7a90"),
+            "rock_dark": _ramp("0e1218", "191f27", "262f3a", "35404e", "465364"),
         },
     },
 }
@@ -1276,8 +1280,18 @@ def _hit_quad(ol, dl, h):
     return t, (0.0, 0.0, -1.0 if dl[2] > 0 else 1.0)
 
 
-def render_frame(prims, scale, bob, size=SPRITE, shadow=False):
-    """Rasterise one posed, yawed model into an RGBA pixel buffer."""
+def render_frame(prims, scale, bob, size=SPRITE, shadow=False, light=None, bias=0):
+    """
+    Rasterise one posed, yawed model into an RGBA pixel buffer.
+
+    `light` overrides the global key direction and `bias` shifts every lit surface
+    down the ramp. The ships use the fixed studio rig, but map props are lit from
+    wherever the map's sun actually is and dimmed by how far from it they sit, so the
+    same geometry is baked per light direction and per falloff tier the way a ship is
+    baked per facing. Biasing the ramp index rather than scaling colour keeps a dimmed
+    prop inside the palette instead of inventing new colours for it.
+    """
+    key = light or LIGHT
     w = h = size
     cx = cy = size * 0.5
     px = [None] * (w * h)  # colour
@@ -1365,12 +1379,12 @@ def render_frame(prims, scale, bob, size=SPRITE, shadow=False):
                 # key light — so a flat-topped hull quantises to one tone. Stretching
                 # the band the lighting actually occupies across the full ramp is what
                 # lets a shallow tilt read as a facet.
-                v = 0.5 * vdot(n, LIGHT) + 0.5
+                v = 0.5 * vdot(n, key) + 0.5
                 f = vdot(n, FILL)
                 if f > 0.0:
                     v += 0.10 * f
                 v = (v - SHADE_LO) * SHADE_GAIN
-                k = int(v * nramp)
+                k = int(v * nramp) + bias
                 px[idx] = ramp[0 if k < 0 else (nramp - 1 if k >= nramp else k)]
                 glow[idx] = 0.0
 

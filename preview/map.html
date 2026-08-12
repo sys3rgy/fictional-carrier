@@ -1,0 +1,526 @@
+<meta charset="utf-8">
+<title>Kestrel Reach</title>
+<style>
+  /* Same token set as the sprite viewer: the map and the ships on it are one system. */
+  :root {
+    --void:        #0d0b0a;
+    --void-deep:   #080706;
+    --panel:       #1a1613;
+    --panel-hi:    #241f1a;
+    --rule:        #3a322a;
+    --steel:       #8b8172;
+    --steel-hi:    #b2a795;
+    --ink:         #e0d7c8;
+    --ink-dim:     #9d9384;
+    --paint:       #d4991c;
+    --paint-hi:    #f0bb3c;
+    --signal:      #3fe07a;
+    --signal-hi:   #b8ffd2;
+    --crimson:     #c62222;
+    --crimson-hi:  #de4038;
+
+    --mono: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+    --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--void);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1320px; margin: 0 auto; padding: var(--s6) var(--s5) var(--s7); }
+
+  .eyebrow {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--steel); margin: 0 0 var(--s2);
+  }
+  h1 {
+    font-family: var(--mono); font-size: clamp(28px, 5vw, 44px); font-weight: 600;
+    letter-spacing: -0.01em; line-height: 1.1; text-wrap: balance;
+    margin: 0 0 var(--s3); color: #f2ece0;
+  }
+  h2 {
+    font-family: var(--mono); font-size: 12px; font-weight: 600; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--steel-hi); margin: 0 0 var(--s3);
+    padding-bottom: var(--s2); border-bottom: 1px solid var(--rule);
+  }
+  .lede { max-width: 68ch; color: var(--ink-dim); margin: 0 0 var(--s5); }
+  .lede strong { color: var(--ink); font-weight: 600; }
+
+  header { border-bottom: 1px solid var(--rule); padding-bottom: var(--s5); margin-bottom: var(--s6); }
+
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--s3); }
+  .fact { border-left: 2px solid var(--rule); padding-left: var(--s3); }
+  .fact b {
+    display: block; font-family: var(--mono); font-size: 20px; font-weight: 600;
+    color: var(--signal); font-variant-numeric: tabular-nums; line-height: 1.2;
+  }
+  .fact span {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.13em;
+    text-transform: uppercase; color: var(--steel);
+  }
+
+  /* ---- viewport ------------------------------------------------------------ */
+
+  .viewport {
+    position: relative;
+    background: var(--void-deep);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    overflow: hidden;
+    aspect-ratio: 1920 / 1000;
+    cursor: grab;
+    touch-action: none;
+  }
+  .viewport.dragging { cursor: grabbing; }
+  #map { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+
+  .hud {
+    position: absolute; top: var(--s3); left: var(--s3);
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--steel); pointer-events: none;
+    text-shadow: 0 1px 2px #000;
+  }
+  .hud b { color: var(--signal); font-weight: 600; }
+
+  .ctl-row { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s4); }
+
+  button {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--ink-dim);
+    background: var(--panel); border: 1px solid var(--rule); border-radius: 2px;
+    padding: 7px 11px; cursor: pointer;
+    transition: color .12s, border-color .12s, background .12s;
+  }
+  button:hover { color: var(--ink); border-color: var(--steel); }
+  button:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+  button[aria-pressed="true"] {
+    color: var(--void); background: var(--paint); border-color: var(--paint); font-weight: 600;
+  }
+  button.ghost[aria-pressed="true"] { background: var(--panel-hi); color: var(--paint-hi); border-color: var(--paint); }
+
+  .cols { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: var(--s6); align-items: start; margin-top: var(--s6); }
+  @media (max-width: 900px) { .cols { grid-template-columns: minmax(0, 1fr); } }
+
+  .legend { list-style: none; margin: 0; padding: 0; }
+  .legend li {
+    display: flex; align-items: baseline; gap: var(--s3);
+    font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.04em;
+    color: var(--ink-dim); padding: 6px 0; border-bottom: 1px solid var(--rule);
+  }
+  .legend li:last-child { border-bottom: 0; }
+  .legend .swatch { width: 10px; height: 10px; flex: 0 0 10px; border-radius: 2px; }
+  .legend .val { margin-left: auto; color: var(--signal); font-variant-numeric: tabular-nums; }
+
+  .scroll-x { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 12px 8px 0; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+  th {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--steel); font-weight: 600;
+  }
+  td { font-family: var(--mono); font-size: 12px; color: var(--ink-dim); font-variant-numeric: tabular-nums; }
+  td.name { color: var(--ink); }
+  a { color: var(--paint); text-decoration: none; border-bottom: 1px solid transparent; }
+  a:hover { border-bottom-color: var(--paint); }
+  a:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+
+  code {
+    font-family: var(--mono); font-size: 0.92em;
+    background: var(--panel-hi); color: var(--paint-hi); padding: 1px 5px; border-radius: 2px;
+  }
+
+  footer {
+    margin-top: var(--s7); padding-top: var(--s4); border-top: 1px solid var(--rule);
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; color: var(--steel);
+  }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Battle map &middot; two carriers &middot; three lanes</p>
+    <h1>Kestrel Reach</h1>
+    <p class="lede">
+      A symmetric two-carrier arena. Asteroid and wreckage fields pack tightly enough to wall
+      off three navigable lanes end to end, with looser cover scattered inside them. The sun is
+      an <strong>actual light source</strong>, not a painted highlight: every prop is baked once
+      per light direction and per falloff tier, then placed with the pair that matches its real
+      bearing and distance to the sun &mdash; the same trick that bakes a ship once per facing.
+      The layout has 180&deg; rotational symmetry, so neither side gets the better ground.
+    </p>
+    <div class="facts">
+      <div class="fact"><b id="f-size">&mdash;</b><span>Map, px</span></div>
+      <div class="fact"><b id="f-props">&mdash;</b><span>Cover props</span></div>
+      <div class="fact"><b id="f-lanes">&mdash;</b><span>Lanes</span></div>
+      <div class="fact"><b id="f-kinds">&mdash;</b><span>Prop kinds</span></div>
+      <div class="fact"><b id="f-buckets">&mdash;</b><span>Light bakes</span></div>
+    </div>
+  </header>
+
+  <div class="viewport" id="viewport">
+    <canvas id="map"></canvas>
+    <p class="hud"><b id="hud-zoom">100%</b> &middot; drag to pan &middot; scroll to zoom</p>
+  </div>
+
+  <div class="ctl-row">
+    <button class="ghost" id="t-lanes" aria-pressed="true">Lanes</button>
+    <button class="ghost" id="t-cover" aria-pressed="false">Cover</button>
+    <button class="ghost" id="t-spawns" aria-pressed="true">Spawns</button>
+    <button class="ghost" id="t-sun" aria-pressed="true">Sun</button>
+    <button class="ghost" id="t-bounds" aria-pressed="false">Bounds</button>
+    <button id="reset">Reset view</button>
+  </div>
+
+  <div class="cols">
+    <section>
+      <h2>Lanes</h2>
+      <div class="scroll-x">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Lane</th>
+              <th scope="col">Centreline v</th>
+              <th scope="col">Half width</th>
+              <th scope="col">Waypoints</th>
+              <th scope="col">Cover in lane</th>
+            </tr>
+          </thead>
+          <tbody id="lane-rows"></tbody>
+        </table>
+      </div>
+
+      <h2 style="margin-top:32px">Props</h2>
+      <div class="scroll-x">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Kind</th>
+              <th scope="col">Placed</th>
+              <th scope="col">Radius</th>
+              <th scope="col">Cover</th>
+              <th scope="col">Cell</th>
+              <th scope="col">Sheet</th>
+            </tr>
+          </thead>
+          <tbody id="prop-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <aside>
+      <section>
+        <h2>Overlay key</h2>
+        <ul class="legend">
+          <li><span class="swatch" style="background:#3fe07a"></span> Lane corridor <span class="val" id="k-lanes">&mdash;</span></li>
+          <li><span class="swatch" style="background:#d4991c"></span> Cover radius <span class="val" id="k-cover">&mdash;</span></li>
+          <li><span class="swatch" style="background:#c62222"></span> Carrier spawn <span class="val">2</span></li>
+          <li><span class="swatch" style="background:#f0bb3c"></span> Sun <span class="val" id="k-sun">&mdash;</span></li>
+        </ul>
+      </section>
+
+      <section style="margin-top:32px">
+        <h2>Files</h2>
+        <ul class="legend">
+          <li>Map image <span class="val"><a id="dl-png" download="battle_map.png">png</a></span></li>
+          <li>Map data <span class="val"><a id="dl-json" download="battle_map.json">json</a></span></li>
+        </ul>
+        <p style="font-size:13px;color:var(--ink-dim);margin-top:12px">
+          The JSON carries bounds, both spawns, lane waypoints, and every prop with its world
+          position, collision radius, cover value and which light bake it uses. It is the map,
+          not a description of the picture.
+        </p>
+      </section>
+    </aside>
+  </div>
+
+  <footer id="foot">
+    Rendered by generate_map.py &middot; Python 3 + Pillow, no other dependencies.
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // Replaced by tools/build_artifact.py with inline data for the standalone page.
+  const EMBEDDED_MAP = null;    /* build:map */
+  const EMBEDDED_IMAGE = null;  /* build:image */
+
+  const DIR = "../maps/";
+  const $ = (id) => document.getElementById(id);
+  const canvas = $("map");
+  const ctx = canvas.getContext("2d");
+  const viewport = $("viewport");
+
+  const view = { x: 0, y: 0, z: 1, fit: 1 };
+  const show = { lanes: true, cover: false, spawns: true, sun: true, bounds: false };
+  let data = null;
+  let img = null;
+
+  function resize() {
+    const r = viewport.getBoundingClientRect();
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    canvas.width = Math.round(r.width * dpr);
+    canvas.height = Math.round(r.height * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    view.fit = r.width / data.width;
+    draw();
+  }
+
+  function resetView() {
+    view.z = 1;
+    view.x = 0;
+    view.y = 0;
+    draw();
+  }
+
+  // map px -> css px
+  function tx(p) { return (p * view.fit * view.z) + view.x; }
+
+  function laneBand(lane) {
+    const half = lane.half_width * data.scale_px_per_unit * 0.5; // v is 2:1 on screen
+    ctx.beginPath();
+    lane.waypoints.forEach((w, i) => {
+      const x = tx(w.screen[0]), y = tx(w.screen[1] - half);
+      i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+    });
+    for (let i = lane.waypoints.length - 1; i >= 0; i--) {
+      const w = lane.waypoints[i];
+      ctx.lineTo(tx(w.screen[0]), tx(w.screen[1] + half));
+    }
+    ctx.closePath();
+  }
+
+  function draw() {
+    const w = canvas.width, h = canvas.height;
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = "#080706";
+    ctx.fillRect(0, 0, w, h);
+    ctx.restore();
+
+    if (!img || !img.complete || !img.naturalWidth) return;
+
+    ctx.imageSmoothingEnabled = false;
+    const s = view.fit * view.z;
+    ctx.drawImage(img, view.x, view.y, data.width * s, data.height * s);
+
+    if (show.bounds) {
+      const b = data.bounds, sc = data.scale_px_per_unit;
+      const x0 = data.width / 2 + b.u[0] * sc, x1 = data.width / 2 + b.u[1] * sc;
+      const y0 = data.height / 2 - b.v[1] * sc * 0.5, y1 = data.height / 2 - b.v[0] * sc * 0.5;
+      ctx.strokeStyle = "rgba(155,146,132,0.85)";
+      ctx.setLineDash([8, 6]);
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(tx(x0), tx(y0), (x1 - x0) * s, (y1 - y0) * s);
+      ctx.setLineDash([]);
+    }
+
+    if (show.lanes) {
+      data.lanes.forEach((lane) => {
+        laneBand(lane);
+        ctx.fillStyle = "rgba(63,224,122,0.13)";
+        ctx.fill();
+        ctx.strokeStyle = "rgba(63,224,122,0.55)";
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.beginPath();
+        lane.waypoints.forEach((p, i) => {
+          const x = tx(p.screen[0]), y = tx(p.screen[1]);
+          i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+        });
+        ctx.setLineDash([10, 8]);
+        ctx.strokeStyle = "rgba(184,255,210,0.75)";
+        ctx.stroke();
+        ctx.setLineDash([]);
+      });
+    }
+
+    if (show.cover) {
+      data.props.forEach((p) => {
+        const rx = p.radius * data.scale_px_per_unit * s;
+        ctx.beginPath();
+        ctx.ellipse(tx(p.screen[0]), tx(p.screen[1]), rx, rx * 0.5, 0, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(212,153,28," + (0.10 + 0.22 * p.cover).toFixed(3) + ")";
+        ctx.fill();
+        ctx.strokeStyle = "rgba(240,187,60,0.5)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      });
+    }
+
+    if (show.sun) {
+      const sx = tx(data.sun.screen[0]), sy = tx(data.sun.screen[1]);
+      ctx.beginPath();
+      ctx.arc(sx, sy, data.sun.radius_px * s, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(240,187,60,0.9)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      // spokes towards a sample of props: the bake direction made visible
+      ctx.strokeStyle = "rgba(240,187,60,0.28)";
+      ctx.lineWidth = 1;
+      for (let i = 0; i < data.props.length; i += 17) {
+        const p = data.props[i];
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.lineTo(tx(p.screen[0]), tx(p.screen[1]));
+        ctx.stroke();
+      }
+      ctx.fillStyle = "#f0bb3c";
+      ctx.font = "600 12px ui-monospace, monospace";
+      ctx.fillText("SUN", sx - 14, sy - data.sun.radius_px * s - 10);
+    }
+
+    if (show.spawns) {
+      data.spawns.forEach((sp) => {
+        const x = tx(sp.screen[0]), y = tx(sp.screen[1]);
+        ctx.beginPath();
+        ctx.ellipse(x, y, 62 * s, 31 * s, 0, 0, Math.PI * 2);
+        ctx.strokeStyle = "rgba(198,34,34,0.95)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.fillStyle = "rgba(198,34,34,0.12)";
+        ctx.fill();
+        ctx.fillStyle = "#de4038";
+        ctx.font = "600 12px ui-monospace, monospace";
+        ctx.fillText(sp.side.toUpperCase() + " → " + sp.facing, x - 30, y - 38 * s);
+      });
+    }
+  }
+
+  // ---- interaction ------------------------------------------------------------
+  let drag = null;
+  viewport.addEventListener("pointerdown", (e) => {
+    drag = { x: e.clientX - view.x, y: e.clientY - view.y };
+    viewport.classList.add("dragging");
+    viewport.setPointerCapture(e.pointerId);
+  });
+  viewport.addEventListener("pointermove", (e) => {
+    if (!drag) return;
+    view.x = e.clientX - drag.x;
+    view.y = e.clientY - drag.y;
+    draw();
+  });
+  const endDrag = () => { drag = null; viewport.classList.remove("dragging"); };
+  viewport.addEventListener("pointerup", endDrag);
+  viewport.addEventListener("pointercancel", endDrag);
+
+  viewport.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const r = viewport.getBoundingClientRect();
+    const mx = e.clientX - r.left, my = e.clientY - r.top;
+    const before = view.z;
+    view.z = Math.max(1, Math.min(6, view.z * (e.deltaY < 0 ? 1.14 : 1 / 1.14)));
+    // keep the point under the cursor fixed
+    const k = view.z / before;
+    view.x = mx - (mx - view.x) * k;
+    view.y = my - (my - view.y) * k;
+    $("hud-zoom").textContent = Math.round(view.z * 100) + "%";
+    draw();
+  }, { passive: false });
+
+  function toggle(id, key) {
+    const b = $(id);
+    b.addEventListener("click", () => {
+      show[key] = !show[key];
+      b.setAttribute("aria-pressed", show[key] ? "true" : "false");
+      draw();
+    });
+  }
+  toggle("t-lanes", "lanes");
+  toggle("t-cover", "cover");
+  toggle("t-spawns", "spawns");
+  toggle("t-sun", "sun");
+  toggle("t-bounds", "bounds");
+  $("reset").addEventListener("click", () => {
+    resetView();
+    $("hud-zoom").textContent = "100%";
+  });
+
+  // ---- panels -----------------------------------------------------------------
+  function fillPanels() {
+    $("f-size").textContent = data.width + "×" + data.height;
+    $("f-props").textContent = data.props.length;
+    $("f-lanes").textContent = data.lanes.length;
+    const kinds = Object.keys(data.prop_kinds);
+    $("f-kinds").textContent = kinds.length;
+    const k0 = data.prop_kinds[kinds[0]];
+    const bakes = k0.light_buckets * k0.falloff_tiers;
+    $("f-buckets").textContent = bakes;
+    $("k-lanes").textContent = "±" + data.lanes[0].half_width;
+    $("k-cover").textContent = data.props.length;
+    $("k-sun").textContent = k0.light_buckets + "×" + k0.falloff_tiers;
+
+    const inLane = (p) =>
+      data.lanes.some((l) => {
+        let best = 1e9;
+        l.waypoints.forEach((w) => {
+          best = Math.min(best, Math.abs(p.v - w.v) + Math.abs(p.u - w.u) * 0.001);
+        });
+        return best < l.half_width;
+      });
+
+    $("lane-rows").innerHTML = data.lanes.map((l) => {
+      const n = data.props.filter((p) => {
+        let best = 1e9;
+        l.waypoints.forEach((w) => {
+          if (Math.abs(p.u - w.u) < 4) best = Math.min(best, Math.abs(p.v - w.v));
+        });
+        return best < l.half_width;
+      }).length;
+      const mid = l.waypoints[Math.floor(l.waypoints.length / 2)];
+      return "<tr><td class='name'>" + l.name + "</td><td>" + mid.v.toFixed(1) +
+             "</td><td>±" + l.half_width + "</td><td>" + l.waypoints.length +
+             "</td><td>" + n + "</td></tr>";
+    }).join("");
+
+    $("prop-rows").innerHTML = kinds.map((k) => {
+      const m = data.prop_kinds[k];
+      const n = data.props.filter((p) => p.kind === k).length;
+      return "<tr><td class='name'>" + k.replace(/_/g, " ") + "</td><td>" + n +
+             "</td><td>" + m.world_radius + "</td><td>" + m.cover +
+             "</td><td>" + m.cell + "px</td><td>" + m.sheet + "</td></tr>";
+    }).join("");
+
+    $("dl-png").href = EMBEDDED_IMAGE || (DIR + data.image);
+    $("dl-json").href = EMBEDDED_MAP
+      ? "data:application/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2))
+      : DIR + "battle_map.json";
+  }
+
+  function boot(d) {
+    data = d;
+    img = new Image();
+    img.onload = draw;
+    img.src = EMBEDDED_IMAGE || (DIR + data.image);
+    fillPanels();
+    window.addEventListener("resize", resize);
+    resize();
+  }
+
+  if (EMBEDDED_MAP) {
+    boot(EMBEDDED_MAP);
+  } else {
+    fetch(DIR + "battle_map.json")
+      .then((r) => r.json())
+      .then(boot)
+      .catch(() => {
+        $("foot").textContent =
+          "Could not load maps/battle_map.json. Run generate_map.py, then serve the " +
+          "repository root over http (python3 -m http.server) and open /preview/map.html.";
+      });
+  }
+})();
+</script>
