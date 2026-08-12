@@ -8,6 +8,7 @@
     "engines_uprated",
     "sensor_array"
   ],
+  "palette": "crimson",
   "squadron_capacity": 4,
   "frame_width": 96,
   "frame_height": 96,

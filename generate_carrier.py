@@ -158,38 +158,89 @@ def project(p):
 # these steps, so the whole fleet shares a palette by construction.
 # --------------------------------------------------------------------------------------
 
-OUTLINE = (10, 14, 22, 255)
-SHADOW = (8, 11, 18, 110)
-GLOW_NEAR = (255, 154, 60, 150)
-GLOW_FAR = (255, 110, 32, 70)
-
-
 def _ramp(*hexes):
     return [tuple(int(h[i : i + 2], 16) for i in (0, 2, 4)) + (255,) for h in hexes]
 
 
-MATERIALS = {
-    # structural hull
-    "hull": _ramp("1b2432", "2c3a4e", "43566e", "5f7590", "8296ad"),
-    "hull_dark": _ramp("10151e", "1a2230", "273244", "36455c", "4a5c76"),
-    "hull_light": _ramp("2b3547", "445269", "62748f", "8494ad", "a8b6c9"),
-    "deck": _ramp("12171f", "1d2532", "28323f", "364356", "4a5a70"),
-    # painted accents
-    "accent": _ramp("53270f", "7d3d15", "a4521c", "d9822b", "f2b45c"),
-    "armor": _ramp("14181f", "21272f", "2f3841", "404b57", "56636f"),
-    # emissive ramps: the index is driven by intensity, not by the lighting
-    "engine": _ramp("2a1408", "8c3a0d", "e0631a", "ff8a2c", "ffc074"),
-    "window": _ramp("0d2029", "17495a", "2b8fa8", "5fcbe0", "b5f2ff"),
-    "bay": _ramp("0b1c22", "12414f", "1f7d94", "3fb6ce", "7fe4f4"),
-    "nav_red": _ramp("2a0a0a", "6b1414", "b62020", "ff3b3b", "ffa0a0"),
-    "nav_green": _ramp("07240f", "0f5a24", "1c9440", "4dff8a", "b8ffd2"),
-    "spark": _ramp("30160a", "8a3c10", "e0731c", "ffb055", "fff0c8"),
+# Geometry names materials semantically, so a paint scheme is a swappable table in the
+# same way a hangar is a swappable module. `plate` is the bold painted armour block,
+# `trench` the recessed strip lighting, `runlight` the marker lights along the deck.
+PALETTES = {
+    # Bone hull, crimson plating, amber-lit recesses, green running lights.
+    "crimson": {
+        "outline": (15, 11, 9, 255),
+        "shadow": (12, 9, 7, 110),
+        "glow_near": (255, 176, 72, 150),
+        "glow_far": (240, 128, 32, 70),
+        "bloom": {"engine", "spark", "trench", "bay"},
+        "ramps": {
+            "hull": _ramp("423c33", "635b4e", "8b8172", "b2a795", "d2c7b3"),
+            "hull_dark": _ramp("29251f", "38332c", "4c463c", "645c4e", "7d7462"),
+            "hull_light": _ramp("4e483e", "6f675a", "958b7a", "b8ad9a", "dbd1bd"),
+            "deck": _ramp("332f28", "4a453c", "665f52", "857c6b", "a89d88"),
+            "plate": _ramp("400a0a", "6e1010", "9c1818", "c62222", "de4038"),
+            "armor": _ramp("1a1815", "262320", "35312c", "47423a", "5c5649"),
+            "accent": _ramp("6b4a0c", "a06f10", "d4991c", "f0bb3c", "ffd97a"),
+            "engine": _ramp("2a1408", "8c3a0d", "e0631a", "ff8a2c", "ffc074"),
+            "window": _ramp("2a1e08", "6b4a0c", "c08a14", "ffc83c", "fff0b0"),
+            "bay": _ramp("2a1a06", "7a5209", "cc8f12", "ffbe33", "ffe49a"),
+            "trench": _ramp("2a1a06", "8a5c0a", "d69a14", "ffc63c", "ffe9a8"),
+            "runlight": _ramp("07240f", "0f5a24", "1c9440", "3fe07a", "b8ffd2"),
+            "nav_red": _ramp("2a0a0a", "6b1414", "b62020", "ff3b3b", "ffa0a0"),
+            "nav_green": _ramp("07240f", "0f5a24", "1c9440", "3fe07a", "b8ffd2"),
+            "spark": _ramp("30160a", "8a3c10", "e0731c", "ffb055", "fff0c8"),
+        },
+    },
+    # The original cool scheme: steel blue hull, cyan bay lighting.
+    "steel": {
+        "outline": (10, 14, 22, 255),
+        "shadow": (8, 11, 18, 110),
+        "glow_near": (255, 154, 60, 150),
+        "glow_far": (255, 110, 32, 70),
+        # cool emitters stay crisp: a warm halo around a cyan light reads as a bug
+        "bloom": {"engine", "spark"},
+        "ramps": {
+            "hull": _ramp("1b2432", "2c3a4e", "43566e", "5f7590", "8296ad"),
+            "hull_dark": _ramp("10151e", "1a2230", "273244", "36455c", "4a5c76"),
+            "hull_light": _ramp("2b3547", "445269", "62748f", "8494ad", "a8b6c9"),
+            "deck": _ramp("12171f", "1d2532", "28323f", "364356", "4a5a70"),
+            "plate": _ramp("10151e", "1a2230", "273244", "36455c", "4a5c76"),
+            "armor": _ramp("14181f", "21272f", "2f3841", "404b57", "56636f"),
+            "accent": _ramp("53270f", "7d3d15", "a4521c", "d9822b", "f2b45c"),
+            "engine": _ramp("2a1408", "8c3a0d", "e0631a", "ff8a2c", "ffc074"),
+            "window": _ramp("0d2029", "17495a", "2b8fa8", "5fcbe0", "b5f2ff"),
+            "bay": _ramp("0b1c22", "12414f", "1f7d94", "3fb6ce", "7fe4f4"),
+            "trench": _ramp("0b1c22", "12414f", "1f7d94", "3fb6ce", "7fe4f4"),
+            "runlight": _ramp("0b1c22", "12414f", "1f7d94", "3fb6ce", "7fe4f4"),
+            "nav_red": _ramp("2a0a0a", "6b1414", "b62020", "ff3b3b", "ffa0a0"),
+            "nav_green": _ramp("07240f", "0f5a24", "1c9440", "4dff8a", "b8ffd2"),
+            "spark": _ramp("30160a", "8a3c10", "e0731c", "ffb055", "fff0c8"),
+        },
+    },
 }
 
-EMISSIVE = {"engine", "window", "bay", "nav_red", "nav_green", "spark"}
-# Only the warm emitters bloom. The cyan and signal lights stay crisp single pixels,
-# which keeps the halo to two fixed palette entries instead of one per hue.
-BLOOMING = {"engine", "spark"}
+# Emissive materials bypass the lighting: their ramp step comes from the intensity the
+# animation sets, which is how one geometry reads as powered, idling or dead.
+EMISSIVE = {"engine", "window", "bay", "trench", "runlight", "nav_red", "nav_green", "spark"}
+
+MATERIALS = {}
+BLOOMING = set()
+OUTLINE = SHADOW = GLOW_NEAR = GLOW_FAR = None
+
+
+def use_palette(name):
+    """Bind one paint scheme for the rest of the run."""
+    global MATERIALS, BLOOMING, OUTLINE, SHADOW, GLOW_NEAR, GLOW_FAR
+    pal = PALETTES[name]
+    MATERIALS = pal["ramps"]
+    BLOOMING = pal["bloom"]
+    OUTLINE = pal["outline"]
+    SHADOW = pal["shadow"]
+    GLOW_NEAR = pal["glow_near"]
+    GLOW_FAR = pal["glow_far"]
+
+
+use_palette("crimson")
 
 
 # --------------------------------------------------------------------------------------
@@ -268,26 +319,52 @@ def quad(c, h, mat, axes=None, power=1.0):
 
 
 def m_chassis(st, cfg):
-    """Hull body, belly, prow taper and flank greebles. Present in every loadout."""
+    """Hull body, belly, prow taper, painted plating, trench lighting and greebles."""
     p = []
     pw = st["power"]
     # core hull: everything else hangs off this
     p.append(box((0.0, 0.0, -0.02), (1.80, 0.58, 0.24), "hull"))
     # belly plate, inset so the hull sides read as a step above it
     p.append(box((-0.15, 0.0, -0.34), (1.50, 0.46, 0.12), "hull_dark"))
-    # prow: two shrinking steps then a rounded nose cap
-    p.append(box((1.96, 0.0, -0.02), (0.20, 0.20, 0.19), "hull"))
+    # prow: two shrinking steps then a nose cap. The bow block carries paint.
+    p.append(box((1.96, 0.0, -0.02), (0.20, 0.20, 0.19), "plate"))
     p.append(box((2.26, 0.0, -0.02), (0.16, 0.15, 0.14), "hull_light"))
     p.append(ell((2.44, 0.0, -0.02), (0.14, 0.14, 0.10), "hull_light"))
     # bow sensor blister
     p.append(ell((2.40, 0.0, 0.10), (0.09, 0.07, 0.06), "window", power=0.72 * pw))
-    # flank ribs, a repeating pattern down both sides
-    for i in range(4):
-        x = -1.15 + i * 0.62
-        for sy in (1.0, -1.0):
-            p.append(box((x, sy * 0.60, -0.06), (0.14, 0.045, 0.15), "hull_dark"))
-    # ventral pylons and keel fin
+
     for sy in (1.0, -1.0):
+        fy = sy * 0.58  # the hull flank plane
+
+        # Painted blocks fore and aft, laid on the flank as thin panels. Two-tone
+        # plating is what carries the scheme, so it is geometry, not a texture.
+        p.append(box((1.28, fy + sy * 0.008, -0.02), (0.44, 0.012, 0.205), "plate"))
+        p.append(box((-1.24, fy + sy * 0.008, -0.02), (0.50, 0.012, 0.205), "plate"))
+        p.append(box((0.02, fy + sy * 0.008, -0.20), (0.72, 0.012, 0.055), "plate"))
+
+        # Recessed strip light between them: a dark inset with the lit strip proud of it.
+        p.append(box((0.02, fy + sy * 0.004, 0.04), (0.76, 0.012, 0.05), "armor"))
+        p.append(
+            box((0.02, fy + sy * 0.012, 0.04), (0.70, 0.010, 0.022), "trench", power=0.85 * pw)
+        )
+
+        # Flank ribs, alternating depth and material so the side reads as built up
+        for i in range(5):
+            x = -1.34 + i * 0.62
+            deep = i % 2 == 0
+            p.append(
+                box(
+                    (x, sy * (0.60 + (0.03 if deep else 0.0)), -0.09),
+                    (0.13 if deep else 0.08, 0.05, 0.12),
+                    "armor" if deep else "hull_dark",
+                )
+            )
+        # Small hull greebles: vents and conduit boxes
+        for (gx, gz, gl, gh) in ((0.72, 0.12, 0.10, 0.04), (-0.44, 0.10, 0.07, 0.05),
+                                 (1.62, -0.14, 0.09, 0.05), (-1.66, 0.06, 0.12, 0.06)):
+            p.append(box((gx, sy * 0.605, gz), (gl, 0.030, gh), "hull_light"))
+
+        # ventral pylons
         p.append(
             box(
                 (-0.70, sy * 0.30, -0.52),
@@ -309,6 +386,8 @@ def m_bridge(st, cfg):
     p.append(box((-1.00, iy, 0.40), (0.40, 0.26, 0.12), "hull"))
     p.append(box((-1.02, iy, 0.66), (0.31, 0.21, 0.26), "hull_light"))
     p.append(box((-1.06, iy, 0.94), (0.22, 0.15, 0.05), "hull_dark"))
+    # painted band around the tower, matching the hull plating
+    p.append(box((-1.02, iy, 0.86), (0.315, 0.215, 0.035), "plate"))
     # forward window band, wrapping onto the outboard flank
     p.append(box((-0.695, iy, 0.74), (0.02, 0.17, 0.07), "window", power=0.88 * pw))
     p.append(box((-1.00, iy - 0.215, 0.74), (0.22, 0.02, 0.06), "window", power=0.66 * pw))
@@ -355,39 +434,78 @@ def _hangar(st, cfg, deck_half_x, deck_half_y, deck_x, sponsons=()):
     # raised edge rails, so the plate reads as a deck and not a lid
     for sy in (1.0, -1.0):
         p.append(box((deck_x, sy * (deck_half_y + 0.02), 0.34), (deck_half_x, 0.035, 0.05), "hull"))
-        # deck edge lights
+        # green marker lights along the rail
         for i in range(5):
             lx = deck_x - deck_half_x + 0.28 + i * (deck_half_x * 2.0 - 0.56) / 4.0
             p.append(
                 ell(
                     (lx, sy * (deck_half_y + 0.02), 0.40),
                     (0.028, 0.028, 0.028),
-                    "bay",
-                    power=(0.30 + 0.55 * door) * pw,
+                    "runlight",
+                    power=(0.35 + 0.50 * door) * pw,
                 )
             )
-    # painted landing strip and two elevator pads
-    p.append(box((deck_x + 0.10, 0.14, 0.372), (deck_half_x * 0.74, 0.055, 0.008), "accent"))
-    for ex in (deck_x - deck_half_x * 0.45, deck_x + deck_half_x * 0.50):
-        p.append(box((ex, -deck_half_y * 0.55, 0.372), (0.20, 0.17, 0.008), "hull_dark"))
-    # catapult marks
-    for i in range(3):
+
+    # Painted deck blocks fore and aft. These read at 96px far better than fine
+    # markings do, and they are what makes the scheme legible from every facing.
+    # The livery is bone-dominant: paint claims the bow apron and the stern block,
+    # and the long middle of the deck stays hull colour.
+    p.append(
+        box((deck_x + deck_half_x * 0.80, 0.0, 0.372),
+            (deck_half_x * 0.20, deck_half_y * 0.96, 0.008), "plate")
+    )
+    p.append(
+        box((deck_x - deck_half_x * 0.84, 0.0, 0.372),
+            (deck_half_x * 0.16, deck_half_y * 0.96, 0.008), "plate")
+    )
+    # painted landing strip down the bone section
+    p.append(box((deck_x - 0.05, 0.14, 0.374), (deck_half_x * 0.50, 0.05, 0.008), "accent"))
+
+    # Fleet insignia: a chevron struck across the bone panel, in the same paint as
+    # the plating so the ship reads as one livery.
+    ins_x, ins_y = deck_x - deck_half_x * 0.10, -deck_half_y * 0.40
+    for sy in (1.0, -1.0):
         p.append(
-            box(
-                (deck_x - deck_half_x * 0.6 + i * deck_half_x * 0.6, deck_half_y * 0.62, 0.372),
-                (0.09, 0.03, 0.008),
-                "hull_light",
-            )
+            box((ins_x, ins_y + sy * 0.15, 0.375), (0.26, 0.055, 0.008), "plate",
+                axes_from_euler(yaw=math.radians(36 * sy)))
         )
+
+    # recessed, lit deck trenches either side of the strip
+    for sy in (1.0, -1.0):
+        ty = sy * deck_half_y * 0.72
+        p.append(box((deck_x - 0.05, ty, 0.368), (deck_half_x * 0.44, 0.055, 0.012), "armor"))
+        p.append(
+            box((deck_x - 0.05, ty, 0.374), (deck_half_x * 0.40, 0.030, 0.008),
+                "trench", power=(0.45 + 0.45 * door) * pw)
+        )
+
+    # elevator pads and deck-side superstructure blocks
+    for ex in (deck_x - deck_half_x * 0.42, deck_x + deck_half_x * 0.16):
+        p.append(box((ex, -deck_half_y * 0.36, 0.372), (0.17, 0.15, 0.008), "hull_dark"))
+    for (bx, by, bl, bw, bh) in (
+        (deck_x - deck_half_x * 0.30, deck_half_y * 0.50, 0.20, 0.11, 0.07),
+        (deck_x + deck_half_x * 0.24, deck_half_y * 0.62, 0.13, 0.09, 0.05),
+        (deck_x - deck_half_x * 0.66, -deck_half_y * 0.66, 0.15, 0.10, 0.06),
+    ):
+        p.append(box((bx, by, DECK_TOP + bh), (bl, bw, bh), "hull_light"))
+        p.append(box((bx, by, DECK_TOP + bh * 2.0), (bl * 0.6, bw * 0.6, 0.02), "armor"))
+    # sensor masts
+    for (mx, my, mh) in ((deck_x + deck_half_x * 0.52, deck_half_y * 0.30, 0.34),
+                         (deck_x - deck_half_x * 0.88, deck_half_y * 0.20, 0.26)):
+        p.append(cyl((mx, my, DECK_TOP), (mx, my, DECK_TOP + mh), 0.022, "armor"))
+        p.append(ell((mx, my, DECK_TOP + mh), (0.035, 0.035, 0.035), "nav_red",
+                     power=st["strobe"] * pw))
 
     # launch bays: recessed mouths in a forward-facing hull face
     for (by, front_x, bz) in cfg["bays"]:
-        inner = 0.28 + 0.72 * door
+        # capped short of the ramp's top step: a fully open bay should read as deep
+        # amber light, not a blown-out white hole in the hull
+        inner = 0.25 + 0.55 * door
         p.append(box((front_x - 0.18, by, bz), (0.18, 0.20, 0.12), "bay", power=inner * pw))
         # two-piece iris door: upper half retracts up, lower half drops
         travel = 0.24 * door
-        p.append(box((front_x + 0.02, by, bz + 0.062 + travel), (0.035, 0.22, 0.065), "hull_light"))
-        p.append(box((front_x + 0.02, by, bz - 0.062 - travel), (0.035, 0.22, 0.065), "hull_light"))
+        p.append(box((front_x + 0.02, by, bz + 0.062 + travel), (0.035, 0.22, 0.065), "hull"))
+        p.append(box((front_x + 0.02, by, bz - 0.062 - travel), (0.035, 0.22, 0.065), "hull"))
         # approach lights either side of the mouth
         for sy in (1.0, -1.0):
             p.append(
@@ -430,7 +548,8 @@ def _engine(p, x0, x1, y, z, r, st, big=True):
     thr = st["throttle"]
     p.append(cyl((x0, y, z), (x1, y, z), r, "hull"))
     p.append(cyl((x1 - 0.06, y, z), (x1 - 0.02, y, z), r * 1.08, "hull_dark"))
-    # intake rings read as a highlight band on the housing
+    # painted band and an intake ring, so the nacelle carries the livery too
+    p.append(cyl((x0 - 0.16, y, z), (x0 - 0.02, y, z), r * 1.04, "plate"))
     p.append(cyl((x0 + 0.06, y, z), (x0 + 0.10, y, z), r * 1.05, "hull_light"))
     p.append(cyl((x1 - 0.02, y, z), (x1 + 0.005, y, z), r * 0.70, "engine", power=0.30 + 0.62 * thr))
     if thr > 0.02:
@@ -1039,7 +1158,10 @@ def fit_scale(cfg):
 
 
 def render_cell(job):
-    key, cfg, anim_fn, frame, nframes, facing, scale, shadow = job
+    key, cfg, anim_fn, frame, nframes, facing, scale, shadow, palette = job
+    # rebound explicitly so the render is identical whether pooled workers are
+    # forked (inheriting globals) or spawned (starting from import state)
+    use_palette(palette)
     st = anim_fn(frame, nframes)
     prims = build_model(cfg, st)
     a = FACING_YAW0 + facing * math.tau / 8.0
@@ -1049,14 +1171,14 @@ def render_cell(job):
     return (facing, frame, img.tobytes())
 
 
-def build_sheets(loadout_key, outdir, shadow=False, contact=False, jobs=None):
+def build_sheets(loadout_key, outdir, shadow=False, contact=False, jobs=None, palette="crimson"):
     cfg = LOADOUTS[loadout_key]
     scale = fit_scale(cfg)
     meta_anims = []
 
     for (aname, afn, nframes, fps, loop) in ANIMATIONS:
         work = [
-            (loadout_key, cfg, afn, f, nframes, fc, scale, shadow)
+            (loadout_key, cfg, afn, f, nframes, fc, scale, shadow, palette)
             for fc in range(8)
             for f in range(nframes)
         ]
@@ -1093,6 +1215,7 @@ def build_sheets(loadout_key, outdir, shadow=False, contact=False, jobs=None):
         "loadout": loadout_key,
         "display_name": cfg["name"],
         "modules": cfg["modules"],
+        "palette": palette,
         "squadron_capacity": cfg["squadrons"],
         "frame_width": SPRITE,
         "frame_height": SPRITE,
@@ -1135,18 +1258,24 @@ def main():
     ap.add_argument("--shadow", action="store_true", help="bake a deck drop shadow")
     ap.add_argument("--contact", action="store_true", help="also write contact sheets")
     ap.add_argument("--jobs", type=int, default=os.cpu_count() or 1)
+    ap.add_argument("--palette", default="crimson", choices=sorted(PALETTES), help="paint scheme")
     args = ap.parse_args()
 
     keys = args.loadout or list(LOADOUTS)
     os.makedirs(args.out, exist_ok=True)
+    use_palette(args.palette)
 
     atlas = []
     for k in keys:
         print(f"{k}: {LOADOUTS[k]['name']}")
-        atlas.append(build_sheets(k, args.out, args.shadow, args.contact, args.jobs))
+        atlas.append(
+            build_sheets(k, args.out, args.shadow, args.contact, args.jobs, args.palette)
+        )
 
     with open(os.path.join(args.out, "carrier_atlas.json"), "w") as fh:
-        json.dump({"sprite_size": SPRITE, "loadouts": atlas}, fh, indent=2)
+        json.dump(
+            {"sprite_size": SPRITE, "palette": args.palette, "loadouts": atlas}, fh, indent=2
+        )
     print(f"\nwrote {len(atlas)} loadout(s) to {args.out}/")
 
 

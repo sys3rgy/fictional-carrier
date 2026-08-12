@@ -20,10 +20,11 @@ re-renders — the whole set takes about 8 seconds.
 
 ```sh
 pip install pillow
-python3 generate_carrier.py                 # all loadouts -> sprites/
-python3 generate_carrier.py --loadout mk1   # just one
-python3 generate_carrier.py --contact       # also write contact sheets for eyeballing
-python3 generate_carrier.py --shadow        # bake a drop shadow (see note below)
+python3 generate_carrier.py                   # all loadouts -> sprites/
+python3 generate_carrier.py --loadout mk1     # just one
+python3 generate_carrier.py --palette steel   # the cool scheme instead of the livery
+python3 generate_carrier.py --contact         # also write contact sheets for eyeballing
+python3 generate_carrier.py --shadow          # bake a drop shadow (see note below)
 ```
 
 Preview them:
@@ -77,6 +78,30 @@ classic 2:1 pixel ratio, so these line up with standard isometric tiles.
 
 `mk1` is the starting ship: a small hangar bay with two squadron launch tubes.
 
+### Paint schemes
+
+Geometry names its materials semantically — `hull`, `plate`, `deck`, `trench`,
+`runlight` — so a paint scheme is a swappable table in the same way a hangar is a
+swappable module. Two ship:
+
+| Key       | Look |
+|-----------|------|
+| `crimson` | Default. Bone hull with crimson plating, amber-lit recesses and trenches, green deck marker lights, fleet chevron on the deck. |
+| `steel`   | Cool steel-blue hull with cyan bay lighting. |
+
+`plate` is the bold painted armour block, `trench` the recessed strip lighting,
+`runlight` the marker lights along the deck rail. Painted regions are real geometry —
+thin panels laid on the hull surface — not a texture, which is why they hold their
+shape correctly across all 8 facings.
+
+A scheme also carries its own outline colour, bloom colours and a `bloom` set naming
+which emitters get a halo. That set is per-scheme on purpose: a warm halo around a
+cyan light reads as a bug, so `steel` blooms only the engines and sparks while
+`crimson` blooms its amber bays and trenches too.
+
+Adding one is a dict entry in `PALETTES` with the same material keys; nothing in the
+geometry changes.
+
 ## Using them
 
 ```js
@@ -128,15 +153,18 @@ hangar is installed rather than hard-coding positions.
 
 ## Notes on the render
 
-- **Palette.** Every surface resolves to a step in one of the ramps in `MATERIALS`,
-  dark to light. Emissive materials — engines, windows, bay lights, nav lights, sparks
-  — bypass the lighting entirely and pick their step from an intensity the animation
-  sets, which is how the same geometry reads as powered, idling or dead.
+- **Palette.** Every surface resolves to a step in one of the ramps of the active
+  scheme, dark to light. Emissive materials — engines, windows, bay lights, trenches,
+  marker lights, sparks — bypass the lighting entirely and pick their step from an
+  intensity the animation sets, which is how the same geometry reads as powered,
+  idling or dead. Those intensities are deliberately capped short of the top step so
+  a fully open bay reads as deep amber light rather than a blown-out hole in the hull.
 - **Shading.** Half-lambert against one key light and one fill, quantised into the
   ramp. Half-lambert rather than plain lambert because at 96px it keeps curved parts
   reading as balls instead of collapsing to two tones.
-- **Bloom.** Only the warm emitters bloom, in two fixed halo colours. The cyan and
-  signal lights stay crisp single pixels, which keeps the palette tight.
+- **Bloom.** Halos use two fixed colours from the active scheme, and only the emitters
+  named in its `bloom` set get one. Everything else stays a crisp single pixel, which
+  keeps the palette tight.
 - **Drop shadow.** Off by default: this is a ship in space, with no ground to cast
   onto. `--shadow` bakes one if you end up wanting these over a hangar deck or a
   planet surface.

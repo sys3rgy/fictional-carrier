@@ -10,6 +10,7 @@
     "weapons_pods",
     "armor_belt"
   ],
+  "palette": "crimson",
   "squadron_capacity": 4,
   "frame_width": 96,
   "frame_height": 96,

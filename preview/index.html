@@ -6,20 +6,21 @@
      page holds on any host background. Tokens are lifted from the sprite palette in
      generate_carrier.py, so page and sprites share a palette by construction. */
   :root {
-    --void:        #0b0f16;
-    --void-deep:   #070a10;
-    --panel:       #141a24;
-    --panel-hi:    #1c2432;
-    --rule:        #26303f;
-    --steel:       #5f7590;
-    --steel-hi:    #8296ad;
-    --ink:         #c8d3e0;
-    --ink-dim:     #8494a8;
-    --paint:       #d9822b;
-    --paint-hi:    #f2b45c;
-    --signal:      #3fb6ce;
-    --signal-hi:   #7fe4f4;
-    --alert:       #ff3b3b;
+    --void:        #0d0b0a;
+    --void-deep:   #080706;
+    --panel:       #1a1613;
+    --panel-hi:    #241f1a;
+    --rule:        #3a322a;
+    --steel:       #8b8172;
+    --steel-hi:    #b2a795;
+    --ink:         #e0d7c8;
+    --ink-dim:     #9d9384;
+    --paint:       #d4991c;
+    --paint-hi:    #f0bb3c;
+    --signal:      #3fe07a;
+    --signal-hi:   #b8ffd2;
+    --crimson:     #c62222;
+    --crimson-hi:  #de4038;
 
     --mono: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
     --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -262,8 +263,9 @@
     background: var(--signal);
     transform: translateY(-1px);
   }
-  .modules li.added::before { background: var(--paint); }
-  .modules li.added { color: var(--paint-hi); }
+  /* upgrades marked in the hull's own paint colour */
+  .modules li.added::before { background: var(--crimson); }
+  .modules li.added { color: var(--crimson-hi); }
   .modules .tag {
     margin-left: auto;
     font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
@@ -470,7 +472,7 @@
       const x = Math.floor(((s.x + drift) % 1) * w);
       const y = Math.floor(s.y * h);
       const size = s.d === 3 ? 2 : 1;
-      sctx.fillStyle = s.d === 3 ? "#4a5c76" : s.d === 2 ? "#2c3a4e" : "#1c2432";
+      sctx.fillStyle = s.d === 3 ? "#6b6355" : s.d === 2 ? "#423b32" : "#2a2520";
       sctx.fillRect(x, y, size, size);
     }
   }
@@ -495,7 +497,7 @@
     if (stage.width !== px) { stage.width = px; stage.height = px; }
 
     sctx.imageSmoothingEnabled = false;
-    sctx.fillStyle = "#070a10";
+    sctx.fillStyle = "#080706";  /* matches --void-deep */
     sctx.fillRect(0, 0, px, px);
     if (state.stars) drawStars(px, px, t);
 

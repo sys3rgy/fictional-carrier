@@ -1,5 +1,6 @@
 {
   "sprite_size": 96,
+  "palette": "crimson",
   "loadouts": [
     {
       "loadout": "mk1",
@@ -10,6 +11,7 @@
         "hangar_small",
         "engines_basic"
       ],
+      "palette": "crimson",
       "squadron_capacity": 2,
       "frame_width": 96,
       "frame_height": 96,
@@ -118,6 +120,7 @@
         "engines_uprated",
         "sensor_array"
       ],
+      "palette": "crimson",
       "squadron_capacity": 4,
       "frame_width": 96,
       "frame_height": 96,
@@ -228,6 +231,7 @@
         "weapons_pods",
         "armor_belt"
       ],
+      "palette": "crimson",
       "squadron_capacity": 4,
       "frame_width": 96,
       "frame_height": 96,
