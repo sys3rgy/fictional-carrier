@@ -4,9 +4,11 @@
   "display_name": "Lancer-class escort carrier",
   "modules": [
     "chassis",
-    "bridge_std",
+    "bridge_civilian",
     "hangar_small",
-    "engines_basic"
+    "engines_basic",
+    "turret_a_laser",
+    "turret_b_laser"
   ],
   "palette": "crimson",
   "frame_width": 96,

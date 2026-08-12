@@ -95,15 +95,68 @@ degrees anticlockwise from there:
 The camera is orthographic dimetric — yaw 45 degrees, pitch 30 degrees — which is the
 classic 2:1 pixel ratio, so these line up with standard isometric tiles.
 
-### Loadouts
+### The five-slot frame
 
-| Key   | Ship                          | Squadrons | Modules |
-|-------|-------------------------------|-----------|---------|
-| `mk1` | Lancer-class escort carrier   | 2         | chassis, bridge_std, hangar_small, engines_basic |
-| `mk2` | Lancer-class, expanded bay refit | 4      | + hangar_large, engines_uprated, sensor_array |
-| `mk3` | Lancer-class battlecarrier    | 4         | + weapons_pods, armor_belt |
+The carrier is a fixed chassis plus five slots (`docs/GDD-v4.md` §4.3). You never add,
+you always replace.
 
-`mk1` is the starting ship: a two-squadron bay built into the forward hull.
+| Slot | Options |
+|------|---------|
+| `bridge`   | `bridge_civilian`, `bridge_military` |
+| `hangar`   | `hangar_small` (2 squadrons), `hangar_large` (4) |
+| `engines`  | `engines_basic`, `engines_uprated` |
+| `turret_a` | `turret_a_laser`, `turret_a_flak`, `turret_a_missile` |
+| `turret_b` | `turret_b_laser`, `turret_b_flak`, `turret_b_missile` |
+
+The two turret mounts are **independent slots**, which is what makes "two of one or one
+of each" a tactical identity rather than a label. Each type is a different silhouette —
+slim twin barrels, a squat four-barrel cluster, a boxy cell launcher — so a player can
+read what a ship carries without a stat screen.
+
+Armour is a **chassis variant** (`chassis_armoured`), not a sixth slot: it would be a new
+system in a frame whose discipline is that every slot is a face on an existing number.
+
+Three sample loadouts ship pre-rendered:
+
+| Key   | Ship                             | Squadrons | Notable |
+|-------|----------------------------------|-----------|---------|
+| `mk1` | Lancer-class escort carrier      | 2         | the starting wreck: civilian bridge, small hangar, slow engines, 2× laser |
+| `mk2` | Lancer-class, expanded bay refit | 4         | one of each turret |
+| `mk3` | Lancer-class battlecarrier       | 4         | double flak, armoured chassis |
+
+### Layered modules
+
+`--layers` bakes each module to its own sheet so the game can composite a ship at
+runtime instead of shipping a sprite set per configuration:
+
+```sh
+python3 generate_carrier.py --layers    # -> sprites/layer_<craft>_<module>_<anim>.png
+```
+
+Five slots with a handful of parts each is **144 configurations today** and grows
+multiplicatively as the catalogue does. Pre-rendering every one is ~60,000 frames now
+and far worse later; baking 84 module layers is ~25 seconds.
+
+`sprites/layers_carrier.json` carries everything a compositor needs:
+
+- `canonical_scale` / `canonical_offset_x` — one fit for **all** configurations, taken
+  against the largest ship that can exist, so layers line up.
+- `draw_order` — per facing, back to front. A whole-ship render gets occlusion free from
+  the per-pixel depth buffer; layers do not, so each module's centroid depth along the
+  camera axis is measured at bake time. Modules absent from a configuration are skipped.
+
+```js
+const L = layers;                       // layers_carrier.json
+for (const mod of L.draw_order[facingRow].filter(m => ship.parts.includes(m))) {
+  const s = L.layers.find(x => x.module === mod && x.animation === anim);
+  if (s) ctx.drawImage(sheet(s.sheet), frame * S, facingRow * S, S, S, px, py, S, S);
+}
+```
+
+**Known difference:** a composited ship is ~2–4% of pixels different from the equivalent
+monolithic render, entirely at module boundaries, because each layer carries its own 1px
+outline. It reads as extra panel definition rather than as an error. If you want them
+identical, drop the outline from layer bakes and run one outline pass on the composite.
 
 | Key           | Fighter                       | Role         | Modules |
 |---------------|-------------------------------|--------------|---------|

@@ -1,0 +1,424 @@
+{
+  "craft": "fighter",
+  "frame_width": 48,
+  "frame_height": 48,
+  "palette": "crimson",
+  "canonical_scale": 12.6387,
+  "canonical_offset_x": 0.2016,
+  "note": "every layer shares one scale and origin, so any slot combination composites",
+  "slots": {},
+  "chassis_options": [],
+  "draw_order": [
+    [
+      "engine_boosted",
+      "engine_std",
+      "torpedo_pods",
+      "wingtip_missiles",
+      "airframe",
+      "cannons_heavy",
+      "cannons_light"
+    ],
+    [
+      "engine_boosted",
+      "engine_std",
+      "torpedo_pods",
+      "wingtip_missiles",
+      "airframe",
+      "cannons_heavy",
+      "cannons_light"
+    ],
+    [
+      "torpedo_pods",
+      "cannons_heavy",
+      "cannons_light",
+      "airframe",
+      "engine_boosted",
+      "engine_std",
+      "wingtip_missiles"
+    ],
+    [
+      "cannons_light",
+      "cannons_heavy",
+      "airframe",
+      "torpedo_pods",
+      "wingtip_missiles",
+      "engine_std",
+      "engine_boosted"
+    ],
+    [
+      "cannons_light",
+      "cannons_heavy",
+      "airframe",
+      "torpedo_pods",
+      "wingtip_missiles",
+      "engine_std",
+      "engine_boosted"
+    ],
+    [
+      "cannons_light",
+      "cannons_heavy",
+      "torpedo_pods",
+      "airframe",
+      "wingtip_missiles",
+      "engine_std",
+      "engine_boosted"
+    ],
+    [
+      "torpedo_pods",
+      "cannons_heavy",
+      "cannons_light",
+      "engine_boosted",
+      "engine_std",
+      "wingtip_missiles",
+      "airframe"
+    ],
+    [
+      "engine_boosted",
+      "engine_std",
+      "torpedo_pods",
+      "wingtip_missiles",
+      "airframe",
+      "cannons_heavy",
+      "cannons_light"
+    ]
+  ],
+  "draw_order_note": "per facing row, back to front; modules absent from a configuration are simply skipped",
+  "layers": [
+    {
+      "module": "airframe",
+      "animation": "idle",
+      "frames": 8,
+      "fps": 10,
+      "loop": true,
+      "sheet": "layer_fighter_airframe_idle.png"
+    },
+    {
+      "module": "airframe",
+      "animation": "cruise",
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "sheet": "layer_fighter_airframe_cruise.png"
+    },
+    {
+      "module": "airframe",
+      "animation": "boost",
+      "frames": 8,
+      "fps": 16,
+      "loop": true,
+      "sheet": "layer_fighter_airframe_boost.png"
+    },
+    {
+      "module": "airframe",
+      "animation": "fire",
+      "frames": 6,
+      "fps": 16,
+      "loop": true,
+      "sheet": "layer_fighter_airframe_fire.png"
+    },
+    {
+      "module": "airframe",
+      "animation": "damage",
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "sheet": "layer_fighter_airframe_damage.png"
+    },
+    {
+      "module": "airframe",
+      "animation": "destroyed",
+      "frames": 10,
+      "fps": 14,
+      "loop": false,
+      "sheet": "layer_fighter_airframe_destroyed.png"
+    },
+    {
+      "module": "engine_std",
+      "animation": "idle",
+      "frames": 8,
+      "fps": 10,
+      "loop": true,
+      "sheet": "layer_fighter_engine_std_idle.png"
+    },
+    {
+      "module": "engine_std",
+      "animation": "cruise",
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "sheet": "layer_fighter_engine_std_cruise.png"
+    },
+    {
+      "module": "engine_std",
+      "animation": "boost",
+      "frames": 8,
+      "fps": 16,
+      "loop": true,
+      "sheet": "layer_fighter_engine_std_boost.png"
+    },
+    {
+      "module": "engine_std",
+      "animation": "fire",
+      "frames": 6,
+      "fps": 16,
+      "loop": true,
+      "sheet": "layer_fighter_engine_std_fire.png"
+    },
+    {
+      "module": "engine_std",
+      "animation": "damage",
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "sheet": "layer_fighter_engine_std_damage.png"
+    },
+    {
+      "module": "engine_std",
+      "animation": "destroyed",
+      "frames": 10,
+      "fps": 14,
+      "loop": false,
+      "sheet": "layer_fighter_engine_std_destroyed.png"
+    },
+    {
+      "module": "engine_boosted",
+      "animation": "idle",
+      "frames": 8,
+      "fps": 10,
+      "loop": true,
+      "sheet": "layer_fighter_engine_boosted_idle.png"
+    },
+    {
+      "module": "engine_boosted",
+      "animation": "cruise",
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "sheet": "layer_fighter_engine_boosted_cruise.png"
+    },
+    {
+      "module": "engine_boosted",
+      "animation": "boost",
+      "frames": 8,
+      "fps": 16,
+      "loop": true,
+      "sheet": "layer_fighter_engine_boosted_boost.png"
+    },
+    {
+      "module": "engine_boosted",
+      "animation": "fire",
+      "frames": 6,
+      "fps": 16,
+      "loop": true,
+      "sheet": "layer_fighter_engine_boosted_fire.png"
+    },
+    {
+      "module": "engine_boosted",
+      "animation": "damage",
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "sheet": "layer_fighter_engine_boosted_damage.png"
+    },
+    {
+      "module": "engine_boosted",
+      "animation": "destroyed",
+      "frames": 10,
+      "fps": 14,
+      "loop": false,
+      "sheet": "layer_fighter_engine_boosted_destroyed.png"
+    },
+    {
+      "module": "cannons_light",
+      "animation": "idle",
+      "frames": 8,
+      "fps": 10,
+      "loop": true,
+      "sheet": "layer_fighter_cannons_light_idle.png"
+    },
+    {
+      "module": "cannons_light",
+      "animation": "cruise",
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "sheet": "layer_fighter_cannons_light_cruise.png"
+    },
+    {
+      "module": "cannons_light",
+      "animation": "boost",
+      "frames": 8,
+      "fps": 16,
+      "loop": true,
+      "sheet": "layer_fighter_cannons_light_boost.png"
+    },
+    {
+      "module": "cannons_light",
+      "animation": "fire",
+      "frames": 6,
+      "fps": 16,
+      "loop": true,
+      "sheet": "layer_fighter_cannons_light_fire.png"
+    },
+    {
+      "module": "cannons_light",
+      "animation": "damage",
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "sheet": "layer_fighter_cannons_light_damage.png"
+    },
+    {
+      "module": "cannons_light",
+      "animation": "destroyed",
+      "frames": 10,
+      "fps": 14,
+      "loop": false,
+      "sheet": "layer_fighter_cannons_light_destroyed.png"
+    },
+    {
+      "module": "cannons_heavy",
+      "animation": "idle",
+      "frames": 8,
+      "fps": 10,
+      "loop": true,
+      "sheet": "layer_fighter_cannons_heavy_idle.png"
+    },
+    {
+      "module": "cannons_heavy",
+      "animation": "cruise",
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "sheet": "layer_fighter_cannons_heavy_cruise.png"
+    },
+    {
+      "module": "cannons_heavy",
+      "animation": "boost",
+      "frames": 8,
+      "fps": 16,
+      "loop": true,
+      "sheet": "layer_fighter_cannons_heavy_boost.png"
+    },
+    {
+      "module": "cannons_heavy",
+      "animation": "fire",
+      "frames": 6,
+      "fps": 16,
+      "loop": true,
+      "sheet": "layer_fighter_cannons_heavy_fire.png"
+    },
+    {
+      "module": "cannons_heavy",
+      "animation": "damage",
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "sheet": "layer_fighter_cannons_heavy_damage.png"
+    },
+    {
+      "module": "cannons_heavy",
+      "animation": "destroyed",
+      "frames": 10,
+      "fps": 14,
+      "loop": false,
+      "sheet": "layer_fighter_cannons_heavy_destroyed.png"
+    },
+    {
+      "module": "torpedo_pods",
+      "animation": "idle",
+      "frames": 8,
+      "fps": 10,
+      "loop": true,
+      "sheet": "layer_fighter_torpedo_pods_idle.png"
+    },
+    {
+      "module": "torpedo_pods",
+      "animation": "cruise",
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "sheet": "layer_fighter_torpedo_pods_cruise.png"
+    },
+    {
+      "module": "torpedo_pods",
+      "animation": "boost",
+      "frames": 8,
+      "fps": 16,
+      "loop": true,
+      "sheet": "layer_fighter_torpedo_pods_boost.png"
+    },
+    {
+      "module": "torpedo_pods",
+      "animation": "fire",
+      "frames": 6,
+      "fps": 16,
+      "loop": true,
+      "sheet": "layer_fighter_torpedo_pods_fire.png"
+    },
+    {
+      "module": "torpedo_pods",
+      "animation": "damage",
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "sheet": "layer_fighter_torpedo_pods_damage.png"
+    },
+    {
+      "module": "torpedo_pods",
+      "animation": "destroyed",
+      "frames": 10,
+      "fps": 14,
+      "loop": false,
+      "sheet": "layer_fighter_torpedo_pods_destroyed.png"
+    },
+    {
+      "module": "wingtip_missiles",
+      "animation": "idle",
+      "frames": 8,
+      "fps": 10,
+      "loop": true,
+      "sheet": "layer_fighter_wingtip_missiles_idle.png"
+    },
+    {
+      "module": "wingtip_missiles",
+      "animation": "cruise",
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "sheet": "layer_fighter_wingtip_missiles_cruise.png"
+    },
+    {
+      "module": "wingtip_missiles",
+      "animation": "boost",
+      "frames": 8,
+      "fps": 16,
+      "loop": true,
+      "sheet": "layer_fighter_wingtip_missiles_boost.png"
+    },
+    {
+      "module": "wingtip_missiles",
+      "animation": "fire",
+      "frames": 6,
+      "fps": 16,
+      "loop": true,
+      "sheet": "layer_fighter_wingtip_missiles_fire.png"
+    },
+    {
+      "module": "wingtip_missiles",
+      "animation": "damage",
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "sheet": "layer_fighter_wingtip_missiles_damage.png"
+    },
+    {
+      "module": "wingtip_missiles",
+      "animation": "destroyed",
+      "frames": 10,
+      "fps": 14,
+      "loop": false,
+      "sheet": "layer_fighter_wingtip_missiles_destroyed.png"
+    }
+  ]
+}

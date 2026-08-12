@@ -3,13 +3,12 @@
   "loadout": "mk3",
   "display_name": "Lancer-class battlecarrier",
   "modules": [
-    "chassis",
-    "bridge_std",
+    "chassis_armoured",
+    "bridge_military",
     "hangar_large",
     "engines_uprated",
-    "sensor_array",
-    "weapons_pods",
-    "armor_belt"
+    "turret_a_flak",
+    "turret_b_flak"
   ],
   "palette": "crimson",
   "frame_width": 96,

@@ -4,10 +4,11 @@
   "display_name": "Lancer-class, expanded bay refit",
   "modules": [
     "chassis",
-    "bridge_std",
+    "bridge_military",
     "hangar_large",
     "engines_uprated",
-    "sensor_array"
+    "turret_a_flak",
+    "turret_b_missile"
   ],
   "palette": "crimson",
   "frame_width": 96,

@@ -1,0 +1,842 @@
+{
+  "craft": "carrier",
+  "frame_width": 96,
+  "frame_height": 96,
+  "palette": "crimson",
+  "canonical_scale": 12.8282,
+  "canonical_offset_x": -0.122,
+  "note": "every layer shares one scale and origin, so any slot combination composites",
+  "slots": {
+    "bridge": [
+      "bridge_civilian",
+      "bridge_military"
+    ],
+    "hangar": [
+      "hangar_small",
+      "hangar_large"
+    ],
+    "engines": [
+      "engines_basic",
+      "engines_uprated"
+    ],
+    "turret_a": [
+      "turret_a_laser",
+      "turret_a_flak",
+      "turret_a_missile"
+    ],
+    "turret_b": [
+      "turret_b_laser",
+      "turret_b_flak",
+      "turret_b_missile"
+    ]
+  },
+  "chassis_options": [
+    "chassis",
+    "chassis_armoured"
+  ],
+  "draw_order": [
+    [
+      "engines_basic",
+      "engines_uprated",
+      "turret_b_laser",
+      "turret_b_flak",
+      "turret_b_missile",
+      "bridge_civilian",
+      "bridge_military",
+      "chassis_armoured",
+      "chassis",
+      "turret_a_flak",
+      "turret_a_laser",
+      "turret_a_missile",
+      "hangar_large",
+      "hangar_small"
+    ],
+    [
+      "engines_basic",
+      "engines_uprated",
+      "turret_b_laser",
+      "turret_b_flak",
+      "turret_b_missile",
+      "bridge_civilian",
+      "bridge_military",
+      "chassis_armoured",
+      "chassis",
+      "turret_a_flak",
+      "turret_a_laser",
+      "turret_a_missile",
+      "hangar_large",
+      "hangar_small"
+    ],
+    [
+      "engines_uprated",
+      "engines_basic",
+      "turret_a_laser",
+      "turret_a_flak",
+      "hangar_large",
+      "chassis_armoured",
+      "turret_b_laser",
+      "hangar_small",
+      "turret_b_flak",
+      "chassis",
+      "turret_a_missile",
+      "turret_b_missile",
+      "bridge_civilian",
+      "bridge_military"
+    ],
+    [
+      "hangar_small",
+      "hangar_large",
+      "turret_a_laser",
+      "turret_a_flak",
+      "turret_a_missile",
+      "chassis",
+      "chassis_armoured",
+      "turret_b_flak",
+      "turret_b_laser",
+      "turret_b_missile",
+      "bridge_civilian",
+      "bridge_military",
+      "engines_uprated",
+      "engines_basic"
+    ],
+    [
+      "hangar_small",
+      "hangar_large",
+      "turret_a_laser",
+      "turret_a_flak",
+      "turret_a_missile",
+      "chassis",
+      "chassis_armoured",
+      "turret_b_flak",
+      "turret_b_laser",
+      "turret_b_missile",
+      "bridge_civilian",
+      "bridge_military",
+      "engines_uprated",
+      "engines_basic"
+    ],
+    [
+      "hangar_small",
+      "hangar_large",
+      "turret_a_laser",
+      "turret_a_flak",
+      "turret_a_missile",
+      "chassis",
+      "chassis_armoured",
+      "turret_b_flak",
+      "turret_b_laser",
+      "turret_b_missile",
+      "bridge_civilian",
+      "bridge_military",
+      "engines_uprated",
+      "engines_basic"
+    ],
+    [
+      "engines_uprated",
+      "engines_basic",
+      "turret_a_laser",
+      "turret_a_flak",
+      "hangar_large",
+      "hangar_small",
+      "chassis_armoured",
+      "turret_b_laser",
+      "turret_b_flak",
+      "chassis",
+      "turret_a_missile",
+      "turret_b_missile",
+      "bridge_civilian",
+      "bridge_military"
+    ],
+    [
+      "engines_basic",
+      "engines_uprated",
+      "turret_b_laser",
+      "turret_b_flak",
+      "turret_b_missile",
+      "bridge_civilian",
+      "bridge_military",
+      "chassis_armoured",
+      "chassis",
+      "turret_a_flak",
+      "turret_a_laser",
+      "turret_a_missile",
+      "hangar_large",
+      "hangar_small"
+    ]
+  ],
+  "draw_order_note": "per facing row, back to front; modules absent from a configuration are simply skipped",
+  "layers": [
+    {
+      "module": "chassis",
+      "animation": "idle",
+      "frames": 8,
+      "fps": 10,
+      "loop": true,
+      "sheet": "layer_carrier_chassis_idle.png"
+    },
+    {
+      "module": "chassis",
+      "animation": "cruise",
+      "frames": 8,
+      "fps": 14,
+      "loop": true,
+      "sheet": "layer_carrier_chassis_cruise.png"
+    },
+    {
+      "module": "chassis",
+      "animation": "bay_open",
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "sheet": "layer_carrier_chassis_bay_open.png"
+    },
+    {
+      "module": "chassis",
+      "animation": "launch",
+      "frames": 12,
+      "fps": 14,
+      "loop": false,
+      "sheet": "layer_carrier_chassis_launch.png"
+    },
+    {
+      "module": "chassis",
+      "animation": "damage",
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "sheet": "layer_carrier_chassis_damage.png"
+    },
+    {
+      "module": "chassis",
+      "animation": "powerdown",
+      "frames": 8,
+      "fps": 10,
+      "loop": false,
+      "sheet": "layer_carrier_chassis_powerdown.png"
+    },
+    {
+      "module": "chassis_armoured",
+      "animation": "idle",
+      "frames": 8,
+      "fps": 10,
+      "loop": true,
+      "sheet": "layer_carrier_chassis_armoured_idle.png"
+    },
+    {
+      "module": "chassis_armoured",
+      "animation": "cruise",
+      "frames": 8,
+      "fps": 14,
+      "loop": true,
+      "sheet": "layer_carrier_chassis_armoured_cruise.png"
+    },
+    {
+      "module": "chassis_armoured",
+      "animation": "bay_open",
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "sheet": "layer_carrier_chassis_armoured_bay_open.png"
+    },
+    {
+      "module": "chassis_armoured",
+      "animation": "launch",
+      "frames": 12,
+      "fps": 14,
+      "loop": false,
+      "sheet": "layer_carrier_chassis_armoured_launch.png"
+    },
+    {
+      "module": "chassis_armoured",
+      "animation": "damage",
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "sheet": "layer_carrier_chassis_armoured_damage.png"
+    },
+    {
+      "module": "chassis_armoured",
+      "animation": "powerdown",
+      "frames": 8,
+      "fps": 10,
+      "loop": false,
+      "sheet": "layer_carrier_chassis_armoured_powerdown.png"
+    },
+    {
+      "module": "bridge_civilian",
+      "animation": "idle",
+      "frames": 8,
+      "fps": 10,
+      "loop": true,
+      "sheet": "layer_carrier_bridge_civilian_idle.png"
+    },
+    {
+      "module": "bridge_civilian",
+      "animation": "cruise",
+      "frames": 8,
+      "fps": 14,
+      "loop": true,
+      "sheet": "layer_carrier_bridge_civilian_cruise.png"
+    },
+    {
+      "module": "bridge_civilian",
+      "animation": "bay_open",
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "sheet": "layer_carrier_bridge_civilian_bay_open.png"
+    },
+    {
+      "module": "bridge_civilian",
+      "animation": "launch",
+      "frames": 12,
+      "fps": 14,
+      "loop": false,
+      "sheet": "layer_carrier_bridge_civilian_launch.png"
+    },
+    {
+      "module": "bridge_civilian",
+      "animation": "damage",
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "sheet": "layer_carrier_bridge_civilian_damage.png"
+    },
+    {
+      "module": "bridge_civilian",
+      "animation": "powerdown",
+      "frames": 8,
+      "fps": 10,
+      "loop": false,
+      "sheet": "layer_carrier_bridge_civilian_powerdown.png"
+    },
+    {
+      "module": "bridge_military",
+      "animation": "idle",
+      "frames": 8,
+      "fps": 10,
+      "loop": true,
+      "sheet": "layer_carrier_bridge_military_idle.png"
+    },
+    {
+      "module": "bridge_military",
+      "animation": "cruise",
+      "frames": 8,
+      "fps": 14,
+      "loop": true,
+      "sheet": "layer_carrier_bridge_military_cruise.png"
+    },
+    {
+      "module": "bridge_military",
+      "animation": "bay_open",
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "sheet": "layer_carrier_bridge_military_bay_open.png"
+    },
+    {
+      "module": "bridge_military",
+      "animation": "launch",
+      "frames": 12,
+      "fps": 14,
+      "loop": false,
+      "sheet": "layer_carrier_bridge_military_launch.png"
+    },
+    {
+      "module": "bridge_military",
+      "animation": "damage",
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "sheet": "layer_carrier_bridge_military_damage.png"
+    },
+    {
+      "module": "bridge_military",
+      "animation": "powerdown",
+      "frames": 8,
+      "fps": 10,
+      "loop": false,
+      "sheet": "layer_carrier_bridge_military_powerdown.png"
+    },
+    {
+      "module": "hangar_small",
+      "animation": "idle",
+      "frames": 8,
+      "fps": 10,
+      "loop": true,
+      "sheet": "layer_carrier_hangar_small_idle.png"
+    },
+    {
+      "module": "hangar_small",
+      "animation": "cruise",
+      "frames": 8,
+      "fps": 14,
+      "loop": true,
+      "sheet": "layer_carrier_hangar_small_cruise.png"
+    },
+    {
+      "module": "hangar_small",
+      "animation": "bay_open",
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "sheet": "layer_carrier_hangar_small_bay_open.png"
+    },
+    {
+      "module": "hangar_small",
+      "animation": "launch",
+      "frames": 12,
+      "fps": 14,
+      "loop": false,
+      "sheet": "layer_carrier_hangar_small_launch.png"
+    },
+    {
+      "module": "hangar_small",
+      "animation": "damage",
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "sheet": "layer_carrier_hangar_small_damage.png"
+    },
+    {
+      "module": "hangar_small",
+      "animation": "powerdown",
+      "frames": 8,
+      "fps": 10,
+      "loop": false,
+      "sheet": "layer_carrier_hangar_small_powerdown.png"
+    },
+    {
+      "module": "hangar_large",
+      "animation": "idle",
+      "frames": 8,
+      "fps": 10,
+      "loop": true,
+      "sheet": "layer_carrier_hangar_large_idle.png"
+    },
+    {
+      "module": "hangar_large",
+      "animation": "cruise",
+      "frames": 8,
+      "fps": 14,
+      "loop": true,
+      "sheet": "layer_carrier_hangar_large_cruise.png"
+    },
+    {
+      "module": "hangar_large",
+      "animation": "bay_open",
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "sheet": "layer_carrier_hangar_large_bay_open.png"
+    },
+    {
+      "module": "hangar_large",
+      "animation": "launch",
+      "frames": 12,
+      "fps": 14,
+      "loop": false,
+      "sheet": "layer_carrier_hangar_large_launch.png"
+    },
+    {
+      "module": "hangar_large",
+      "animation": "damage",
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "sheet": "layer_carrier_hangar_large_damage.png"
+    },
+    {
+      "module": "hangar_large",
+      "animation": "powerdown",
+      "frames": 8,
+      "fps": 10,
+      "loop": false,
+      "sheet": "layer_carrier_hangar_large_powerdown.png"
+    },
+    {
+      "module": "engines_basic",
+      "animation": "idle",
+      "frames": 8,
+      "fps": 10,
+      "loop": true,
+      "sheet": "layer_carrier_engines_basic_idle.png"
+    },
+    {
+      "module": "engines_basic",
+      "animation": "cruise",
+      "frames": 8,
+      "fps": 14,
+      "loop": true,
+      "sheet": "layer_carrier_engines_basic_cruise.png"
+    },
+    {
+      "module": "engines_basic",
+      "animation": "bay_open",
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "sheet": "layer_carrier_engines_basic_bay_open.png"
+    },
+    {
+      "module": "engines_basic",
+      "animation": "launch",
+      "frames": 12,
+      "fps": 14,
+      "loop": false,
+      "sheet": "layer_carrier_engines_basic_launch.png"
+    },
+    {
+      "module": "engines_basic",
+      "animation": "damage",
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "sheet": "layer_carrier_engines_basic_damage.png"
+    },
+    {
+      "module": "engines_basic",
+      "animation": "powerdown",
+      "frames": 8,
+      "fps": 10,
+      "loop": false,
+      "sheet": "layer_carrier_engines_basic_powerdown.png"
+    },
+    {
+      "module": "engines_uprated",
+      "animation": "idle",
+      "frames": 8,
+      "fps": 10,
+      "loop": true,
+      "sheet": "layer_carrier_engines_uprated_idle.png"
+    },
+    {
+      "module": "engines_uprated",
+      "animation": "cruise",
+      "frames": 8,
+      "fps": 14,
+      "loop": true,
+      "sheet": "layer_carrier_engines_uprated_cruise.png"
+    },
+    {
+      "module": "engines_uprated",
+      "animation": "bay_open",
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "sheet": "layer_carrier_engines_uprated_bay_open.png"
+    },
+    {
+      "module": "engines_uprated",
+      "animation": "launch",
+      "frames": 12,
+      "fps": 14,
+      "loop": false,
+      "sheet": "layer_carrier_engines_uprated_launch.png"
+    },
+    {
+      "module": "engines_uprated",
+      "animation": "damage",
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "sheet": "layer_carrier_engines_uprated_damage.png"
+    },
+    {
+      "module": "engines_uprated",
+      "animation": "powerdown",
+      "frames": 8,
+      "fps": 10,
+      "loop": false,
+      "sheet": "layer_carrier_engines_uprated_powerdown.png"
+    },
+    {
+      "module": "turret_a_laser",
+      "animation": "idle",
+      "frames": 8,
+      "fps": 10,
+      "loop": true,
+      "sheet": "layer_carrier_turret_a_laser_idle.png"
+    },
+    {
+      "module": "turret_a_laser",
+      "animation": "cruise",
+      "frames": 8,
+      "fps": 14,
+      "loop": true,
+      "sheet": "layer_carrier_turret_a_laser_cruise.png"
+    },
+    {
+      "module": "turret_a_laser",
+      "animation": "bay_open",
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "sheet": "layer_carrier_turret_a_laser_bay_open.png"
+    },
+    {
+      "module": "turret_a_laser",
+      "animation": "launch",
+      "frames": 12,
+      "fps": 14,
+      "loop": false,
+      "sheet": "layer_carrier_turret_a_laser_launch.png"
+    },
+    {
+      "module": "turret_a_laser",
+      "animation": "damage",
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "sheet": "layer_carrier_turret_a_laser_damage.png"
+    },
+    {
+      "module": "turret_a_laser",
+      "animation": "powerdown",
+      "frames": 8,
+      "fps": 10,
+      "loop": false,
+      "sheet": "layer_carrier_turret_a_laser_powerdown.png"
+    },
+    {
+      "module": "turret_a_flak",
+      "animation": "idle",
+      "frames": 8,
+      "fps": 10,
+      "loop": true,
+      "sheet": "layer_carrier_turret_a_flak_idle.png"
+    },
+    {
+      "module": "turret_a_flak",
+      "animation": "cruise",
+      "frames": 8,
+      "fps": 14,
+      "loop": true,
+      "sheet": "layer_carrier_turret_a_flak_cruise.png"
+    },
+    {
+      "module": "turret_a_flak",
+      "animation": "bay_open",
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "sheet": "layer_carrier_turret_a_flak_bay_open.png"
+    },
+    {
+      "module": "turret_a_flak",
+      "animation": "launch",
+      "frames": 12,
+      "fps": 14,
+      "loop": false,
+      "sheet": "layer_carrier_turret_a_flak_launch.png"
+    },
+    {
+      "module": "turret_a_flak",
+      "animation": "damage",
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "sheet": "layer_carrier_turret_a_flak_damage.png"
+    },
+    {
+      "module": "turret_a_flak",
+      "animation": "powerdown",
+      "frames": 8,
+      "fps": 10,
+      "loop": false,
+      "sheet": "layer_carrier_turret_a_flak_powerdown.png"
+    },
+    {
+      "module": "turret_a_missile",
+      "animation": "idle",
+      "frames": 8,
+      "fps": 10,
+      "loop": true,
+      "sheet": "layer_carrier_turret_a_missile_idle.png"
+    },
+    {
+      "module": "turret_a_missile",
+      "animation": "cruise",
+      "frames": 8,
+      "fps": 14,
+      "loop": true,
+      "sheet": "layer_carrier_turret_a_missile_cruise.png"
+    },
+    {
+      "module": "turret_a_missile",
+      "animation": "bay_open",
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "sheet": "layer_carrier_turret_a_missile_bay_open.png"
+    },
+    {
+      "module": "turret_a_missile",
+      "animation": "launch",
+      "frames": 12,
+      "fps": 14,
+      "loop": false,
+      "sheet": "layer_carrier_turret_a_missile_launch.png"
+    },
+    {
+      "module": "turret_a_missile",
+      "animation": "damage",
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "sheet": "layer_carrier_turret_a_missile_damage.png"
+    },
+    {
+      "module": "turret_a_missile",
+      "animation": "powerdown",
+      "frames": 8,
+      "fps": 10,
+      "loop": false,
+      "sheet": "layer_carrier_turret_a_missile_powerdown.png"
+    },
+    {
+      "module": "turret_b_laser",
+      "animation": "idle",
+      "frames": 8,
+      "fps": 10,
+      "loop": true,
+      "sheet": "layer_carrier_turret_b_laser_idle.png"
+    },
+    {
+      "module": "turret_b_laser",
+      "animation": "cruise",
+      "frames": 8,
+      "fps": 14,
+      "loop": true,
+      "sheet": "layer_carrier_turret_b_laser_cruise.png"
+    },
+    {
+      "module": "turret_b_laser",
+      "animation": "bay_open",
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "sheet": "layer_carrier_turret_b_laser_bay_open.png"
+    },
+    {
+      "module": "turret_b_laser",
+      "animation": "launch",
+      "frames": 12,
+      "fps": 14,
+      "loop": false,
+      "sheet": "layer_carrier_turret_b_laser_launch.png"
+    },
+    {
+      "module": "turret_b_laser",
+      "animation": "damage",
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "sheet": "layer_carrier_turret_b_laser_damage.png"
+    },
+    {
+      "module": "turret_b_laser",
+      "animation": "powerdown",
+      "frames": 8,
+      "fps": 10,
+      "loop": false,
+      "sheet": "layer_carrier_turret_b_laser_powerdown.png"
+    },
+    {
+      "module": "turret_b_flak",
+      "animation": "idle",
+      "frames": 8,
+      "fps": 10,
+      "loop": true,
+      "sheet": "layer_carrier_turret_b_flak_idle.png"
+    },
+    {
+      "module": "turret_b_flak",
+      "animation": "cruise",
+      "frames": 8,
+      "fps": 14,
+      "loop": true,
+      "sheet": "layer_carrier_turret_b_flak_cruise.png"
+    },
+    {
+      "module": "turret_b_flak",
+      "animation": "bay_open",
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "sheet": "layer_carrier_turret_b_flak_bay_open.png"
+    },
+    {
+      "module": "turret_b_flak",
+      "animation": "launch",
+      "frames": 12,
+      "fps": 14,
+      "loop": false,
+      "sheet": "layer_carrier_turret_b_flak_launch.png"
+    },
+    {
+      "module": "turret_b_flak",
+      "animation": "damage",
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "sheet": "layer_carrier_turret_b_flak_damage.png"
+    },
+    {
+      "module": "turret_b_flak",
+      "animation": "powerdown",
+      "frames": 8,
+      "fps": 10,
+      "loop": false,
+      "sheet": "layer_carrier_turret_b_flak_powerdown.png"
+    },
+    {
+      "module": "turret_b_missile",
+      "animation": "idle",
+      "frames": 8,
+      "fps": 10,
+      "loop": true,
+      "sheet": "layer_carrier_turret_b_missile_idle.png"
+    },
+    {
+      "module": "turret_b_missile",
+      "animation": "cruise",
+      "frames": 8,
+      "fps": 14,
+      "loop": true,
+      "sheet": "layer_carrier_turret_b_missile_cruise.png"
+    },
+    {
+      "module": "turret_b_missile",
+      "animation": "bay_open",
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "sheet": "layer_carrier_turret_b_missile_bay_open.png"
+    },
+    {
+      "module": "turret_b_missile",
+      "animation": "launch",
+      "frames": 12,
+      "fps": 14,
+      "loop": false,
+      "sheet": "layer_carrier_turret_b_missile_launch.png"
+    },
+    {
+      "module": "turret_b_missile",
+      "animation": "damage",
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "sheet": "layer_carrier_turret_b_missile_damage.png"
+    },
+    {
+      "module": "turret_b_missile",
+      "animation": "powerdown",
+      "frames": 8,
+      "fps": 10,
+      "loop": false,
+      "sheet": "layer_carrier_turret_b_missile_powerdown.png"
+    }
+  ]
+}

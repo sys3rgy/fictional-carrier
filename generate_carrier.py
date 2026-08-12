@@ -428,8 +428,11 @@ def m_chassis(st, cfg):
     return p
 
 
-def m_bridge(st, cfg):
-    """Command block set into the dorsal stack, with a mast and strobe above it."""
+def m_bridge_civilian(st, cfg):
+    """
+    The starting bridge: a command block set into the dorsal stack with a mast and
+    strobe. Says out loud that this is a patched wreck, not a warship.
+    """
     p = []
     pw = st["power"]
     iy = -0.14  # nudged off the centreline so the ridge is not mirror-symmetric
@@ -521,6 +524,20 @@ def _hangar(st, cfg):
     return p
 
 
+def m_bridge_military(st, cfg):
+    """Fleet bridge: the same tower carrying a dish and a turning search bar."""
+    return m_bridge_civilian(st, cfg) + _sensor_array(st, cfg)
+
+
+def m_chassis_armoured(st, cfg):
+    """
+    Chassis with the ablative belt fitted. Armour is a hull variant, not a slot: a
+    sixth slot would mean a new system (damage reduction) in a frame whose discipline
+    is that every slot is a face on a number the simulation already runs.
+    """
+    return m_chassis(st, cfg) + _armor_belt(st, cfg)
+
+
 def m_hangar_small(st, cfg):
     """Two-squadron bay: the starting module."""
     return _hangar(st, cfg)
@@ -577,7 +594,7 @@ def m_engines_uprated(st, cfg):
     return p
 
 
-def m_sensor_array(st, cfg):
+def _sensor_array(st, cfg):
     """Dish on the mast head and a search bar turning on the dorsal ridge."""
     p = []
     spin = st["t"] * math.tau
@@ -593,31 +610,78 @@ def m_sensor_array(st, cfg):
     return p
 
 
-def m_weapons_pods(st, cfg):
-    """Four twin-barrel turrets: two flanking the bay mass, two on the keel shoulders."""
-    p = []
+# --------------------------------------------------------------------------------------
+# turret mounts
+#
+# Two independent slots, not one weapons module. That is what makes "two of one or one of
+# each" a tactical identity rather than a label: mount A is the forward pair flanking the
+# bay mass, mount B the aft pair on the keel shoulders, and each takes any turret type.
+# The three types are deliberately different silhouettes — a player has to be able to read
+# what a ship is carrying without a stat screen.
+# --------------------------------------------------------------------------------------
+
+
+def _mount_points(cfg, mount):
     bx, bhx, bhy, bhz = hull_of(cfg)
-    sweep = math.sin(st["t"] * math.tau) * 0.18
-    mounts = [
-        ((bx + bhx * 0.24, bhy + 0.08, 0.06), math.radians(55)),
-        ((bx + bhx * 0.24, -bhy - 0.08, 0.06), math.radians(-55)),
-        ((-1.28, 0.44, 0.14), math.radians(125)),
-        ((-1.28, -0.44, 0.14), math.radians(-125)),
-    ]
-    for (c, ang) in mounts:
-        # plinth first, so the turret is not glued straight to the plating
-        p.append(box((c[0], c[1], c[2] - 0.085), (0.14, 0.12, 0.055), "armor"))
-        ax = axes_from_euler(yaw=ang + sweep)
-        p.append(ell(c, (0.125, 0.125, 0.085), "hull_light", ax))
-        for sy in (1.0, -1.0):
-            off = vadd(c, vmul(ax[1], sy * 0.046))
-            p.append(
-                cyl(vadd(off, vmul(ax[0], 0.04)), vadd(off, vmul(ax[0], 0.27)), 0.027, "hull_dark")
-            )
-    return p
+    if mount == "a":
+        return [((bx + bhx * 0.24, bhy + 0.08, 0.06), math.radians(55)),
+                ((bx + bhx * 0.24, -bhy - 0.08, 0.06), math.radians(-55))]
+    return [((-1.28, 0.44, 0.14), math.radians(125)),
+            ((-1.28, -0.44, 0.14), math.radians(-125))]
 
 
-def m_armor_belt(st, cfg):
+def _turret_laser(p, c, ax):
+    """Starting part: a slim twin-barrel gun. Weak at everything, looks it."""
+    p.append(ell(c, (0.125, 0.125, 0.085), "hull_light", ax))
+    for sy in (1.0, -1.0):
+        off = vadd(c, vmul(ax[1], sy * 0.046))
+        p.append(
+            cyl(vadd(off, vmul(ax[0], 0.04)), vadd(off, vmul(ax[0], 0.27)), 0.027, "hull_dark")
+        )
+
+
+def _turret_flak(p, c, ax):
+    """Anti-fighter: a squat four-barrel cluster, visibly short-ranged."""
+    p.append(box(c, (0.125, 0.150, 0.080), "hull_light", ax))
+    for sy in (-1.0, -0.34, 0.34, 1.0):
+        off = vadd(c, vmul(ax[1], sy * 0.072))
+        p.append(
+            cyl(vadd(off, vmul(ax[0], 0.02)), vadd(off, vmul(ax[0], 0.17)), 0.022, "hull_dark")
+        )
+    p.append(box(vadd(c, vmul(ax[0], -0.11)), (0.055, 0.155, 0.065), "armor", ax))
+
+
+def _turret_missile(p, c, ax):
+    """Anti-missile: a boxy cell launcher. Reads as ordnance rather than a gun."""
+    p.append(box(c, (0.115, 0.150, 0.070), "armor", ax))
+    cell = (c[0], c[1], c[2] + 0.095)
+    p.append(box(cell, (0.105, 0.140, 0.070), "hull_light", ax))
+    for ix in (-1.0, 1.0):
+        for iy in (-1.0, 1.0):
+            q = vadd(cell, vadd(vmul(ax[0], ix * 0.048), vmul(ax[1], iy * 0.068)))
+            p.append(box((q[0], q[1], q[2] + 0.072), (0.034, 0.048, 0.012), "plate", ax))
+
+
+TURRET_TYPES = {"laser": _turret_laser, "flak": _turret_flak, "missile": _turret_missile}
+
+
+def _turret_module(mount, kind):
+    draw = TURRET_TYPES[kind]
+
+    def module(st, cfg):
+        p = []
+        sweep = math.sin(st["t"] * math.tau) * 0.18
+        for (c, ang) in _mount_points(cfg, mount):
+            # plinth first, so the turret is not glued straight to the plating
+            p.append(box((c[0], c[1], c[2] - 0.085), (0.14, 0.12, 0.055), "armor"))
+            draw(p, c, axes_from_euler(yaw=ang + sweep))
+        return p
+
+    module.__doc__ = f"Turret mount {mount.upper()}, {kind}."
+    return module
+
+
+def _armor_belt(st, cfg):
     """Ablative plating along the keel, over the bay shoulders and on the prow."""
     p = []
     bx, bhx, bhy, bhz = hull_of(cfg)
@@ -698,47 +762,64 @@ def m_damage(st, cfg):
 
 CARRIER_MODULES = {
     "chassis": m_chassis,
-    "bridge_std": m_bridge,
+    "chassis_armoured": m_chassis_armoured,
+    "bridge_civilian": m_bridge_civilian,
+    "bridge_military": m_bridge_military,
     "hangar_small": m_hangar_small,
     "hangar_large": m_hangar_large,
     "engines_basic": m_engines_basic,
     "engines_uprated": m_engines_uprated,
-    "sensor_array": m_sensor_array,
-    "weapons_pods": m_weapons_pods,
-    "armor_belt": m_armor_belt,
+}
+for _mount in ("a", "b"):
+    for _kind in TURRET_TYPES:
+        CARRIER_MODULES[f"turret_{_mount}_{_kind}"] = _turret_module(_mount, _kind)
+
+# The five-slot frame from the GDD. You never add, you always replace; the chassis is
+# fixed and sits outside the frame.
+CARRIER_SLOTS = {
+    "bridge": ["bridge_civilian", "bridge_military"],
+    "hangar": ["hangar_small", "hangar_large"],
+    "engines": ["engines_basic", "engines_uprated"],
+    "turret_a": [f"turret_a_{k}" for k in TURRET_TYPES],
+    "turret_b": [f"turret_b_{k}" for k in TURRET_TYPES],
 }
 
 # A bay is (lateral offset, the x of the hull face it opens through, its height).
 BAYS_2 = [(0.30, 1.85, 0.0), (-0.30, 1.85, 0.0)]
 BAYS_4 = [(0.26, 1.98, 0.0), (-0.26, 1.98, 0.0), (0.58, 1.98, 0.0), (-0.58, 1.98, 0.0)]
 
+def carrier(display, bridge, hangar, engines, turret_a, turret_b, chassis="chassis"):
+    """
+    Assemble a loadout from the five slots. Every configuration is the same frame with
+    different parts in it, so a loadout is a slot table rather than a bag of modules.
+    """
+    big = hangar == "hangar_large"
+    slots = {"bridge": bridge, "hangar": hangar, "engines": engines,
+             "turret_a": turret_a, "turret_b": turret_b}
+    return {
+        "name": display,
+        "chassis": chassis,
+        "slots": slots,
+        "modules": [chassis, bridge, hangar, engines, turret_a, turret_b],
+        "squadrons": 4 if big else 2,
+        "bays": BAYS_4 if big else BAYS_2,
+    }
+
+
 CARRIER_LOADOUTS = {
-    "mk1": {
-        "name": "Lancer-class escort carrier",
-        "modules": ["chassis", "bridge_std", "hangar_small", "engines_basic"],
-        "squadrons": 2,
-        "bays": BAYS_2,
-    },
-    "mk2": {
-        "name": "Lancer-class, expanded bay refit",
-        "modules": ["chassis", "bridge_std", "hangar_large", "engines_uprated", "sensor_array"],
-        "squadrons": 4,
-        "bays": BAYS_4,
-    },
-    "mk3": {
-        "name": "Lancer-class battlecarrier",
-        "modules": [
-            "chassis",
-            "bridge_std",
-            "hangar_large",
-            "engines_uprated",
-            "sensor_array",
-            "weapons_pods",
-            "armor_belt",
-        ],
-        "squadrons": 4,
-        "bays": BAYS_4,
-    },
+    # The opening ship: civilian bridge, small hangar, slow engines, two laser turrets.
+    # A wreck being patched, not a fleet carrier being equipped.
+    "mk1": carrier("Lancer-class escort carrier",
+                   "bridge_civilian", "hangar_small", "engines_basic",
+                   "turret_a_laser", "turret_b_laser"),
+    # One of each turret: the split the GDD calls a tactical identity.
+    "mk2": carrier("Lancer-class, expanded bay refit",
+                   "bridge_military", "hangar_large", "engines_uprated",
+                   "turret_a_flak", "turret_b_missile"),
+    # Doubled down on flak, armoured hull. Visibly a gun platform.
+    "mk3": carrier("Lancer-class battlecarrier",
+                   "bridge_military", "hangar_large", "engines_uprated",
+                   "turret_a_flak", "turret_b_flak", chassis="chassis_armoured"),
 }
 
 
@@ -1467,6 +1548,7 @@ CRAFT = {
         "display": "Lancer-class carrier",
         "sprite": 96,
         "loadouts": CARRIER_LOADOUTS,
+        "modules": CARRIER_MODULES,
         "animations": CARRIER_ANIMS,
         "build": build_carrier,
         "fit_state": {"throttle": 0.55, "door": 1.0},
@@ -1475,6 +1557,7 @@ CRAFT = {
         "display": "Kite-class fighter",
         "sprite": 48,
         "loadouts": FIGHTER_LOADOUTS,
+        "modules": FIGHTER_MODULES,
         "animations": FIGHTER_ANIMS,
         "build": build_fighter,
         "fit_state": {"throttle": 0.75},
@@ -1513,6 +1596,131 @@ def fit_scale(craft_key, cfg):
     size = craft["sprite"]
     half = size * 0.5 - margin_for(size)
     return min(half / ext_x, half / ext_y), offx
+
+
+def envelope_cfg(craft_key):
+    """
+    A synthetic loadout holding every module at once, used only for fitting. Layers have
+    to share one scale and one origin across every configuration, so the fit is taken
+    against the largest ship that can exist rather than against any one loadout.
+    """
+    craft = CRAFT[craft_key]
+    base = next(iter(craft["loadouts"].values()))
+    # biggest hangar first, because hull_of takes the first one it finds and everything
+    # that mounts to the bay mass should mount to the largest
+    mods = sorted(craft["modules"], key=lambda m: -HULLS.get(m, (0.0, 0.0, 0.0, 0.0))[1])
+    cfg = dict(base)
+    cfg["name"] = f"{craft_key} envelope"
+    cfg["modules"] = mods
+    if "bays" in base:
+        cfg["bays"] = BAYS_4
+    return cfg
+
+
+def canonical_fit(craft_key):
+    """One scale and offset per craft, shared by every layer and every configuration."""
+    return fit_scale(craft_key, envelope_cfg(craft_key))
+
+
+def layer_depth_order(craft_key, cfg, offx):
+    """
+    Per-facing back-to-front order for compositing layers.
+
+    A whole-ship render gets occlusion for free from the per-pixel depth buffer. Layers
+    do not, so each module's centroid depth along the camera axis is measured here and
+    the ordering published per facing. Modules occupy distinct hull regions, so a single
+    order per facing is enough; interpenetrating parts would need a depth channel.
+    """
+    craft = CRAFT[craft_key]
+    st = base_state(0, 8)
+    st.update(craft["fit_state"])
+    order = []
+    for facing in range(8):
+        a = FACING_YAW0 + facing * math.tau / 8.0
+        depths = []
+        for name in cfg["modules"]:
+            prims = craft["modules"][name](st, cfg)
+            if not prims:
+                continue
+            placed = [p.placed(offx, a) for p in prims]
+            depths.append((sum(vdot(p.c, CAM_D) for p in placed) / len(placed), name))
+        # smaller dot with the camera axis is further away, so it goes down first
+        order.append([n for _d, n in sorted(depths)])
+    return order
+
+
+def render_layer_cell(job):
+    craft_key, cfg, module, anim_fn, frame, nframes, facing, scale, offx, palette = job
+    use_palette(palette)
+    craft = CRAFT[craft_key]
+    st = anim_fn(frame, nframes)
+    prims = craft["modules"][module](st, cfg)
+    a = FACING_YAW0 + facing * math.tau / 8.0
+    prims = [p.placed(offx, a) for p in prims]
+    size = craft["sprite"]
+    img = render_frame(prims, scale, st["bob"] * scale, size, False)
+    return (facing, frame, img.tobytes())
+
+
+def build_layers(craft_key, outdir, jobs=None, palette="crimson"):
+    """
+    Bake every module to its own sheet so the game can composite a ship at runtime.
+
+    Five slots with a handful of parts each is on the order of a thousand configurations;
+    a full sprite set is ~416 frames, so pre-rendering every ship is ~400k frames. Baking
+    ~20 module layers instead is a couple of minutes, and makes "every part is visible on
+    the hull" free rather than combinatorially impossible.
+    """
+    craft = CRAFT[craft_key]
+    size = craft["sprite"]
+    cfg = envelope_cfg(craft_key)
+    scale, offx = canonical_fit(craft_key)
+    modules = list(craft["modules"])
+
+    sheets = []
+    for module in modules:
+        for (aname, afn, nframes, fps, loop) in craft["animations"]:
+            work = [(craft_key, cfg, module, afn, f, nframes, fc, scale, offx, palette)
+                    for fc in range(8) for f in range(nframes)]
+            if jobs and jobs > 1:
+                with Pool(jobs) as pool:
+                    results = pool.map(render_layer_cell, work, chunksize=8)
+            else:
+                results = [render_layer_cell(w) for w in work]
+
+            sheet = Image.new("RGBA", (size * nframes, size * 8), (0, 0, 0, 0))
+            blank = True
+            for (facing, frame, raw) in results:
+                cell = Image.frombytes("RGBA", (size, size), raw)
+                if cell.getbbox():
+                    blank = False
+                sheet.paste(cell, (frame * size, facing * size))
+            if blank:
+                continue
+            name = f"layer_{craft_key}_{module}_{aname}.png"
+            sheet.save(os.path.join(outdir, name))
+            sheets.append({"module": module, "animation": aname, "frames": nframes,
+                           "fps": fps, "loop": loop, "sheet": name})
+        print(f"  layer {craft_key}/{module}")
+
+    meta = {
+        "craft": craft_key,
+        "frame_width": size, "frame_height": size,
+        "palette": palette,
+        "canonical_scale": round(scale, 4),
+        "canonical_offset_x": round(offx, 4),
+        "note": "every layer shares one scale and origin, so any slot combination composites",
+        "slots": CARRIER_SLOTS if craft_key == "carrier" else {},
+        "chassis_options": [m for m in modules if m.startswith("chassis")],
+        "draw_order": layer_depth_order(craft_key, cfg, offx),
+        "draw_order_note": "per facing row, back to front; modules absent from a "
+                           "configuration are simply skipped",
+        "layers": sheets,
+    }
+    with open(os.path.join(outdir, f"layers_{craft_key}.json"), "w") as fh:
+        json.dump(meta, fh, indent=2)
+    print(f"  -> {len(sheets)} layer sheets for {craft_key}")
+    return meta
 
 
 def render_cell(job):
@@ -1627,6 +1835,8 @@ def main():
     ap.add_argument("--contact", action="store_true", help="also write contact sheets")
     ap.add_argument("--jobs", type=int, default=os.cpu_count() or 1)
     ap.add_argument("--palette", default="crimson", choices=sorted(PALETTES), help="paint scheme")
+    ap.add_argument("--layers", action="store_true",
+                    help="also bake per-module layers for runtime composition")
     args = ap.parse_args()
 
     os.makedirs(args.out, exist_ok=True)
@@ -1647,6 +1857,11 @@ def main():
                              args.jobs, args.palette)
             )
         atlas.append(entry)
+
+    if args.layers:
+        for craft_key in (args.craft or list(CRAFT)):
+            print(f"{craft_key} layers:")
+            build_layers(craft_key, args.out, args.jobs, args.palette)
 
     with open(os.path.join(args.out, "sprite_atlas.json"), "w") as fh:
         json.dump({"palette": args.palette, "craft": atlas}, fh, indent=2)

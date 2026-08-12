@@ -12,9 +12,11 @@
           "display_name": "Lancer-class escort carrier",
           "modules": [
             "chassis",
-            "bridge_std",
+            "bridge_civilian",
             "hangar_small",
-            "engines_basic"
+            "engines_basic",
+            "turret_a_laser",
+            "turret_b_laser"
           ],
           "palette": "crimson",
           "frame_width": 96,
@@ -121,10 +123,11 @@
           "display_name": "Lancer-class, expanded bay refit",
           "modules": [
             "chassis",
-            "bridge_std",
+            "bridge_military",
             "hangar_large",
             "engines_uprated",
-            "sensor_array"
+            "turret_a_flak",
+            "turret_b_missile"
           ],
           "palette": "crimson",
           "frame_width": 96,
@@ -230,13 +233,12 @@
           "loadout": "mk3",
           "display_name": "Lancer-class battlecarrier",
           "modules": [
-            "chassis",
-            "bridge_std",
+            "chassis_armoured",
+            "bridge_military",
             "hangar_large",
             "engines_uprated",
-            "sensor_array",
-            "weapons_pods",
-            "armor_belt"
+            "turret_a_flak",
+            "turret_b_flak"
           ],
           "palette": "crimson",
           "frame_width": 96,

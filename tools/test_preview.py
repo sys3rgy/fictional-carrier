@@ -96,11 +96,12 @@ def main():
         page.locator("#loadouts button").nth(2).click()
         page.wait_for_timeout(400)
         assert page.evaluate(INKED) > 500, "mk3 stage looks empty"
+        # the five-slot frame plus a chassis: every configuration has the same part count
         mods = page.locator("#modules li").count()
-        assert mods == 7, f"expected 7 modules on mk3, got {mods}"
-        # everything mk1 does not carry: bigger hangar and engines, sensors, guns, armour
+        assert mods == 6, f"expected 6 parts on mk3 (chassis + 5 slots), got {mods}"
+        # mk3 shares nothing with the starting ship
         added = page.locator("#modules li.added").count()
-        assert added == 5, f"expected 5 upgrade modules on mk3, got {added}"
+        assert added == 6, f"expected all 6 parts swapped on mk3, got {added}"
 
         page.screenshot(path=os.path.join(SHOTS, "viewer_mk3.png"), full_page=True)
 
