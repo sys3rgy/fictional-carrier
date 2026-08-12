@@ -164,7 +164,7 @@ def _ramp(*hexes):
 
 # Geometry names materials semantically, so a paint scheme is a swappable table in the
 # same way a hangar is a swappable module. `plate` is the bold painted armour block,
-# `trench` the recessed strip lighting, `runlight` the marker lights along the deck.
+# `trench` the recessed strip lighting, `runlight` the marker lights along the hull.
 PALETTES = {
     # Bone hull, crimson plating, amber-lit recesses, green running lights.
     "crimson": {
@@ -261,10 +261,11 @@ class Prim:
         self.power = power  # emissive intensity, 0..1; ignored for lit materials
         self.ax, self.ay, self.az = axes or ((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0))
 
-    def yawed(self, a):
+    def placed(self, dx, a):
+        """Slide along the ship's long axis to centre it in the cell, then yaw."""
         p = Prim.__new__(Prim)
         p.kind, p.h, p.mat, p.power = self.kind, self.h, self.mat, self.power
-        p.c = yaw_vec(self.c, a)
+        p.c = yaw_vec((self.c[0] + dx, self.c[1], self.c[2]), a)
         p.ax, p.ay, p.az = yaw_vec(self.ax, a), yaw_vec(self.ay, a), yaw_vec(self.az, a)
         return p
 
@@ -319,345 +320,297 @@ def quad(c, h, mat, axes=None, power=1.0):
 
 
 def m_chassis(st, cfg):
-    """Hull body, belly, prow taper, painted plating, trench lighting and greebles."""
+    """
+    The spine: a long keel carrying a stepped stack of armour plate, a chisel prow
+    and a forward sensor spar. The ship's mass steps up towards a dorsal ridge —
+    there is no flat top deck, the silhouette is layered blocks along an axis.
+    """
     p = []
     pw = st["power"]
-    # core hull: everything else hangs off this
-    p.append(box((0.0, 0.0, -0.02), (1.80, 0.58, 0.24), "hull"))
-    # belly plate, inset so the hull sides read as a step above it
-    p.append(box((-0.15, 0.0, -0.34), (1.50, 0.46, 0.12), "hull_dark"))
-    # prow: two shrinking steps then a nose cap. The bow block carries paint.
-    p.append(box((1.96, 0.0, -0.02), (0.20, 0.20, 0.19), "plate"))
-    p.append(box((2.26, 0.0, -0.02), (0.16, 0.15, 0.14), "hull_light"))
-    p.append(ell((2.44, 0.0, -0.02), (0.14, 0.14, 0.10), "hull_light"))
-    # bow sensor blister
-    p.append(ell((2.40, 0.0, 0.10), (0.09, 0.07, 0.06), "window", power=0.72 * pw))
+
+    # keel and belly
+    p.append(box((0.0, 0.0, 0.0), (2.20, 0.40, 0.22), "hull"))
+    p.append(box((-0.35, 0.0, -0.28), (1.85, 0.28, 0.09), "hull_dark"))
+
+    # Stepped dorsal stack: each layer shorter and narrower than the one below, so
+    # the hull reads as built-up plate rather than a lid.
+    for (cx, cz, hx, hy, hz, mat) in (
+        (-0.15, 0.28, 1.80, 0.34, 0.08, "hull"),
+        (-0.42, 0.42, 1.35, 0.26, 0.07, "hull_light"),
+        (-0.66, 0.55, 0.92, 0.19, 0.07, "hull"),
+        (-0.86, 0.67, 0.55, 0.12, 0.06, "hull_light"),
+    ):
+        # a dark recess under each layer, proud of its footprint, so the stack reads
+        # as separate plates with shadow gaps instead of one smooth mass
+        p.append(box((cx, 0.0, cz - hz), (hx * 0.99, hy + 0.022, 0.018), "armor"))
+        p.append(box((cx, 0.0, cz), (hx, hy, hz), mat))
+
+    # Paint goes on as a few large blocks where a layer's top is actually exposed.
+    # Striping every edge instead just reads as noise at this size.
+    p.append(box((1.29, 0.0, 0.365), (0.34, 0.325, 0.009), "plate"))
+    p.append(box((-0.02, 0.0, 0.625), (0.25, 0.180, 0.009), "plate"))
+    p.append(box((-0.86, 0.0, 0.735), (0.50, 0.110, 0.009), "plate"))
+
+    # chisel prow, then a slender sensor spar off the nose
+    p.append(box((2.42, 0.0, 0.0), (0.22, 0.30, 0.17), "hull"))
+    p.append(box((2.74, 0.0, 0.0), (0.14, 0.19, 0.11), "plate"))
+    p.append(box((2.94, 0.0, 0.0), (0.09, 0.10, 0.06), "hull_light"))
+    p.append(cyl((3.02, 0.0, 0.02), (3.42, 0.0, 0.02), 0.026, "hull_light"))
+    p.append(box((3.13, 0.0, 0.02), (0.03, 0.055, 0.055), "armor"))
+    p.append(ell((3.44, 0.0, 0.02), (0.034, 0.034, 0.034), "nav_red", power=st["strobe"] * pw))
+    p.append(ell((2.60, 0.0, 0.15), (0.10, 0.08, 0.06), "window", power=0.72 * pw))
 
     for sy in (1.0, -1.0):
-        fy = sy * 0.58  # the hull flank plane
+        fy = sy * 0.40  # keel flank plane
 
-        # Painted blocks fore and aft, laid on the flank as thin panels. Two-tone
-        # plating is what carries the scheme, so it is geometry, not a texture.
-        p.append(box((1.28, fy + sy * 0.008, -0.02), (0.44, 0.012, 0.205), "plate"))
-        p.append(box((-1.24, fy + sy * 0.008, -0.02), (0.50, 0.012, 0.205), "plate"))
-        p.append(box((0.02, fy + sy * 0.008, -0.20), (0.72, 0.012, 0.055), "plate"))
-
-        # Recessed strip light between them: a dark inset with the lit strip proud of it.
-        p.append(box((0.02, fy + sy * 0.004, 0.04), (0.76, 0.012, 0.05), "armor"))
+        # painted blocks fore and aft on the keel side
+        p.append(box((-1.55, fy + sy * 0.008, 0.0), (0.58, 0.012, 0.185), "plate"))
+        p.append(box((1.66, fy + sy * 0.008, 0.0), (0.46, 0.012, 0.185), "plate"))
+        # recessed strip light between them
+        p.append(box((0.05, fy + sy * 0.004, 0.07), (0.98, 0.012, 0.052), "armor"))
         p.append(
-            box((0.02, fy + sy * 0.012, 0.04), (0.70, 0.010, 0.022), "trench", power=0.85 * pw)
+            box((0.05, fy + sy * 0.012, 0.07), (0.92, 0.010, 0.020), "trench", power=0.85 * pw)
         )
+        # painted flanks on the stack layers, deep enough to read as blocks not pinstripes
+        p.append(box((0.42, sy * 0.348, 0.28), (0.86, 0.010, 0.072), "plate"))
+        p.append(box((-1.18, sy * 0.348, 0.28), (0.48, 0.010, 0.072), "plate"))
+        p.append(box((-0.95, sy * 0.268, 0.42), (0.72, 0.010, 0.060), "plate"))
 
-        # Flank ribs, alternating depth and material so the side reads as built up
-        for i in range(5):
-            x = -1.34 + i * 0.62
+        # ribs down the keel, alternating depth
+        for i in range(6):
+            x = -1.85 + i * 0.66
             deep = i % 2 == 0
             p.append(
                 box(
-                    (x, sy * (0.60 + (0.03 if deep else 0.0)), -0.09),
-                    (0.13 if deep else 0.08, 0.05, 0.12),
+                    (x, sy * (0.42 + (0.03 if deep else 0.0)), -0.10),
+                    (0.12 if deep else 0.07, 0.05, 0.10),
                     "armor" if deep else "hull_dark",
                 )
             )
-        # Small hull greebles: vents and conduit boxes
-        for (gx, gz, gl, gh) in ((0.72, 0.12, 0.10, 0.04), (-0.44, 0.10, 0.07, 0.05),
-                                 (1.62, -0.14, 0.09, 0.05), (-1.66, 0.06, 0.12, 0.06)):
-            p.append(box((gx, sy * 0.605, gz), (gl, 0.030, gh), "hull_light"))
+        # greebles clinging to the stack shoulders
+        for (gx, gy, gz, gl, gh) in (
+            (0.55, 0.365, 0.26, 0.09, 0.045),
+            (-1.30, 0.365, 0.28, 0.11, 0.05),
+            (-0.30, 0.285, 0.42, 0.09, 0.04),
+            (-0.80, 0.205, 0.55, 0.07, 0.04),
+        ):
+            p.append(box((gx, sy * gy, gz), (gl, 0.032, gh), "hull_light"))
 
-        # ventral pylons
+        # ventral fin
         p.append(
             box(
-                (-0.70, sy * 0.30, -0.52),
-                (0.40, 0.07, 0.14),
+                (-1.20, sy * 0.28, -0.46),
+                (0.45, 0.06, 0.16),
                 "armor",
-                axes_from_euler(pitch=math.radians(6)),
+                axes_from_euler(pitch=math.radians(8)),
             )
         )
-    p.append(box((-1.30, 0.0, -0.40), (0.35, 0.05, 0.20), "armor"))
     return p
 
 
 def m_bridge(st, cfg):
-    """Island: command tower offset to starboard, window band, mast and strobe."""
+    """Command block set into the dorsal stack, with a mast and strobe above it."""
     p = []
     pw = st["power"]
-    iy = -0.58  # offset to starboard, like a wet-navy carrier
-    # base plinth ties the tower into the deck instead of letting it float
-    p.append(box((-1.00, iy, 0.40), (0.40, 0.26, 0.12), "hull"))
-    p.append(box((-1.02, iy, 0.66), (0.31, 0.21, 0.26), "hull_light"))
-    p.append(box((-1.06, iy, 0.94), (0.22, 0.15, 0.05), "hull_dark"))
-    # painted band around the tower, matching the hull plating
-    p.append(box((-1.02, iy, 0.86), (0.315, 0.215, 0.035), "plate"))
-    # forward window band, wrapping onto the outboard flank
-    p.append(box((-0.695, iy, 0.74), (0.02, 0.17, 0.07), "window", power=0.88 * pw))
-    p.append(box((-1.00, iy - 0.215, 0.74), (0.22, 0.02, 0.06), "window", power=0.66 * pw))
-    p.append(box((-1.00, iy, 0.545), (0.24, 0.215, 0.03), "window", power=0.45 * pw))
-    # mast + strobe
-    p.append(cyl((-1.10, iy, 0.98), (-1.14, iy, 1.42), 0.045, "hull_dark"))
-    p.append(box((-1.12, iy, 1.20), (0.03, 0.16, 0.03), "hull_dark"))
-    p.append(ell((-1.15, iy, 1.48), (0.075, 0.075, 0.075), "nav_red", power=st["strobe"] * pw))
+    iy = -0.14  # nudged off the centreline so the ridge is not mirror-symmetric
+    p.append(box((-1.10, iy, 0.66), (0.36, 0.20, 0.15), "hull_light"))
+    p.append(box((-1.14, iy, 0.83), (0.26, 0.15, 0.04), "hull_dark"))
+    p.append(box((-1.10, iy, 0.775), (0.362, 0.202, 0.028), "plate"))
+    # forward window band, wrapping onto both flanks
+    p.append(box((-0.755, iy, 0.70), (0.02, 0.15, 0.055), "window", power=0.88 * pw))
+    for sy in (1.0, -1.0):
+        p.append(box((-1.08, iy + sy * 0.205, 0.70), (0.20, 0.02, 0.045), "window",
+                     power=0.62 * pw))
+    # mast, yardarm, strobe
+    p.append(cyl((-1.34, iy, 0.86), (-1.40, iy, 1.24), 0.034, "hull_dark"))
+    p.append(box((-1.38, iy, 1.06), (0.026, 0.14, 0.026), "hull_dark"))
+    p.append(ell((-1.41, iy, 1.30), (0.06, 0.06, 0.06), "nav_red", power=st["strobe"] * pw))
+    # navigation lights on the keel shoulders: port red, starboard green
+    p.append(ell((-1.62, 0.42, 0.20), (0.05, 0.05, 0.05), "nav_red", power=st["nav"] * pw))
+    p.append(ell((-1.62, -0.42, 0.20), (0.05, 0.05, 0.05), "nav_green", power=st["nav"] * pw))
     return p
 
 
-# Deck plate geometry per hangar module: (half length, half width, centre x). Other
-# modules look this up so that armour and turrets mount to whichever deck is fitted.
-DECKS = {
-    "hangar_small": (1.62, 0.80, 0.02),
-    "hangar_large": (1.74, 1.14, 0.06),
+# Hangar mass per module: (centre x, half x, half y, half z). Other modules look this
+# up so armour and turrets mount to whichever bay is fitted.
+HULLS = {
+    "hangar_small": (1.05, 0.80, 0.56, 0.26),
+    "hangar_large": (1.00, 0.98, 0.76, 0.29),
 }
-DECK_TOP = 0.37
 
 
-def deck_of(cfg):
+def hull_of(cfg):
     for name in cfg["modules"]:
-        if name in DECKS:
-            return DECKS[name]
+        if name in HULLS:
+            return HULLS[name]
     raise ValueError(f"loadout {cfg['name']!r} has no hangar module")
 
 
-def _hangar(st, cfg, deck_half_x, deck_half_y, deck_x, sponsons=()):
+def _hangar(st, cfg):
     """
-    Flight deck plus the launch bays. The deck is the ship's hero shape, so the
-    hangar module owns it: a bigger bay module means a bigger, wider deck.
+    The bay is a mass built into the forward hull, stepped out from the keel, with
+    the launch mouths cut into its bow face. A bigger bay is a bigger block, so the
+    module changes the ship's silhouette and not just its interior.
     """
     p = []
     pw = st["power"]
     door = ease(st["door"])
+    bx, bhx, bhy, bhz = hull_of(cfg)
+    top = 0.02 + bhz
 
-    # sponsons: outboard hull extensions that carry the outer bays
-    for (sx, sy, shx, shy) in sponsons:
-        p.append(box((sx, sy, -0.04), (shx, shy, 0.20), "hull"))
-        p.append(box((sx - 0.10, sy, -0.24), (shx * 0.8, shy * 0.7, 0.06), "hull_dark"))
-
-    # flight deck plate
-    p.append(box((deck_x, 0.0, 0.29), (deck_half_x, deck_half_y, 0.08), "deck"))
-    # raised edge rails, so the plate reads as a deck and not a lid
-    for sy in (1.0, -1.0):
-        p.append(box((deck_x, sy * (deck_half_y + 0.02), 0.34), (deck_half_x, 0.035, 0.05), "hull"))
-        # green marker lights along the rail
-        for i in range(5):
-            lx = deck_x - deck_half_x + 0.28 + i * (deck_half_x * 2.0 - 0.56) / 4.0
-            p.append(
-                ell(
-                    (lx, sy * (deck_half_y + 0.02), 0.40),
-                    (0.028, 0.028, 0.028),
-                    "runlight",
-                    power=(0.35 + 0.50 * door) * pw,
-                )
-            )
-
-    # Painted deck blocks fore and aft. These read at 96px far better than fine
-    # markings do, and they are what makes the scheme legible from every facing.
-    # The livery is bone-dominant: paint claims the bow apron and the stern block,
-    # and the long middle of the deck stays hull colour.
+    p.append(box((bx, 0.0, 0.02), (bhx, bhy, bhz), "hull"))
+    p.append(box((bx - 0.10, 0.0, top - 0.01), (bhx * 0.84, bhy * 0.78, 0.016), "armor"))
+    p.append(box((bx - 0.10, 0.0, top + 0.05), (bhx * 0.82, bhy * 0.76, 0.055), "hull_light"))
+    p.append(box((bx - 0.05, 0.0, -bhz - 0.02), (bhx * 0.70, bhy * 0.60, 0.05), "hull_dark"))
+    # painted block across the aft half of the bay mass roof
     p.append(
-        box((deck_x + deck_half_x * 0.80, 0.0, 0.372),
-            (deck_half_x * 0.20, deck_half_y * 0.96, 0.008), "plate")
+        box((bx - bhx * 0.42, 0.0, top + 0.108), (bhx * 0.30, bhy * 0.74, 0.010), "plate")
     )
-    p.append(
-        box((deck_x - deck_half_x * 0.84, 0.0, 0.372),
-            (deck_half_x * 0.16, deck_half_y * 0.96, 0.008), "plate")
-    )
-    # painted landing strip down the bone section
-    p.append(box((deck_x - 0.05, 0.14, 0.374), (deck_half_x * 0.50, 0.05, 0.008), "accent"))
 
-    # Fleet insignia: a chevron struck across the bone panel, in the same paint as
-    # the plating so the ship reads as one livery.
-    ins_x, ins_y = deck_x - deck_half_x * 0.10, -deck_half_y * 0.40
     for sy in (1.0, -1.0):
-        p.append(
-            box((ins_x, ins_y + sy * 0.15, 0.375), (0.26, 0.055, 0.008), "plate",
-                axes_from_euler(yaw=math.radians(36 * sy)))
-        )
+        fy = sy * bhy
+        # painted band and a long lit slot down the flank of the bay mass
+        p.append(box((bx - 0.05, fy + sy * 0.008, 0.02 + bhz * 0.55),
+                     (bhx * 0.86, 0.012, bhz * 0.28), "plate"))
+        p.append(box((bx - 0.05, fy + sy * 0.004, -0.03), (bhx * 0.80, 0.012, 0.055), "armor"))
+        p.append(box((bx - 0.05, fy + sy * 0.012, -0.03), (bhx * 0.74, 0.010, 0.024),
+                     "trench", power=(0.45 + 0.45 * door) * pw))
+        # marker lights along the top edge
+        for i in range(4):
+            lx = bx - bhx * 0.70 + i * (bhx * 1.40) / 3.0
+            p.append(ell((lx, fy, top), (0.028, 0.028, 0.028), "runlight",
+                         power=(0.35 + 0.50 * door) * pw))
 
-    # recessed, lit deck trenches either side of the strip
+    # Fleet insignia struck across the top of the bay mass, in the hull's own paint.
+    ins_x, ins_y = bx + bhx * 0.14, -bhy * 0.30
     for sy in (1.0, -1.0):
-        ty = sy * deck_half_y * 0.72
-        p.append(box((deck_x - 0.05, ty, 0.368), (deck_half_x * 0.44, 0.055, 0.012), "armor"))
-        p.append(
-            box((deck_x - 0.05, ty, 0.374), (deck_half_x * 0.40, 0.030, 0.008),
-                "trench", power=(0.45 + 0.45 * door) * pw)
-        )
+        p.append(box((ins_x, ins_y + sy * 0.14, top + 0.108), (0.24, 0.050, 0.010), "plate",
+                     axes_from_euler(yaw=math.radians(36 * sy))))
 
-    # elevator pads and deck-side superstructure blocks
-    for ex in (deck_x - deck_half_x * 0.42, deck_x + deck_half_x * 0.16):
-        p.append(box((ex, -deck_half_y * 0.36, 0.372), (0.17, 0.15, 0.008), "hull_dark"))
-    for (bx, by, bl, bw, bh) in (
-        (deck_x - deck_half_x * 0.30, deck_half_y * 0.50, 0.20, 0.11, 0.07),
-        (deck_x + deck_half_x * 0.24, deck_half_y * 0.62, 0.13, 0.09, 0.05),
-        (deck_x - deck_half_x * 0.66, -deck_half_y * 0.66, 0.15, 0.10, 0.06),
-    ):
-        p.append(box((bx, by, DECK_TOP + bh), (bl, bw, bh), "hull_light"))
-        p.append(box((bx, by, DECK_TOP + bh * 2.0), (bl * 0.6, bw * 0.6, 0.02), "armor"))
-    # sensor masts
-    for (mx, my, mh) in ((deck_x + deck_half_x * 0.52, deck_half_y * 0.30, 0.34),
-                         (deck_x - deck_half_x * 0.88, deck_half_y * 0.20, 0.26)):
-        p.append(cyl((mx, my, DECK_TOP), (mx, my, DECK_TOP + mh), 0.022, "armor"))
-        p.append(ell((mx, my, DECK_TOP + mh), (0.035, 0.035, 0.035), "nav_red",
-                     power=st["strobe"] * pw))
-
-    # launch bays: recessed mouths in a forward-facing hull face
+    # launch mouths cut into the bow face of the mass
     for (by, front_x, bz) in cfg["bays"]:
-        # capped short of the ramp's top step: a fully open bay should read as deep
-        # amber light, not a blown-out white hole in the hull
         inner = 0.25 + 0.55 * door
-        p.append(box((front_x - 0.18, by, bz), (0.18, 0.20, 0.12), "bay", power=inner * pw))
+        p.append(box((front_x - 0.18, by, bz), (0.18, 0.16, 0.11), "bay", power=inner * pw))
         # two-piece iris door: upper half retracts up, lower half drops
-        travel = 0.24 * door
-        p.append(box((front_x + 0.02, by, bz + 0.062 + travel), (0.035, 0.22, 0.065), "hull"))
-        p.append(box((front_x + 0.02, by, bz - 0.062 - travel), (0.035, 0.22, 0.065), "hull"))
-        # approach lights either side of the mouth
+        travel = 0.20 * door
+        p.append(box((front_x + 0.02, by, bz + 0.058 + travel), (0.035, 0.18, 0.055), "hull"))
+        p.append(box((front_x + 0.02, by, bz - 0.058 - travel), (0.035, 0.18, 0.055), "hull"))
         for sy in (1.0, -1.0):
-            p.append(
-                ell(
-                    (front_x - 0.01, by + sy * 0.235, bz),
-                    (0.032, 0.032, 0.032),
-                    "bay",
-                    power=(0.25 + 0.75 * door) * pw,
-                )
-            )
-    # navigation lights on the deck corners: port red, starboard green
-    p.append(
-        ell((deck_x + deck_half_x - 0.1, deck_half_y + 0.02, 0.40), (0.05, 0.05, 0.05),
-            "nav_red", power=st["nav"] * pw)
-    )
-    p.append(
-        ell((deck_x + deck_half_x - 0.1, -deck_half_y - 0.02, 0.40), (0.05, 0.05, 0.05),
-            "nav_green", power=st["nav"] * pw)
-    )
+            p.append(ell((front_x - 0.01, by + sy * 0.195, bz), (0.030, 0.030, 0.030),
+                         "bay", power=(0.25 + 0.60 * door) * pw))
     return p
 
 
 def m_hangar_small(st, cfg):
     """Two-squadron bay: the starting module."""
-    hx, hy, dx = DECKS["hangar_small"]
-    return _hangar(st, cfg, hx, hy, dx)
+    return _hangar(st, cfg)
 
 
 def m_hangar_large(st, cfg):
-    """Four-squadron bay: wider, longer deck carried on a pair of sponsons."""
-    hx, hy, dx = DECKS["hangar_large"]
-    return _hangar(
-        st, cfg, hx, hy, dx,
-        sponsons=[(0.60, 0.80, 0.92, 0.24), (0.60, -0.80, 0.92, 0.24)],
-    )
-
-
-def _engine(p, x0, x1, y, z, r, st, big=True):
-    """One nacelle: housing, nozzle disc, and a plume whose length tracks throttle."""
-    thr = st["throttle"]
-    p.append(cyl((x0, y, z), (x1, y, z), r, "hull"))
-    p.append(cyl((x1 - 0.06, y, z), (x1 - 0.02, y, z), r * 1.08, "hull_dark"))
-    # painted band and an intake ring, so the nacelle carries the livery too
-    p.append(cyl((x0 - 0.16, y, z), (x0 - 0.02, y, z), r * 1.04, "plate"))
-    p.append(cyl((x0 + 0.06, y, z), (x0 + 0.10, y, z), r * 1.05, "hull_light"))
-    p.append(cyl((x1 - 0.02, y, z), (x1 + 0.005, y, z), r * 0.70, "engine", power=0.30 + 0.62 * thr))
-    if thr > 0.02:
-        # the plume is a short bright core plus a longer, dimmer, narrower tail
-        ln = (0.18 + 0.60 * thr) * st["plume"]
-        core = r * (0.46 if big else 0.40)
-        p.append(cyl((x1 + 0.005, y, z), (x1 - ln * 0.50, y, z), core, "engine",
-                     power=0.52 + 0.40 * thr))
-        p.append(cyl((x1 - ln * 0.45, y, z), (x1 - ln, y, z), core * 0.66, "engine",
-                     power=0.22 + 0.28 * thr))
+    """Four-squadron bay: a longer, wider forward mass on outboard sponsons."""
+    p = _hangar(st, cfg)
+    bx, bhx, bhy, bhz = hull_of(cfg)
+    for sy in (1.0, -1.0):
+        p.append(box((bx - 0.30, sy * (bhy + 0.09), -0.06), (bhx * 0.55, 0.11, 0.13), "armor"))
     return p
 
 
+def _thruster(p, x_front, x_back, y, z, r, st, plume_scale=1.0):
+    """One engine: housing, painted collar, nozzle, and a throttle-driven plume."""
+    thr = st["throttle"]
+    p.append(cyl((x_front, y, z), (x_back, y, z), r, "hull"))
+    p.append(cyl((x_front - 0.02, y, z), (x_front - 0.11, y, z), r * 1.06, "plate"))
+    p.append(cyl((x_back + 0.05, y, z), (x_back + 0.02, y, z), r * 1.09, "hull_dark"))
+    p.append(cyl((x_back + 0.02, y, z), (x_back - 0.01, y, z), r * 0.72, "engine",
+                 power=0.30 + 0.62 * thr))
+    if thr > 0.02:
+        ln = (0.18 + 0.60 * thr) * st["plume"] * plume_scale
+        core = r * 0.50
+        p.append(cyl((x_back - 0.01, y, z), (x_back - ln * 0.50, y, z), core, "engine",
+                     power=0.52 + 0.40 * thr))
+        p.append(cyl((x_back - ln * 0.45, y, z), (x_back - ln, y, z), core * 0.66, "engine",
+                     power=0.22 + 0.28 * thr))
+
+
 def m_engines_basic(st, cfg):
-    """Two main nacelles plus a pair of dorsal manoeuvring thrusters."""
+    """Stern block with a four-nozzle cluster."""
     p = []
-    for sy in (1.0, -1.0):
-        _engine(p, -1.92, -2.62, sy * 0.60, 0.02, 0.25, st)
-    p.append(box((-2.05, 0.0, 0.06), (0.28, 0.46, 0.28), "hull_dark"))
-    for sy in (1.0, -1.0):
-        p.append(
-            cyl((-2.12, sy * 0.16, 0.34), (-2.34, sy * 0.16, 0.34), 0.075, "hull_light")
-        )
-        p.append(
-            cyl(
-                (-2.34, sy * 0.16, 0.34),
-                (-2.38, sy * 0.16, 0.34),
-                0.06,
-                "engine",
-                power=0.25 + 0.45 * st["throttle"],
-            )
-        )
+    p.append(box((-2.32, 0.0, 0.02), (0.28, 0.42, 0.26), "hull_dark"))
+    p.append(box((-2.34, 0.0, 0.31), (0.22, 0.30, 0.05), "hull_light"))
+    p.append(box((-2.32, 0.0, -0.26), (0.24, 0.34, 0.04), "armor"))
+    for (y, z) in ((0.23, 0.15), (-0.23, 0.15), (0.23, -0.13), (-0.23, -0.13)):
+        _thruster(p, -2.26, -2.66, y, z, 0.125, st)
     return p
 
 
 def m_engines_uprated(st, cfg):
-    """Four nacelles: the inboard pair grows, an outboard pair is added."""
+    """Six nozzles: the stern cluster plus a pair of outboard pods on pylons."""
     p = []
+    p.append(box((-2.30, 0.0, 0.02), (0.32, 0.46, 0.28), "hull_dark"))
+    p.append(box((-2.32, 0.0, 0.33), (0.24, 0.32, 0.05), "hull_light"))
+    p.append(box((-2.30, 0.0, -0.28), (0.26, 0.36, 0.04), "armor"))
+    for (y, z) in ((0.25, 0.17), (-0.25, 0.17), (0.25, -0.15), (-0.25, -0.15)):
+        _thruster(p, -2.24, -2.72, y, z, 0.130, st)
     for sy in (1.0, -1.0):
-        _engine(p, -1.88, -2.70, sy * 0.52, 0.02, 0.28, st)
-        _engine(p, -1.72, -2.34, sy * 1.02, -0.10, 0.18, st, big=False)
-        # outboard pylon tying the small nacelle to the hull
-        p.append(box((-1.70, sy * 0.80, -0.06), (0.16, 0.24, 0.06), "armor"))
-    p.append(box((-2.05, 0.0, 0.08), (0.30, 0.44, 0.30), "hull_dark"))
+        p.append(box((-1.92, sy * 0.54, -0.02), (0.30, 0.15, 0.085), "armor"))
+        _thruster(p, -2.18, -2.54, sy * 0.62, -0.02, 0.155, st, plume_scale=0.85)
     return p
 
 
 def m_sensor_array(st, cfg):
-    """Dish and search bar on the island."""
+    """Dish on the mast head and a search bar turning on the dorsal ridge."""
     p = []
     spin = st["t"] * math.tau
-    ax = axes_from_euler(pitch=math.radians(-58), yaw=spin)
-    p.append(cyl((-1.53, 0.0, 1.02), (-1.53, 0.0, 1.10), 0.05, "hull_dark"))
-    p.append(Prim("cyl", (-1.53, 0.0, 1.16), (0.20, 0.20, 0.022), "hull_light", ax))
+    p.append(cyl((-1.40, -0.14, 0.98), (-1.40, -0.14, 1.06), 0.042, "hull_dark"))
     p.append(
-        box(
-            (-0.95, 0.0, 0.50),
-            (0.05, 0.34, 0.05),
-            "hull_dark",
-            axes_from_euler(yaw=spin * 0.5),
-        )
+        Prim("cyl", (-1.40, -0.14, 1.13), (0.18, 0.18, 0.020), "hull_light",
+             axes_from_euler(pitch=math.radians(-58), yaw=spin))
+    )
+    p.append(
+        box((-0.66, 0.0, 0.68), (0.045, 0.28, 0.040), "hull_dark",
+            axes_from_euler(yaw=spin * 0.5))
     )
     return p
 
 
 def m_weapons_pods(st, cfg):
-    """Four twin-barrel turrets on deck-edge sponsons, where they stay readable."""
+    """Four twin-barrel turrets: two flanking the bay mass, two on the keel shoulders."""
     p = []
-    hx, hy, dx = deck_of(cfg)
+    bx, bhx, bhy, bhz = hull_of(cfg)
     sweep = math.sin(st["t"] * math.tau) * 0.18
     mounts = [
-        ((dx + hx * 0.55, hy + 0.06, DECK_TOP + 0.05), math.radians(60)),
-        ((dx + hx * 0.55, -hy - 0.06, DECK_TOP + 0.05), math.radians(-60)),
-        ((dx - hx * 0.62, hy + 0.06, DECK_TOP + 0.05), math.radians(130)),
-        ((dx - hx * 0.62, -hy - 0.06, DECK_TOP + 0.05), math.radians(-130)),
+        ((bx + bhx * 0.24, bhy + 0.08, 0.06), math.radians(55)),
+        ((bx + bhx * 0.24, -bhy - 0.08, 0.06), math.radians(-55)),
+        ((-1.28, 0.44, 0.14), math.radians(125)),
+        ((-1.28, -0.44, 0.14), math.radians(-125)),
     ]
     for (c, ang) in mounts:
-        # plinth first, so the turret does not look glued to the deck rail
-        p.append(box((c[0], c[1], c[2] - 0.10), (0.17, 0.15, 0.07), "armor"))
+        # plinth first, so the turret is not glued straight to the plating
+        p.append(box((c[0], c[1], c[2] - 0.085), (0.14, 0.12, 0.055), "armor"))
         ax = axes_from_euler(yaw=ang + sweep)
-        p.append(ell(c, (0.14, 0.14, 0.10), "hull_light", ax))
+        p.append(ell(c, (0.125, 0.125, 0.085), "hull_light", ax))
         for sy in (1.0, -1.0):
-            off = vadd(c, vmul(ax[1], sy * 0.05))
+            off = vadd(c, vmul(ax[1], sy * 0.046))
             p.append(
-                cyl(vadd(off, vmul(ax[0], 0.04)), vadd(off, vmul(ax[0], 0.30)), 0.030, "hull_dark")
+                cyl(vadd(off, vmul(ax[0], 0.04)), vadd(off, vmul(ax[0], 0.27)), 0.027, "hull_dark")
             )
     return p
 
 
 def m_armor_belt(st, cfg):
-    """Ablative plating: a belt under the deck rim, prow shoulders and a keel plate."""
+    """Ablative plating along the keel, over the bay shoulders and on the prow."""
     p = []
-    hx, hy, dx = deck_of(cfg)
+    bx, bhx, bhy, bhz = hull_of(cfg)
     for sy in (1.0, -1.0):
-        # segmented belt hugging the underside of the deck rim
-        for i in range(5):
-            x = dx - hx * 0.80 + i * (hx * 1.60) / 4.0
-            p.append(box((x, sy * (hy - 0.01), 0.17), (hx * 0.16, 0.075, 0.10), "armor"))
-        # prow shoulder plates, angled in towards the nose
+        for i in range(4):
+            x = -1.95 + i * 0.62
+            p.append(box((x, sy * 0.435, 0.0), (0.26, 0.07, 0.17), "armor"))
+        p.append(box((bx - 0.08, sy * (bhy + 0.045), 0.10), (bhx * 0.72, 0.055, 0.11), "armor"))
         p.append(
-            box(
-                (1.70, sy * 0.56, 0.00),
-                (0.34, 0.075, 0.20),
-                "armor",
-                axes_from_euler(yaw=math.radians(-9 * sy)),
-            )
+            box((2.36, sy * 0.27, 0.0), (0.26, 0.07, 0.15), "armor",
+                axes_from_euler(yaw=math.radians(-9 * sy)))
         )
-    p.append(box((-0.20, 0.0, -0.47), (1.50, 0.44, 0.05), "armor"))
+    p.append(box((-0.45, 0.0, -0.40), (1.70, 0.30, 0.05), "armor"))
     return p
 
 
@@ -702,27 +655,28 @@ def m_damage(st, cfg):
     dmg = st["damage"]
     if dmg <= 0.0:
         return p
-    hx, hy, dx = deck_of(cfg)
+    cx, hx, hy, hz = hull_of(cfg)
     rng = Rng(st["frame"] * 977 + 31)
-    # a breach in the deck, always in the same place so the damage reads as a wound
-    bx, by = dx - hx * 0.30, hy * 0.45
-    p.append(box((bx, by, DECK_TOP - 0.03), (0.26, 0.20, 0.05), "hull_dark"))
+    # A breach torn in the top of the bay mass, always in the same place so the damage
+    # reads as a wound. That face is exposed from every facing, unlike the keel flanks.
+    bx, by, top = cx - hx * 0.30, hy * 0.40, 0.02 + hz
+    p.append(box((bx, by, top + 0.02), (0.24, 0.18, 0.05), "hull_dark"))
     p.append(
-        box((bx - 0.22, by + 0.16, DECK_TOP + 0.04), (0.16, 0.05, 0.12), "hull_dark",
+        box((bx - 0.20, by + 0.15, top + 0.09), (0.15, 0.05, 0.11), "hull_dark",
             axes_from_euler(roll=math.radians(26)))
     )
     # fire in the breach, flickering on the frame clock
     for i in range(3):
         f = 0.55 + 0.45 * math.sin(st["t"] * math.tau * 3.0 + i * 2.1)
         p.append(
-            ell((bx + (i - 1) * 0.13, by, DECK_TOP + 0.02 + 0.05 * f),
-                (0.09, 0.08, 0.06 + 0.05 * f), "spark", power=(0.55 + 0.45 * f) * dmg)
+            ell((bx + (i - 1) * 0.12, by, top + 0.07 + 0.05 * f),
+                (0.085, 0.075, 0.06 + 0.05 * f), "spark", power=(0.55 + 0.45 * f) * dmg)
         )
     # sparks thrown clear of the hull
     for _ in range(int(4 + 5 * dmg)):
         x = rng.range(bx - 0.5, bx + 0.7)
         y = by + rng.range(-0.35, 0.45)
-        z = rng.range(DECK_TOP - 0.05, DECK_TOP + 0.55)
+        z = rng.range(top, top + 0.60)
         r = rng.range(0.035, 0.070)
         p.append(ell((x, y, z), (r, r, r), "spark", power=rng.range(0.50, 1.0)))
     return p
@@ -741,8 +695,8 @@ MODULES = {
 }
 
 # A bay is (lateral offset, the x of the hull face it opens through, its height).
-BAYS_2 = [(0.38, 1.80, -0.02), (-0.38, 1.80, -0.02)]
-BAYS_4 = BAYS_2 + [(0.80, 1.52, -0.04), (-0.80, 1.52, -0.04)]
+BAYS_2 = [(0.30, 1.85, 0.0), (-0.30, 1.85, 0.0)]
+BAYS_4 = [(0.26, 1.98, 0.0), (-0.26, 1.98, 0.0), (0.58, 1.98, 0.0), (-0.58, 1.98, 0.0)]
 
 LOADOUTS = {
     "mk1": {
@@ -1137,35 +1091,40 @@ def _finish(px, glow, w, h, shadow):
 
 def fit_scale(cfg):
     """
-    One scale per loadout, shared by every facing and animation, so sprites stay
-    registered. Fitting uses the model's radius in the xy plane, which is facing
-    independent by construction.
+    One scale and one long-axis offset per loadout, shared by every facing and
+    animation, so sprites stay registered across sheets. The ship is bow-heavy, so
+    it is first slid to centre it on the yaw axis — otherwise half the cell is spent
+    on empty space behind the stern.
     """
     st = base_state(0, 8)
     st["throttle"] = 0.55  # leave room for a moderate plume
     st["door"] = 1.0
     prims = build_model(cfg, st)
+
+    xs = [c[0] for pr in prims for c in pr.corners()]
+    offx = -(min(xs) + max(xs)) * 0.5
+
     ext_x = ext_y = 1e-6
     for f in range(8):
         a = FACING_YAW0 + f * math.tau / 8.0
         for pr in prims:
             for c in pr.corners():
-                sx, sy = project(yaw_vec(c, a))
+                sx, sy = project(yaw_vec((c[0] + offx, c[1], c[2]), a))
                 ext_x = max(ext_x, abs(sx))
                 ext_y = max(ext_y, abs(sy))
     half = SPRITE * 0.5 - MARGIN
-    return min(half / ext_x, half / ext_y)
+    return min(half / ext_x, half / ext_y), offx
 
 
 def render_cell(job):
-    key, cfg, anim_fn, frame, nframes, facing, scale, shadow, palette = job
+    key, cfg, anim_fn, frame, nframes, facing, scale, offx, shadow, palette = job
     # rebound explicitly so the render is identical whether pooled workers are
     # forked (inheriting globals) or spawned (starting from import state)
     use_palette(palette)
     st = anim_fn(frame, nframes)
     prims = build_model(cfg, st)
     a = FACING_YAW0 + facing * math.tau / 8.0
-    prims = [p.yawed(a) for p in prims]
+    prims = [p.placed(offx, a) for p in prims]
     bob = st["bob"] * scale
     img = render_frame(prims, scale, bob, SPRITE, shadow)
     return (facing, frame, img.tobytes())
@@ -1173,12 +1132,12 @@ def render_cell(job):
 
 def build_sheets(loadout_key, outdir, shadow=False, contact=False, jobs=None, palette="crimson"):
     cfg = LOADOUTS[loadout_key]
-    scale = fit_scale(cfg)
+    scale, offx = fit_scale(cfg)
     meta_anims = []
 
     for (aname, afn, nframes, fps, loop) in ANIMATIONS:
         work = [
-            (loadout_key, cfg, afn, f, nframes, fc, scale, shadow, palette)
+            (loadout_key, cfg, afn, f, nframes, fc, scale, offx, shadow, palette)
             for fc in range(8)
             for f in range(nframes)
         ]

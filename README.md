@@ -3,6 +3,10 @@
 Isometric sprite sheets for a modular sci-fi carrier: **8 facings x 6 animations x 3
 module loadouts**, 96x96 per cell at 1x, plus 2x.
 
+The hull is a long slender spine carrying a stepped stack of armour plate, a chisel
+prow and a forward sensor spar, with the hangar built into the forward mass — no flat
+top deck. Bone plating, crimson paint blocks, amber-lit recesses.
+
 The sprites are not drawn frame by frame. The carrier is described once as a small 3D
 model made of primitives — boxes, ellipsoids, cylinders, flat quads — grouped into
 swappable **modules**. Each animation is a function that poses that model for a frame;
@@ -52,8 +56,10 @@ python3 tools/test_preview.py     # Playwright check of the viewer
 `sprites/carrier_<loadout>.json` describes one ship, `sprites/carrier_atlas.json`
 describes all of them — frame size, facing table, fps and loop flags per animation.
 
-Every sheet for a given loadout shares one scale, computed once from the hull, so the
-ship sits in the same pixels across every animation and facing. You can cross-fade
+Every sheet for a given loadout shares one scale and one long-axis offset, computed
+once from the hull, so the ship sits in the same pixels across every animation and
+facing. (The offset matters because the hull is bow-heavy — without it, half the cell
+is spent on empty space behind the stern.) You can cross-fade
 between animations without the sprite jumping.
 
 ### Facings
@@ -76,7 +82,7 @@ classic 2:1 pixel ratio, so these line up with standard isometric tiles.
 | `mk2` | Lancer-class, expanded bay refit | 4      | + hangar_large, engines_uprated, sensor_array |
 | `mk3` | Lancer-class battlecarrier    | 4         | + weapons_pods, armor_belt |
 
-`mk1` is the starting ship: a small hangar bay with two squadron launch tubes.
+`mk1` is the starting ship: a two-squadron bay built into the forward hull.
 
 ### Paint schemes
 
@@ -86,11 +92,11 @@ swappable module. Two ship:
 
 | Key       | Look |
 |-----------|------|
-| `crimson` | Default. Bone hull with crimson plating, amber-lit recesses and trenches, green deck marker lights, fleet chevron on the deck. |
+| `crimson` | Default. Bone hull with crimson plating, amber-lit recesses and trenches, green marker lights, fleet chevron struck across the bay roof. |
 | `steel`   | Cool steel-blue hull with cyan bay lighting. |
 
 `plate` is the bold painted armour block, `trench` the recessed strip lighting,
-`runlight` the marker lights along the deck rail. Painted regions are real geometry —
+`runlight` the marker lights along the hull. Painted regions are real geometry —
 thin panels laid on the hull surface — not a texture, which is why they hold their
 shape correctly across all 8 facings.
 
@@ -128,11 +134,11 @@ space — `+x` is the bow, `+y` is port, `+z` is up. Write it, register it, use 
 
 ```python
 def m_shield_ring(st, cfg):
-    hx, hy, dx = deck_of(cfg)          # mount relative to whichever deck is fitted
+    bx, bhx, bhy, bhz = hull_of(cfg)   # mount relative to whichever bay mass is fitted
     p = []
     for sy in (1.0, -1.0):
-        p.append(cyl((dx, sy * (hy + 0.18), 0.10),
-                     (dx - 0.6, sy * (hy + 0.18), 0.10), 0.09, "armor"))
+        p.append(cyl((bx, sy * (bhy + 0.18), 0.10),
+                     (bx - 0.6, sy * (bhy + 0.18), 0.10), 0.09, "armor"))
     return p
 
 MODULES["shield_ring"] = m_shield_ring
@@ -145,7 +151,7 @@ LOADOUTS["mk4"] = {
 ```
 
 Re-run the generator and every facing and animation of `mk4` exists. Modules read
-`deck_of(cfg)` to find the fitted flight deck, so armour and turrets follow whichever
+`hull_of(cfg)` to find the fitted bay mass, so armour and turrets follow whichever
 hangar is installed rather than hard-coding positions.
 
 `st` carries the per-frame pose: `throttle`, `door`, `launch`, `damage`, `power`,
