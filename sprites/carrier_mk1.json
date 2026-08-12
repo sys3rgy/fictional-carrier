@@ -1,0 +1,107 @@
+{
+  "loadout": "mk1",
+  "display_name": "Lancer-class escort carrier",
+  "modules": [
+    "chassis",
+    "bridge_std",
+    "hangar_small",
+    "engines_basic"
+  ],
+  "squadron_capacity": 2,
+  "frame_width": 96,
+  "frame_height": 96,
+  "projection": "orthographic dimetric, yaw 45 deg, pitch 30 deg (2:1)",
+  "origin": "cell centre; the hull is registered identically across every sheet",
+  "facings": [
+    {
+      "row": 0,
+      "name": "S",
+      "yaw_deg": 225
+    },
+    {
+      "row": 1,
+      "name": "SE",
+      "yaw_deg": 270
+    },
+    {
+      "row": 2,
+      "name": "E",
+      "yaw_deg": 315
+    },
+    {
+      "row": 3,
+      "name": "NE",
+      "yaw_deg": 0
+    },
+    {
+      "row": 4,
+      "name": "N",
+      "yaw_deg": 45
+    },
+    {
+      "row": 5,
+      "name": "NW",
+      "yaw_deg": 90
+    },
+    {
+      "row": 6,
+      "name": "W",
+      "yaw_deg": 135
+    },
+    {
+      "row": 7,
+      "name": "SW",
+      "yaw_deg": 180
+    }
+  ],
+  "animations": [
+    {
+      "name": "idle",
+      "frames": 8,
+      "fps": 10,
+      "loop": true,
+      "sheet": "carrier_mk1_idle.png",
+      "sheet_2x": "carrier_mk1_idle@2x.png"
+    },
+    {
+      "name": "cruise",
+      "frames": 8,
+      "fps": 14,
+      "loop": true,
+      "sheet": "carrier_mk1_cruise.png",
+      "sheet_2x": "carrier_mk1_cruise@2x.png"
+    },
+    {
+      "name": "bay_open",
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "sheet": "carrier_mk1_bay_open.png",
+      "sheet_2x": "carrier_mk1_bay_open@2x.png"
+    },
+    {
+      "name": "launch",
+      "frames": 12,
+      "fps": 14,
+      "loop": false,
+      "sheet": "carrier_mk1_launch.png",
+      "sheet_2x": "carrier_mk1_launch@2x.png"
+    },
+    {
+      "name": "damage",
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "sheet": "carrier_mk1_damage.png",
+      "sheet_2x": "carrier_mk1_damage@2x.png"
+    },
+    {
+      "name": "powerdown",
+      "frames": 8,
+      "fps": 10,
+      "loop": false,
+      "sheet": "carrier_mk1_powerdown.png",
+      "sheet_2x": "carrier_mk1_powerdown@2x.png"
+    }
+  ]
+}

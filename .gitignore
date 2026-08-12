@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+
+# Iteration aids, regenerate with: python3 generate_carrier.py --contact
+sprites/contact_*.png
+# Playwright screenshots from tools/test_preview.py
+tools/shots/

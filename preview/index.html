@@ -1,0 +1,758 @@
+<meta charset="utf-8">
+<title>Lancer-class Carrier</title>
+<style>
+  /* Committed single look: these sprites are authored to sit on deep space, and a
+     light ground would misrepresent them. Every colour is painted explicitly so the
+     page holds on any host background. Tokens are lifted from the sprite palette in
+     generate_carrier.py, so page and sprites share a palette by construction. */
+  :root {
+    --void:        #0b0f16;
+    --void-deep:   #070a10;
+    --panel:       #141a24;
+    --panel-hi:    #1c2432;
+    --rule:        #26303f;
+    --steel:       #5f7590;
+    --steel-hi:    #8296ad;
+    --ink:         #c8d3e0;
+    --ink-dim:     #8494a8;
+    --paint:       #d9822b;
+    --paint-hi:    #f2b45c;
+    --signal:      #3fb6ce;
+    --signal-hi:   #7fe4f4;
+    --alert:       #ff3b3b;
+
+    --mono: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+    --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--void);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: var(--s6) var(--s5) var(--s7); }
+
+  /* ---- type ---------------------------------------------------------------- */
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--steel);
+    margin: 0 0 var(--s2);
+  }
+
+  h1 {
+    font-family: var(--mono);
+    font-size: clamp(28px, 5vw, 44px);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+    text-wrap: balance;
+    margin: 0 0 var(--s3);
+    color: #eaf1f8;
+  }
+
+  h2 {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--steel-hi);
+    margin: 0 0 var(--s3);
+    padding-bottom: var(--s2);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .lede { max-width: 62ch; color: var(--ink-dim); margin: 0 0 var(--s5); }
+  .lede strong { color: var(--ink); font-weight: 600; }
+
+  /* ---- shell --------------------------------------------------------------- */
+
+  header { border-bottom: 1px solid var(--rule); padding-bottom: var(--s5); margin-bottom: var(--s6); }
+
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: var(--s6);
+    align-items: start;
+  }
+  @media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: var(--s4);
+  }
+
+  section + section { margin-top: var(--s6); }
+
+  /* ---- stage --------------------------------------------------------------- */
+
+  .stage-shell {
+    position: relative;
+    background: var(--void-deep);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    display: grid;
+    place-items: center;
+    padding: var(--s4);
+    min-height: 460px;
+  }
+
+  #stage { image-rendering: pixelated; display: block; max-width: 100%; }
+
+  .readout {
+    position: absolute;
+    top: var(--s3);
+    left: var(--s3);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--steel);
+    text-transform: uppercase;
+    pointer-events: none;
+  }
+  .readout b { color: var(--signal); font-weight: 600; }
+
+  .frame-dots {
+    position: absolute;
+    bottom: var(--s3);
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 5px;
+  }
+  .frame-dots i {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--rule);
+    display: block;
+  }
+  .frame-dots i.on { background: var(--paint); }
+
+  /* ---- controls ------------------------------------------------------------ */
+
+  .ctl-row { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s4); }
+
+  button {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    padding: 7px 11px;
+    cursor: pointer;
+    transition: color .12s, border-color .12s, background .12s;
+  }
+  button:hover { color: var(--ink); border-color: var(--steel); }
+  button:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+  button[aria-pressed="true"] {
+    color: var(--void);
+    background: var(--paint);
+    border-color: var(--paint);
+    font-weight: 600;
+  }
+
+  .field { display: flex; align-items: center; gap: var(--s3); margin-top: var(--s4); }
+  .field label {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--steel); white-space: nowrap;
+  }
+  input[type="range"] { accent-color: var(--paint); flex: 1; min-width: 100px; }
+  .field output {
+    font-family: var(--mono); font-size: 12px; color: var(--signal);
+    font-variant-numeric: tabular-nums; min-width: 4ch; text-align: right;
+  }
+
+  /* ---- compass ------------------------------------------------------------- */
+
+  .compass {
+    position: relative;
+    width: 180px; height: 180px;
+    margin: var(--s3) auto var(--s4);
+  }
+  .compass::before {
+    content: "";
+    position: absolute; inset: 26px;
+    border: 1px dashed var(--rule);
+    border-radius: 50%;
+  }
+  .compass button {
+    position: absolute;
+    width: 42px; height: 30px;
+    transform: translate(-50%, -50%);
+    padding: 0;
+  }
+
+  /* ---- facing strip -------------------------------------------------------- */
+
+  .strip {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--s2);
+  }
+  @media (max-width: 560px) { .strip { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .strip figure { margin: 0; }
+  .strip canvas {
+    image-rendering: pixelated;
+    width: 100%; height: auto; display: block;
+    background: var(--void-deep);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    cursor: pointer;
+  }
+  .strip figure[data-on="1"] canvas { border-color: var(--paint); }
+  .strip figcaption {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em;
+    color: var(--steel); text-align: center; padding-top: 5px;
+  }
+  .strip figure[data-on="1"] figcaption { color: var(--paint-hi); }
+
+  /* ---- loadout cards ------------------------------------------------------- */
+
+  .loadouts { display: flex; flex-direction: column; gap: var(--s2); }
+
+  .loadout {
+    width: 100%;
+    text-align: left;
+    text-transform: none;
+    letter-spacing: 0;
+    font-family: var(--sans);
+    font-size: 14px;
+    padding: var(--s3);
+    line-height: 1.45;
+  }
+  .loadout[aria-pressed="true"] { background: var(--panel-hi); border-color: var(--paint); color: var(--ink); }
+  .loadout .lo-name { display: block; font-weight: 600; }
+  .loadout .lo-cap {
+    display: block;
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em;
+    color: var(--steel);
+  }
+  .loadout[aria-pressed="true"] .lo-cap { color: var(--paint-hi); }
+
+  /* module list: a real checklist of what is bolted on, not decoration */
+  .modules { list-style: none; margin: var(--s3) 0 0; padding: 0; }
+  .modules li {
+    display: flex; align-items: baseline; gap: var(--s2);
+    font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.04em;
+    color: var(--ink-dim);
+    padding: 3px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .modules li:last-child { border-bottom: 0; }
+  .modules li::before {
+    content: "";
+    width: 6px; height: 6px; flex: 0 0 6px;
+    background: var(--signal);
+    transform: translateY(-1px);
+  }
+  .modules li.added::before { background: var(--paint); }
+  .modules li.added { color: var(--paint-hi); }
+  .modules .tag {
+    margin-left: auto;
+    font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--steel);
+  }
+
+  /* ---- data table ---------------------------------------------------------- */
+
+  .scroll-x { overflow-x: auto; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  caption { text-align: left; color: var(--ink-dim); padding-bottom: var(--s3); font-size: 13px; }
+  th, td {
+    text-align: left;
+    padding: 8px 12px 8px 0;
+    border-bottom: 1px solid var(--rule);
+    white-space: nowrap;
+  }
+  th {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--steel); font-weight: 600;
+  }
+  td { font-family: var(--mono); font-size: 12px; color: var(--ink-dim); font-variant-numeric: tabular-nums; }
+  td.name { color: var(--ink); }
+  td .loop { color: var(--signal); }
+  td .once { color: var(--steel); }
+  a { color: var(--paint); text-decoration: none; border-bottom: 1px solid transparent; }
+  a:hover { border-bottom-color: var(--paint); }
+  a:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: var(--s3); }
+  .fact { border-left: 2px solid var(--rule); padding-left: var(--s3); }
+  .fact b {
+    display: block; font-family: var(--mono); font-size: 20px; font-weight: 600;
+    color: var(--signal); font-variant-numeric: tabular-nums; line-height: 1.2;
+  }
+  .fact span {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.13em;
+    text-transform: uppercase; color: var(--steel);
+  }
+
+  footer {
+    margin-top: var(--s7);
+    padding-top: var(--s4);
+    border-top: 1px solid var(--rule);
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em;
+    color: var(--steel);
+  }
+
+  code {
+    font-family: var(--mono); font-size: 0.92em;
+    background: var(--panel-hi); color: var(--signal-hi);
+    padding: 1px 5px; border-radius: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Isometric sprite set &middot; 8 facings &middot; 6 animations</p>
+    <h1>Lancer-class Carrier</h1>
+    <p class="lede">
+      Every frame here is <strong>rendered, not drawn</strong>. The carrier is described once as a
+      small 3D model of boxes, ellipsoids and cylinders grouped into swappable modules; each
+      animation poses that model, and the pose is rotated in 45&deg; steps and projected through a
+      fixed isometric camera. Swap the hangar module and all 8 facings of all 6 animations agree
+      on proportion, lighting and palette by construction.
+    </p>
+    <div class="facts">
+      <div class="fact"><b>96&times;96</b><span>Cell, 1&times;</span></div>
+      <div class="fact"><b>8</b><span>Facings</span></div>
+      <div class="fact"><b>6</b><span>Animations</span></div>
+      <div class="fact"><b>52</b><span>Frames each</span></div>
+      <div class="fact"><b>3</b><span>Loadouts</span></div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <div>
+      <section>
+        <div class="stage-shell">
+          <p class="readout"><span id="ro-ship">&mdash;</span> &middot; <b id="ro-anim">&mdash;</b> &middot; facing <b id="ro-face">&mdash;</b></p>
+          <canvas id="stage" width="384" height="384"></canvas>
+          <div class="frame-dots" id="dots"></div>
+        </div>
+
+        <div class="ctl-row" id="anim-buttons"></div>
+
+        <div class="field">
+          <label for="zoom">Zoom</label>
+          <input type="range" id="zoom" min="2" max="8" step="1" value="4">
+          <output id="zoom-out">4&times;</output>
+        </div>
+        <div class="field">
+          <label for="speed">Speed</label>
+          <input type="range" id="speed" min="10" max="200" step="5" value="100">
+          <output id="speed-out">100%</output>
+        </div>
+        <div class="ctl-row">
+          <button id="play" aria-pressed="true">Pause</button>
+          <button id="spin" aria-pressed="false">Auto-rotate</button>
+          <button id="stars" aria-pressed="true">Starfield</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>All eight facings</h2>
+        <div class="strip" id="strip"></div>
+      </section>
+    </div>
+
+    <aside>
+      <section>
+        <h2>Loadout</h2>
+        <div class="loadouts" id="loadouts"></div>
+        <ul class="modules" id="modules"></ul>
+      </section>
+
+      <section>
+        <h2>Facing</h2>
+        <div class="compass" id="compass"></div>
+      </section>
+    </aside>
+  </div>
+
+  <section>
+    <h2>Sheets</h2>
+    <div class="scroll-x">
+      <table>
+        <caption id="dl-caption">Rows are the 8 facings, columns are the animation frames.</caption>
+        <thead>
+          <tr>
+            <th scope="col">Animation</th>
+            <th scope="col">Frames</th>
+            <th scope="col">FPS</th>
+            <th scope="col">Playback</th>
+            <th scope="col">Sheet</th>
+            <th scope="col">Download</th>
+          </tr>
+        </thead>
+        <tbody id="dl-rows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer id="foot">
+    Rendered by generate_carrier.py &middot; Python 3 + Pillow, no other dependencies.
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // The build step for the standalone page replaces these two lines with inline data.
+  const EMBEDDED_ATLAS = null;   /* build:atlas */
+  const EMBEDDED_ASSETS = null;  /* build:assets */
+
+  const SPRITE_DIR = "../sprites/";
+  const assetUrl = (name) => (EMBEDDED_ASSETS ? EMBEDDED_ASSETS[name] : SPRITE_DIR + name);
+
+  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const state = {
+    atlas: null,
+    loadout: 0,
+    anim: 0,
+    facing: 0,
+    frame: 0,
+    zoom: 4,
+    speed: 1,
+    playing: true,
+    spin: false,
+    stars: !reduceMotion,
+    images: new Map(),
+    acc: 0,
+    spinAcc: 0,
+    last: 0,
+  };
+
+  const $ = (id) => document.getElementById(id);
+  const stage = $("stage");
+  const sctx = stage.getContext("2d");
+
+  const lo = () => state.atlas.loadouts[state.loadout];
+  const an = () => lo().animations[state.anim];
+
+  // ---- starfield: three depth layers drifting to port -------------------------
+  const STARS = [];
+  for (let i = 0; i < 90; i++) {
+    STARS.push({
+      x: Math.random(),
+      y: Math.random(),
+      d: 1 + Math.floor(Math.random() * 3), // 1 far .. 3 near
+    });
+  }
+
+  function drawStars(w, h, t) {
+    for (const s of STARS) {
+      const drift = state.stars ? (t * 0.000012 * s.d) % 1 : 0;
+      const x = Math.floor(((s.x + drift) % 1) * w);
+      const y = Math.floor(s.y * h);
+      const size = s.d === 3 ? 2 : 1;
+      sctx.fillStyle = s.d === 3 ? "#4a5c76" : s.d === 2 ? "#2c3a4e" : "#1c2432";
+      sctx.fillRect(x, y, size, size);
+    }
+  }
+
+  // ---- image loading ----------------------------------------------------------
+  function loadImage(name) {
+    if (state.images.has(name)) return state.images.get(name);
+    const img = new Image();
+    img.src = assetUrl(name);
+    state.images.set(name, img);
+    return img;
+  }
+
+  function preload() {
+    for (const l of state.atlas.loadouts) for (const a of l.animations) loadImage(a.sheet);
+  }
+
+  // ---- main stage -------------------------------------------------------------
+  function drawStage(t) {
+    const S = state.atlas.sprite_size;
+    const px = S * state.zoom;
+    if (stage.width !== px) { stage.width = px; stage.height = px; }
+
+    sctx.imageSmoothingEnabled = false;
+    sctx.fillStyle = "#070a10";
+    sctx.fillRect(0, 0, px, px);
+    if (state.stars) drawStars(px, px, t);
+
+    const a = an();
+    const img = loadImage(a.sheet);
+    if (img.complete && img.naturalWidth) {
+      sctx.drawImage(
+        img,
+        state.frame * S, state.facing * S, S, S,
+        0, 0, px, px
+      );
+    }
+  }
+
+  // ---- facing strip -----------------------------------------------------------
+  let stripCanvases = [];
+
+  function buildStrip() {
+    const S = state.atlas.sprite_size;
+    const el = $("strip");
+    el.innerHTML = "";
+    stripCanvases = [];
+    lo().facings.forEach((f, i) => {
+      const fig = document.createElement("figure");
+      fig.dataset.on = i === state.facing ? "1" : "0";
+      const c = document.createElement("canvas");
+      c.width = S; c.height = S;
+      c.title = "Face " + f.name + " (yaw " + f.yaw_deg + "\u00b0)";
+      c.addEventListener("click", () => { state.facing = i; sync(); });
+      const cap = document.createElement("figcaption");
+      cap.textContent = f.name;
+      fig.append(c, cap);
+      el.append(fig);
+      stripCanvases.push({ ctx: c.getContext("2d"), fig });
+    });
+  }
+
+  function drawStrip() {
+    const S = state.atlas.sprite_size;
+    const img = loadImage(an().sheet);
+    if (!img.complete || !img.naturalWidth) return;
+    stripCanvases.forEach((c, i) => {
+      c.ctx.imageSmoothingEnabled = false;
+      c.ctx.clearRect(0, 0, S, S);
+      c.ctx.drawImage(img, state.frame * S, i * S, S, S, 0, 0, S, S);
+      c.fig.dataset.on = i === state.facing ? "1" : "0";
+    });
+  }
+
+  // ---- compass ----------------------------------------------------------------
+  function buildCompass() {
+    const el = $("compass");
+    el.innerHTML = "";
+    // Screen-space bearings: row 0 points south, and each row steps 45 degrees
+    // anticlockwise, so the ring below matches what the sprite actually does.
+    const bearing = { S: 180, SE: 135, E: 90, NE: 45, N: 0, NW: 315, W: 270, SW: 225 };
+    lo().facings.forEach((f, i) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = f.name;
+      b.setAttribute("aria-pressed", i === state.facing ? "true" : "false");
+      b.setAttribute("aria-label", "Face " + f.name + ", yaw " + f.yaw_deg + " degrees");
+      const rad = (bearing[f.name] - 90) * Math.PI / 180;
+      b.style.left = (50 + 40 * Math.cos(rad)) + "%";
+      b.style.top = (50 + 40 * Math.sin(rad)) + "%";
+      b.addEventListener("click", () => { state.facing = i; sync(); });
+      el.append(b);
+    });
+  }
+
+  // ---- panels -----------------------------------------------------------------
+  function buildLoadouts() {
+    const el = $("loadouts");
+    el.innerHTML = "";
+    state.atlas.loadouts.forEach((l, i) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "loadout";
+      b.setAttribute("aria-pressed", i === state.loadout ? "true" : "false");
+      b.innerHTML =
+        '<span class="lo-name">' + l.display_name + "</span>" +
+        '<span class="lo-cap">' + l.loadout.toUpperCase() + " \u00b7 " +
+        l.squadron_capacity + " squadrons \u00b7 " + l.modules.length + " modules</span>";
+      b.addEventListener("click", () => {
+        state.loadout = i;
+        state.anim = Math.min(state.anim, l.animations.length - 1);
+        state.frame = 0;
+        rebuild();
+      });
+      el.append(b);
+    });
+  }
+
+  function buildModules() {
+    const el = $("modules");
+    el.innerHTML = "";
+    const base = state.atlas.loadouts[0].modules;
+    lo().modules.forEach((m) => {
+      const li = document.createElement("li");
+      const isNew = !base.includes(m);
+      if (isNew) li.className = "added";
+      li.innerHTML = m.replace(/_/g, " ") +
+        '<span class="tag">' + (isNew ? "upgrade" : "standard") + "</span>";
+      el.append(li);
+    });
+  }
+
+  function buildAnimButtons() {
+    const el = $("anim-buttons");
+    el.innerHTML = "";
+    lo().animations.forEach((a, i) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = a.name.replace(/_/g, " ");
+      b.setAttribute("aria-pressed", i === state.anim ? "true" : "false");
+      b.addEventListener("click", () => { state.anim = i; state.frame = 0; sync(); });
+      el.append(b);
+    });
+  }
+
+  function buildDots() {
+    const el = $("dots");
+    el.innerHTML = "";
+    for (let i = 0; i < an().frames; i++) el.append(document.createElement("i"));
+  }
+
+  function buildDownloads() {
+    const el = $("dl-rows");
+    el.innerHTML = "";
+    const l = lo();
+    l.animations.forEach((a) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML =
+        '<td class="name">' + a.name.replace(/_/g, " ") + "</td>" +
+        "<td>" + a.frames + "</td>" +
+        "<td>" + a.fps + "</td>" +
+        "<td>" + (a.loop ? '<span class="loop">loop</span>' : '<span class="once">once</span>') + "</td>" +
+        "<td>" + (a.frames * state.atlas.sprite_size) + "\u00d7" + (8 * state.atlas.sprite_size) + "</td>" +
+        '<td><a href="' + assetUrl(a.sheet) + '" download="' + a.sheet + '">1&times;</a> &nbsp; ' +
+        '<a href="' + assetUrl(a.sheet_2x) + '" download="' + a.sheet_2x + '">2&times;</a></td>';
+      el.append(tr);
+    });
+    $("dl-caption").textContent =
+      l.display_name + " \u2014 rows are the 8 facings, columns are the animation frames. " +
+      "Cell " + state.atlas.sprite_size + "\u00d7" + state.atlas.sprite_size + " at 1\u00d7.";
+  }
+
+  // ---- sync + loop ------------------------------------------------------------
+  function sync() {
+    const l = lo(), a = an();
+    $("ro-ship").textContent = l.loadout;
+    $("ro-anim").textContent = a.name.replace(/_/g, " ");
+    $("ro-face").textContent = l.facings[state.facing].name;
+
+    [...$("anim-buttons").children].forEach((b, i) =>
+      b.setAttribute("aria-pressed", i === state.anim ? "true" : "false"));
+    [...$("compass").children].forEach((b, i) =>
+      b.setAttribute("aria-pressed", i === state.facing ? "true" : "false"));
+    [...$("loadouts").children].forEach((b, i) =>
+      b.setAttribute("aria-pressed", i === state.loadout ? "true" : "false"));
+  }
+
+  function rebuild() {
+    buildLoadouts();
+    buildModules();
+    buildAnimButtons();
+    buildCompass();
+    buildStrip();
+    buildDots();
+    buildDownloads();
+    sync();
+  }
+
+  function tick(t) {
+    if (!state.last) state.last = t;
+    const dt = Math.min(t - state.last, 200);
+    state.last = t;
+
+    const a = an();
+    if (state.playing) {
+      state.acc += dt * state.speed;
+      const step = 1000 / a.fps;
+      while (state.acc >= step) {
+        state.acc -= step;
+        state.frame = (state.frame + 1) % a.frames;
+      }
+    }
+    if (state.spin && !reduceMotion) {
+      state.spinAcc += dt * state.speed;
+      if (state.spinAcc >= 700) {
+        state.spinAcc = 0;
+        state.facing = (state.facing + 1) % 8;
+        sync();
+      }
+    }
+
+    drawStage(t);
+    drawStrip();
+
+    const dots = $("dots").children;
+    for (let i = 0; i < dots.length; i++) dots[i].className = i === state.frame ? "on" : "";
+
+    requestAnimationFrame(tick);
+  }
+
+  // ---- controls ---------------------------------------------------------------
+  function toggle(btn, key, labels) {
+    btn.addEventListener("click", () => {
+      state[key] = !state[key];
+      btn.setAttribute("aria-pressed", state[key] ? "true" : "false");
+      if (labels) btn.textContent = state[key] ? labels[0] : labels[1];
+    });
+  }
+
+  $("zoom").addEventListener("input", (e) => {
+    state.zoom = +e.target.value;
+    $("zoom-out").textContent = state.zoom + "\u00d7";
+  });
+  $("speed").addEventListener("input", (e) => {
+    state.speed = +e.target.value / 100;
+    $("speed-out").textContent = e.target.value + "%";
+  });
+  toggle($("play"), "playing", ["Pause", "Play"]);
+  toggle($("spin"), "spin");
+  toggle($("stars"), "stars");
+
+  document.addEventListener("keydown", (e) => {
+    if (e.target.tagName === "INPUT") return;
+    if (e.key === "ArrowLeft") { state.facing = (state.facing + 7) % 8; sync(); }
+    else if (e.key === "ArrowRight") { state.facing = (state.facing + 1) % 8; sync(); }
+    else if (e.key === " ") { e.preventDefault(); $("play").click(); }
+    else return;
+  });
+
+  // ---- boot -------------------------------------------------------------------
+  function boot(atlas) {
+    state.atlas = atlas;
+    if (reduceMotion) {
+      state.stars = false;
+      $("stars").setAttribute("aria-pressed", "false");
+    }
+    preload();
+    rebuild();
+    requestAnimationFrame(tick);
+  }
+
+  if (EMBEDDED_ATLAS) {
+    boot(EMBEDDED_ATLAS);
+  } else {
+    fetch(SPRITE_DIR + "carrier_atlas.json")
+      .then((r) => r.json())
+      .then(boot)
+      .catch(() => {
+        $("foot").textContent =
+          "Could not load sprites/carrier_atlas.json. Run generate_carrier.py, then serve the " +
+          "repository root over http (python3 -m http.server) and open /preview/.";
+      });
+  }
+})();
+</script>
