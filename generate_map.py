@@ -681,6 +681,72 @@ def paste_units(canvas, spritedir, lanes):
 # --------------------------------------------------------------------------------------
 
 
+def place_props_combat(seed):
+    """
+    A single battle wants cover, not routes. Clusters of rock with open lanes of fire
+    between them, both spawn approaches kept clear, and the same 180 degree symmetry.
+    """
+    rng = Rng(seed)
+    heavy = ("asteroid_lg", "asteroid_md", "debris_lg")
+    light = ("asteroid_sm", "debris_sm", "asteroid_md")
+    seeds = []
+    for _ in range(60):
+        x, y = rng.range(-ARENA_N, ARENA_N), rng.range(-ARENA_N, ARENA_N)
+        if x - y > -6.0:                      # generate one half, mirror the other
+            continue
+        if not in_arena(x, y, pad=4.0):
+            continue
+        if math.dist((x, y), SPAWN_W) < 20.0 or math.dist((x, y), SPAWN_E) < 20.0:
+            continue
+        if any(math.dist((x, y), c) < 15.0 for c in seeds):
+            continue
+        seeds.append((x, y))
+        if len(seeds) >= 5:
+            break
+
+    CELL = 6.0
+    grid = {}
+    half = []
+    for (cx, cy) in seeds:
+        for _ in range(90):
+            a, r = rng.range(0.0, math.tau), rng.range(0.0, 1.0) ** 0.6 * 9.0
+            x, y = cx + math.cos(a) * r, cy + math.sin(a) * r
+            if not in_arena(x, y, pad=2.5):
+                continue
+            if math.dist((x, y), SPAWN_W) < 18.0 or math.dist((x, y), SPAWN_E) < 18.0:
+                continue
+            kind = heavy[int(rng.range(0.0, 3.0)) % 3] if r < 5.0 \
+                else light[int(rng.range(0.0, 3.0)) % 3]
+            radius = PROP_KINDS[kind][1]
+            gx, gy = int(x // CELL), int(y // CELL)
+            clash = False
+            for ax in range(gx - 1, gx + 2):
+                for ay in range(gy - 1, gy + 2):
+                    for (ox, oy, orad) in grid.get((ax, ay), ()):
+                        if math.dist((x, y), (ox, oy)) < (radius + orad) * 0.85:
+                            clash = True
+            if clash:
+                continue
+            grid.setdefault((gx, gy), []).append((x, y, radius))
+            half.append({"kind": kind, "variant": int(rng.range(0.0, PROP_KINDS[kind][2])) %
+                         PROP_KINDS[kind][2], "x": x, "y": y,
+                         "radius": radius, "cover": PROP_KINDS[kind][3]})
+
+    props = []
+    for o in half:
+        for sign in (1.0, -1.0):
+            x, y = o["x"] * sign, o["y"] * sign
+            sx, sy = to_screen(x, y)
+            props.append({"kind": o["kind"], "variant": o["variant"],
+                          "x": round(x, 2), "y": round(y, 2),
+                          "radius": o["radius"], "cover": o["cover"],
+                          "side": "west" if sign > 0 else "east",
+                          "light_bucket": bucket_towards_sun(x, y),
+                          "falloff_tier": falloff_tier(x, y),
+                          "screen": [round(sx, 1), round(sy, 1)]})
+    return props
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--out", default="maps")
@@ -688,7 +754,22 @@ def main():
     ap.add_argument("--palette", default="crimson", choices=sorted(PALETTES))
     ap.add_argument("--seed", type=int, default=1337)
     ap.add_argument("--no-units", action="store_true", help="terrain only")
+    ap.add_argument("--combat", action="store_true",
+                    help="a single-battle arena: smaller, cover clusters, no lanes")
     args = ap.parse_args()
+
+    global ARENA_N, MAP_W, MAP_H, SUN_XY, CORNER_N, CORNER_E, CORNER_S, CORNER_W
+    global SPAWN_W, SPAWN_E, FALLOFF_EDGES, SUN_R, SUN_CORONA
+    if args.combat:
+        ARENA_N = 34.0
+        MAP_W, MAP_H = 1280, 700
+        SUN_XY = (2.0, 52.0)
+        SUN_R, SUN_CORONA = 66, 210
+        FALLOFF_EDGES = (42.0, 76.0)
+        CORNER_N = (ARENA_N, ARENA_N); CORNER_E = (ARENA_N, -ARENA_N)
+        CORNER_S = (-ARENA_N, -ARENA_N); CORNER_W = (-ARENA_N, ARENA_N)
+        SPAWN_W = (-ARENA_N + SPAWN_INSET, ARENA_N - SPAWN_INSET)
+        SPAWN_E = (ARENA_N - SPAWN_INSET, -ARENA_N + SPAWN_INSET)
 
     os.makedirs(args.out, exist_ok=True)
     os.makedirs(args.sprites, exist_ok=True)
@@ -697,12 +778,16 @@ def main():
     print("props:")
     prop_meta = render_prop_sheets(args.sprites)
 
-    lanes = build_lanes()
-    props = place_props(args.seed, lanes)
-    reopened = clear_lanes(props, lanes)
-    passable = verify_lanes(props, lanes)
-    if reopened:
-        print(f"  cleared {reopened} props to reopen pinched lanes")
+    if args.combat:
+        lanes, reopened, passable = [], 0, []
+        props = place_props_combat(args.seed)
+    else:
+        lanes = build_lanes()
+        props = place_props(args.seed, lanes)
+        reopened = clear_lanes(props, lanes)
+        passable = verify_lanes(props, lanes)
+        if reopened:
+            print(f"  cleared {reopened} props to reopen pinched lanes")
     # Painter's order: larger x + y sits higher on screen and is further from the
     # camera, so the far side of the field has to go down first.
     props.sort(key=lambda o: -(o["x"] + o["y"]))
@@ -714,9 +799,10 @@ def main():
     for prop in props:
         paste_prop(canvas, sheets, prop)
 
-    units = [] if args.no_units else paste_units(canvas, args.sprites, lanes)
+    units = [] if args.no_units or args.combat else paste_units(canvas, args.sprites, lanes)
 
-    img_path = os.path.join(args.out, "battle_map.png")
+    stem = "combat_arena" if args.combat else "battle_map"
+    img_path = os.path.join(args.out, stem + ".png")
     canvas.convert("RGB").save(img_path)
 
     sun_sx, sun_sy = to_screen(*SUN_XY)
@@ -775,7 +861,7 @@ def main():
             }
             for lane in lanes
         ],
-        "traversal_check": {
+        "traversal_check": {} if args.combat else {
             "craft_radius": passable[0]["craft_radius"],
             "props_cleared_to_reopen": reopened,
             "method": "occupancy grid flood fill along each corridor, spawn to spawn",
@@ -786,16 +872,16 @@ def main():
         "props": props,
         "units": units,
     }
-    with open(os.path.join(args.out, "battle_map.json"), "w") as fh:
+    with open(os.path.join(args.out, stem + ".json"), "w") as fh:
         json.dump(data, fh, indent=2)
 
     kb = os.path.getsize(img_path) / 1024
     print(f"\n{img_path}  {MAP_W}x{MAP_H}  {kb:.0f} KB")
     print(f"{len(props)} props, {len(lanes)} lanes, {len(units)} units placed")
     for lane in data["lanes"]:
-        ok = "open" if lane["passable"] else "BLOCKED"
+        ok = "open" if lane.get("passable") else "BLOCKED"
         print(f"  lane {lane['name']:<7} {lane['length']:>6.1f} units  {ok}")
-    if not all(l["passable"] for l in data["lanes"]):
+    if data["lanes"] and not all(l["passable"] for l in data["lanes"]):
         print("\nA lane is not traversable — reduce density or widen LANE_HALF.")
         return 1
 

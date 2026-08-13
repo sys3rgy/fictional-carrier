@@ -1,0 +1,109 @@
+{
+  "craft": "fighter",
+  "loadout": "bomber",
+  "display_name": "Kite-class strike bomber",
+  "modules": [
+    "airframe",
+    "engine_std",
+    "cannons_light",
+    "torpedo_pods"
+  ],
+  "palette": "steel",
+  "frame_width": 48,
+  "frame_height": 48,
+  "projection": "orthographic dimetric, yaw 45 deg, pitch 30 deg (2:1)",
+  "origin": "cell centre; the hull is registered identically across every sheet",
+  "facings": [
+    {
+      "row": 0,
+      "name": "S",
+      "yaw_deg": 225
+    },
+    {
+      "row": 1,
+      "name": "SE",
+      "yaw_deg": 270
+    },
+    {
+      "row": 2,
+      "name": "E",
+      "yaw_deg": 315
+    },
+    {
+      "row": 3,
+      "name": "NE",
+      "yaw_deg": 0
+    },
+    {
+      "row": 4,
+      "name": "N",
+      "yaw_deg": 45
+    },
+    {
+      "row": 5,
+      "name": "NW",
+      "yaw_deg": 90
+    },
+    {
+      "row": 6,
+      "name": "W",
+      "yaw_deg": 135
+    },
+    {
+      "row": 7,
+      "name": "SW",
+      "yaw_deg": 180
+    }
+  ],
+  "animations": [
+    {
+      "name": "idle",
+      "frames": 8,
+      "fps": 10,
+      "loop": true,
+      "sheet": "fighter_bomber_idle.png",
+      "sheet_2x": "fighter_bomber_idle@2x.png"
+    },
+    {
+      "name": "cruise",
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "sheet": "fighter_bomber_cruise.png",
+      "sheet_2x": "fighter_bomber_cruise@2x.png"
+    },
+    {
+      "name": "boost",
+      "frames": 8,
+      "fps": 16,
+      "loop": true,
+      "sheet": "fighter_bomber_boost.png",
+      "sheet_2x": "fighter_bomber_boost@2x.png"
+    },
+    {
+      "name": "fire",
+      "frames": 6,
+      "fps": 16,
+      "loop": true,
+      "sheet": "fighter_bomber_fire.png",
+      "sheet_2x": "fighter_bomber_fire@2x.png"
+    },
+    {
+      "name": "damage",
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "sheet": "fighter_bomber_damage.png",
+      "sheet_2x": "fighter_bomber_damage@2x.png"
+    },
+    {
+      "name": "destroyed",
+      "frames": 10,
+      "fps": 14,
+      "loop": false,
+      "sheet": "fighter_bomber_destroyed.png",
+      "sheet_2x": "fighter_bomber_destroyed@2x.png"
+    }
+  ],
+  "role": "anti-capital"
+}

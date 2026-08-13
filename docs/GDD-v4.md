@@ -144,6 +144,18 @@ Sending help stacks damage. The EMP swings duels. Disengaging costs you a few fr
 on the way out. "Locked" means committed to each other, **not** untargetable by anyone else
 — without that, the whole intervene-and-rescue layer dies.
 
+**Orders are binding, and *where* a duel is fought is decided by who came to whom.** Two
+rules the prototype forced, both load-bearing:
+
+- **A craft only locks what it was ordered onto.** Opportunistic locking — grabbing
+  whatever wandered into range — made assignment advisory, and skilled play measured no
+  better than charging. Being *jumped* is still legal: the enemy that caught you named
+  you. Nobody ever tangles with something merely because they flew past it.
+- **The anchor favours whoever held station.** A duel is anchored 35% of the way from the
+  defender toward the craft that came to them, not at the midpoint. This is the only
+  reason the flak umbrella reliably covers a defended fight (§3.7), and it makes "reach
+  out and take him" a real cost rather than a free action.
+
 > **Because most duels end in a pin rather than a kill, most of what is on screen is the
 > default outcome.** The pin must not read as dead time. The thing being spent is
 > ordnance, so ordnance is what the UI must foreground during a lock — the player should
@@ -188,6 +200,25 @@ also puts the thing you cannot lose inside their reach.
 
 The umbrella is the clearest expression of Law 7 in the game: swapping a turret changes a
 radius you can see on screen.
+
+**The umbrella is a position, not a button.** Getting this wrong was the single largest
+correction the combat prototype produced, and it took three passes:
+
+- **Hostiles will not fly into it for free.** They press to the lip of the envelope and
+  wait. So sitting inside is *safe* and wins nothing — the objective is never in there
+  with you, and turtling produces a standoff rather than a victory.
+- **They do not wait forever.** After about twelve seconds on the boundary a hostile
+  decides your carrier is worth the burn and comes in anyway. The umbrella buys a window
+  to consolidate, recover a pod and pick your fight. It is not somewhere you get to live.
+- **What it actually gives you is the anchor.** Because a defended duel is fought on the
+  defender's ground (§3.4), reaching out from inside to a hostile loitering on the edge
+  drags the fight in under your own guns. *That* is the play the outnumbered scenario is
+  built around, and it is the only line that wins it.
+
+The failure mode this replaced is worth recording: with hostiles set to charge, duels
+anchored at a radius of 11.6 against an umbrella of 11.5 — every fight landed a hair
+outside the guns and **the flak never fired a shot in any scenario**, while still being
+drawn on screen as though it were doing something. Law 2.
 
 ### 3.8 Fog and surprise
 
@@ -524,6 +555,11 @@ bar and turn economy, the anchor strip-and-assault loop, the five-slot refit dri
 layered sprites, purchasable airframes, the approach choice, and pilots persisting for a
 run. The battle sits behind `resolveBattle()`, the seam the real engine plugs into.
 
+**Built as a combat prototype:** three scenarios of increasing difficulty against binding
+orders, the counter-chain, pods, the EMP and a working flak umbrella — deliberately
+**without the rearm cycle**, to find out whether the fight is fun before the logistics
+loop is there to prop it up.
+
 **Designed, not built:** every mission type beyond the shapes the shell generates, and the
 real-time battle's integration with the campaign layer.
 
@@ -566,6 +602,46 @@ the battle layer *generalises*, and finding out it does not is better early than
 de-risks a different thing than the one §10 names as the risk. If the fear is never
 finishing, close the loop first.
 
+### 10.2 What building combat without the rearm cycle taught — *new*
+
+The prototype exists to answer one question — *is the fight fun on its own?* — so it was
+built with §3.5 deliberately removed. Ordnance is still a per-sortie budget, but nothing
+flies home. Five scripted commanders of increasing sophistication play all three scenarios
+to termination, and the measurement that matters is whether playing better wins more:
+
+| | charge | matchup | screen | umbrella | anvil |
+|---|---|---|---|---|---|
+| **patrol** | win | win | win | win | win |
+| **convoy** | loss | loss | win | win | win |
+| **outnumbered** | loss | loss | loss | loss | **win** |
+
+Each scenario teaches exactly one thing, and the policy that learns it is the first one to
+beat it. Findings:
+
+- **The gradient does not exist for free.** Before orders were binding (§3.4), all five
+  columns were identical — every policy performed like `charge`, because assignment did
+  not survive contact. *A counter-chain with unassignable matchups is not a mechanic.*
+- **Pinning as the default outcome needs an exit.** With no rearm, two even duellists run
+  dry just before either kill lands and pin each other permanently. The fix was not to
+  retune the numbers but to accept it: a dry pin is a legitimate board state that the
+  player breaks by sending help, and the game says so out loud and auto-pauses when it
+  happens. `The wing is spent` is a loss condition.
+- **Without rearm, a capital's health is a hard constraint, not a dial.** A bomber carries
+  one magazine, so a capital that outlasts it makes the mission unwinnable by arithmetic
+  before a shot is fired. This is the clearest evidence yet that §3.5 is load-bearing:
+  removing it does not make the fight simpler, it makes capital HP a puzzle with one legal
+  answer.
+- **Losing the objective should not end the mission.** The bomber dies first in every
+  scenario, because pinning it is correct enemy doctrine. Ending the instant it died threw
+  away the pods, so a dead strike now converts the mission into an extraction: you cannot
+  win, but pilots persist (§3.6) and there is still something to play for.
+
+**On the question that prompted this — is it fun?** The `outnumbered` line is: fall back,
+let them stack on the lip of the flak, reach out and pull one in, trade three-on-one under
+your own guns, and eat the losses. It costs two of three craft and takes about thirty
+seconds. That reads as a fight worth having. What is *not* yet fun is the middle of an even
+duel, which is exactly the dead time §3.4 warned about.
+
 ---
 
 ## 11. Open questions
@@ -607,3 +683,8 @@ finishing, close the loop first.
 | 11 | Asset pipeline section added: layered modules, verified map data | §8 |
 | 12 | Pin readability: UI foregrounds ordnance during a lock | §3.4 |
 | 13 | Run length raised as the load-bearing open question | §11 |
+| 14 | Orders are binding: a craft only locks what it was ordered onto | §3.4 |
+| 15 | Duel anchors favour whoever held station, which is what puts the flak on them | §3.4 |
+| 16 | The umbrella is a position, not a button: hostiles hold the lip, then press | §3.7 |
+| 17 | Losing the objective converts the mission to an extraction rather than ending it | §10.2 |
+| 18 | Combat measured as a skill gradient across five scripted commanders | §10.2 |

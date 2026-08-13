@@ -26,6 +26,8 @@ OUT = os.path.join(ROOT, "dist", "carrier-sprites.html")
 MAP_OUT = os.path.join(ROOT, "dist", "battle-map.html")
 GAME_SRC = os.path.join(ROOT, "game", "index.html")
 GAME_OUT = os.path.join(ROOT, "dist", "last-carrier-flying.html")
+COMBAT_SRC = os.path.join(ROOT, "combat", "index.html")
+COMBAT_OUT = os.path.join(ROOT, "dist", "wing-command.html")
 
 
 def data_uri(path):
@@ -101,6 +103,39 @@ def build_game():
           f"{len(art)} sprites embedded)")
 
 
+def build_combat():
+    """The combat prototype needs the arena and one cruise sheet per craft, per side."""
+    arena_json = os.path.join(MAPS, "combat_arena.json")
+    if not os.path.exists(arena_json):
+        print("skipping combat — run generate_map.py --combat first")
+        return
+    with open(arena_json) as fh:
+        arena = json.load(fh)
+
+    wanted = ["maps/" + arena["image"]]
+    for side in ("sprites/", "sprites/steel/"):
+        for role in ("fighter", "interceptor", "bomber"):
+            wanted.append(f"{side}fighter_{role}_cruise.png")
+        wanted.append(side + "carrier_mk1_cruise.png")
+
+    art = {}
+    for rel in wanted:
+        path = os.path.join(ROOT, rel)
+        if os.path.exists(path):
+            art[rel] = data_uri(path)
+
+    with open(COMBAT_SRC) as fh:
+        html = fh.read()
+    html = inline(html, "arena", "EMBEDDED_ARENA", json.dumps(arena, separators=(",", ":")))
+    html = inline(html, "combatart", "EMBEDDED_COMBAT_ART",
+                  json.dumps(art, separators=(",", ":")))
+
+    os.makedirs(os.path.dirname(COMBAT_OUT), exist_ok=True)
+    with open(COMBAT_OUT, "w") as fh:
+        fh.write(html)
+    print(f"wrote {COMBAT_OUT} ({len(html.encode()) / 1e6:.2f} MB, {len(art)} sprites)")
+
+
 def main():
     with open(os.path.join(SPRITES, "sprite_atlas.json")) as fh:
         atlas = json.load(fh)
@@ -137,6 +172,7 @@ def main():
 
     build_map()
     build_game()
+    build_combat()
 
 
 if __name__ == "__main__":
