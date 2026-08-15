@@ -355,8 +355,8 @@ A human reading the board should do better than the script.
 ## Combat
 
 `combat/index.html` is the real fight — the thing `resolveBattle()` stands in for —
-built **without the rearm cycle** to answer one question on its own terms: is the
-combat fun before logistics is there to prop it up?
+built with **unlimited ammunition and no rearm cycle**, to answer one question on its
+own terms: is the combat fun before logistics is there to prop it up?
 
 ```sh
 python3 generate_map.py --combat  # -> maps/combat_arena.{png,json}
@@ -365,8 +365,9 @@ python3 tools/build_artifact.py   # standalone -> dist/wing-command.html
 python3 tools/test_combat.py      # 15 scripted runs across 3 scenarios
 ```
 
-Ordnance is still a per-sortie budget, but nothing flies home. A dry craft can still
-pin, block and pull a pod out — pinning is free, killing is what costs a magazine.
+Nothing is spent but the craft themselves. An even duel wears a craft to a quarter of
+its condition and no further, then the loser breaks off and runs — pilot alive, out of
+the fight. Killing takes an advantage, an assist, or the carrier's flak.
 
 ### What the harness measures
 
@@ -377,26 +378,44 @@ gradient between them:
 | | charge | matchup | screen | umbrella | anvil |
 |---|---|---|---|---|---|
 | **patrol** — the tutorial | win | win | win | win | win |
-| **convoy** — the screening lesson | loss | loss | win | win | win |
+| **convoy** — the screening lesson | loss | loss | win | loss | win |
 | **outnumbered** — the umbrella lesson | loss | loss | loss | loss | **win** |
 
 `charge` flies at the nearest thing. `matchup` reads the counter-chain. `screen` guards
-the bomber before it commits. `umbrella` turtles in the flak. `anvil` holds the flak
+the bomber and breaks pins on it. `umbrella` turtles in the flak. `anvil` holds the flak
 facing the threat, reaches out so the duel anchors under its own guns, and piles onto
 anything already pinned.
 
 Each scenario teaches one thing, and the first policy that learns it is the first to
-beat it. The suite also asserts the three rules that would rot silently in a refactor:
-orders are binding, defended duels anchor closer to the carrier than reached-out ones,
-and a craft with an empty magazine still holds its lock while dealing nothing.
+beat it. The suite also asserts the rules that would rot silently in a refactor: orders
+are binding, defended duels anchor closer to the carrier than reached-out ones, an even
+duel kills nobody in 40s of grinding, and a clean bombing run costs the bomber 20–75%
+of its hull.
 
-Three findings, in the order they were forced:
+### The umbrella, in three passes
 
 | Symptom | Cause | Fix |
 |---|---|---|
 | Every policy performed identically | craft locked whatever they flew past, so assignment did not survive contact | orders are binding — you only lock what you were ordered onto, or whoever chose you |
 | `outnumbered` unwinnable under every policy, including the umbrella its brief prescribes | duels anchored at 11.6 against a flak radius of 11.5 — **the umbrella never fired a shot** | hostiles hold the lip of the envelope; a defended duel anchors on the defender's ground |
 | The umbrella then won everything by itself | nothing punished turtling | hostiles wait ~12s on the boundary, then come in anyway. The flak buys a window, not a home |
+
+### What ammunition was secretly doing
+
+Ammunition was removed on a later pass, and it turned out to be holding up three things
+that had nothing to do with supply. Each had to be rebuilt before the table above came
+back:
+
+| Job the magazine was doing | What broke without it | Replacement |
+|---|---|---|
+| Made even duels not kill (dry at 16s, kill at 18s) | every engagement became a 1-for-1 trade; no dps value fixes it, since any rate slow enough never to resolve is too slow to feel like a fight | a stated floor — an even duel stops at 25% condition, and the loser breaks off |
+| Bounded the bomber's time over the target | a lone bomber loiters forever and **convoy falls to a naive charge** | the capital's flak, charged per salvo (the §3.3 return arrow, previously undesigned-for) |
+| Hid a tie-break bug | two identical fighters hit zero on the same tick and the update loop's first unit won — always the friendly | duel damage is gathered and applied in separate passes |
+
+The flak number is load-bearing and measured, not guessed: at 0 per salvo convoy falls
+to `charge`; above about 15 even a well-screened bomber cannot finish. It is charged per
+salvo rather than per second because a per-second cost punishes exactly what screening
+produces — a bomber that breaks off and comes back.
 
 ## Notes on the render
 

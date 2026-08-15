@@ -74,7 +74,6 @@
   .meters { width:66px; }
   .meter { height:4px; background:#2a231d; border-radius:1px; overflow:hidden; margin-bottom:2px; }
   .meter i { display:block; height:100%; background:var(--signal); }
-  .meter.ord i { background:var(--paint); }
   .meter.low i { background:var(--crimson); }
 
   .obj { font-family:var(--mono); font-size:12px; line-height:1.8; }
@@ -97,8 +96,10 @@
   <h1>Wing Command</h1>
   <p class="lede">
     Orders are intent your craft carry out on their own. <b>Space</b> pauses whenever a moment
-    deserves a decision, and the game pauses itself on the beats that do. Nothing rearms &mdash;
-    a magazine is all you have, and a dry craft can still pin, block and pull a pod out.
+    deserves a decision, and the game pauses itself on the beats that do. Ammunition is
+    unlimited, so nothing is ever spent but the craft themselves &mdash; an even duel is a
+    pin that will not resolve, and the only things that turn a pin into a kill are the
+    counter-chain, an assist, and the EMP.
   </p>
 
   <div class="stagewrap">
@@ -159,7 +160,7 @@
   </div>
 
   <footer id="foot">
-    Combat prototype on GDD v4 §3 &middot; no rearm cycle: ordnance is a per-sortie budget.
+    Combat prototype on GDD v4 §3 &middot; unlimited ammunition: no rearm cycle and no magazine.
   </footer>
 </div>
 
@@ -183,6 +184,11 @@
   // worth the burn. The umbrella buys you a window to consolidate, recover a pod and pick
   // your fight — it is not a place you get to live.
   const PATIENCE = 12;
+  // What a capital costs a bomber per salvo delivered (GDD 3.3, the return arrow). This
+  // is charged on the run-in rather than per second in range, because a per-second cost
+  // punishes exactly the thing screening produces — a bomber that breaks off and comes
+  // back — and made the screening lesson unwinnable at every tuning tried.
+  const CAP_FLAK = 12;
 
   // Matchup damage. An execution is fast and cheap; an even duel is a long grind that
   // eats the whole magazine. That asymmetry is the counter-chain doing its work.
@@ -190,25 +196,31 @@
   // intervene-and-rescue layer exists. At 30 dps a fighter deleted a bomber in four
   // seconds — before any help could cross the map — so the fight was decided at spawn
   // rather than by anything the commander did.
-  // Tuned so the numbers say what §3.4 says. An even duel runs a magazine dry *before*
-  // it lands the kill: pinning is the default outcome and killing is what happens when
-  // you solve the matchup. An execution is fast and cheap, which makes the counter-chain
-  // matter twice — once for survival and once for supply (§3.5).
+  // Ammunition is unlimited: nothing rearms because nothing runs out.
   //
-  //            time to kill 100 cond      ordnance spent      damage per ordnance
-  //   ADV      ~6s                        ~35                 2.8
-  //   EVEN     never (dry at ~89 dealt)   130                 0.7
-  //   DIS      never                      130                 0.3
-  const ADV  = { dps: 17,  burn: 6.0 };
-  const EVEN = { dps: 5.5, burn: 8.0 };
-  const DIS  = { dps: 2.4, burn: 8.0 };
+  // The magazine used to be what made §3.4 true — an even duel ran dry at ~16s and the
+  // kill did not land until ~18s, so "pinning is the default outcome" was enforced by
+  // supply rather than by damage. With ammunition gone that job has to live in the dps
+  // table instead, or two evenly matched fighters simply annihilate each other at 18s
+  // and every engagement becomes a 1-for-1 trade.
+  //
+  // So an even duel is now a *grind that does not resolve inside a mission*, and the
+  // only thing that converts a pin into a kill is solving the matchup — or sending help.
+  //
+  //            time to kill 100 cond
+  //   ADV      ~6s        an execution
+  //   EVEN     ~83s       a pin; missions do not last this long
+  //   DIS      ~200s      you are being executed and contributing almost nothing
+  const ADV  = { dps: 17 };
+  const EVEN = { dps: 2.8 };
+  const DIS  = { dps: 0.5 };
 
   const TYPES = {
-    fighter:     { label:"Fighter",     speed:7.6,  cond:100, ord:130, beats:"bomber",  sheet:"fighter_fighter_cruise.png" },
-    interceptor: { label:"Interceptor", speed:9.2,  cond:88,  ord:130, beats:"fighter", sheet:"fighter_interceptor_cruise.png" },
-    bomber:      { label:"Bomber",      speed:5.6,  cond:120, ord:130, beats:"capital", sheet:"fighter_bomber_cruise.png" },
-    carrier:     { label:"Carrier",     speed:2.0,  cond:420, ord:0,   beats:null,      sheet:"carrier_mk1_cruise.png" },
-    capital:     { label:"Capital",     speed:1.1,  cond:132, ord:0,   beats:null,      sheet:"carrier_mk1_cruise.png" },
+    fighter:     { label:"Fighter",     speed:7.6,  cond:100, beats:"bomber",  sheet:"fighter_fighter_cruise.png" },
+    interceptor: { label:"Interceptor", speed:9.2,  cond:88,  beats:"fighter", sheet:"fighter_interceptor_cruise.png" },
+    bomber:      { label:"Bomber",      speed:5.6,  cond:120, beats:"capital", sheet:"fighter_bomber_cruise.png" },
+    carrier:     { label:"Carrier",     speed:2.0,  cond:420, beats:null,      sheet:"carrier_mk1_cruise.png" },
+    capital:     { label:"Capital",     speed:1.1,  cond:184, beats:null,      sheet:"carrier_mk1_cruise.png" },
   };
   const NAMES = ["Vasquez","Okonjo","Halloran","Reyes","Sato","Petrov","Lind","Mbeki"];
 
@@ -274,9 +286,9 @@
   function makeUnit(side, type, x, y, name) {
     const T = TYPES[type];
     return { id: ++uid, side, type, x, y, vx:0, vy:0, heading: side === "friend" ? 0 : Math.PI,
-             cond: T.cond, maxCond: T.cond, ord: T.ord, maxOrd: T.ord || 1,
+             cond: T.cond, maxCond: T.cond,
              order: { kind: "hold" }, lock: null, anchor: null, alive: true,
-             name: name || "", stun: 0, frame: Math.random() * 8, bombCd: 0, dryNoted: false };
+             name: name || "", stun: 0, frame: Math.random() * 8, bombCd: 0 };
   }
 
   function start(key) {
@@ -305,6 +317,8 @@
   const friendlies = () => units.filter(u => u.alive && u.side === "friend" && u.type !== "carrier");
   const carrier = () => units.find(u => u.type === "carrier" && u.alive);
   const foes = () => units.filter(u => u.alive && u.side === "foe" && u.type !== "capital");
+  // Objectives care about who can still fight, not who is still drawn on screen.
+  const fightingFoes = () => foes().filter(u => !u.broken);
   const capital = () => units.find(u => u.type === "capital" && u.alive);
 
   function beats(a, b) { return TYPES[a] && TYPES[a].beats === b; }
@@ -317,6 +331,22 @@
       if (o && o.lock === u.id) { o.lock = null; o.anchor = null; }
     }
     u.lock = null; u.anchor = null;
+  }
+
+  // A craft ground to the floor of an even duel is combat-ineffective: it disengages and
+  // runs for its own side. This is what makes 'rout' an objective you can actually meet
+  // without killing everything — and it is the honest end of a fight nobody was winning.
+  // The pilot lives, which matters because pilots persist across a run (GDD 3.6).
+  function breakOff(u) {
+    u.broken = true;
+    breakLock(u);
+    u.order = { kind: "hold" };
+    if (u.side === "friend") {
+      say(`${u.name} is shot to pieces and breaking off.`, "warn");
+      autoPause();
+    } else {
+      say(`${TYPES[u.type].label} breaks off — he has had enough.`, "good");
+    }
   }
 
   function kill(u, why) {
@@ -342,8 +372,8 @@
 
     // --- enemy intent: pin the bombers first, exactly as the design says they should
     foes().forEach((f) => {
-      if (f.lock) return;
-      const targets = friendlies().filter(u => u.alive);
+      if (f.lock || f.broken) return;
+      const targets = friendlies().filter(u => u.alive && !u.broken);
       if (!targets.length) { f.order = { kind: "engage", target: (carrier() || {}).id }; return; }
       // They will not fly into the flak for free. Without this the umbrella was a
       // dominant answer to every scenario — turtle up, let the guns work, never sortie.
@@ -381,7 +411,7 @@
     // the fight — it just costs nothing to say in advance who shows up.
     const flyer = (u) => u.type !== "carrier" && u.type !== "capital";
     const cGuard = carrier();
-    units.filter(u => u.alive && u.lock === null && flyer(u) &&
+    units.filter(u => u.alive && !u.broken && u.lock === null && flyer(u) &&
                       (u.order.kind === "engage" || u.order.kind === "defend"))
       .forEach((u) => {
         let g = null;
@@ -416,6 +446,27 @@
       if (!u.alive) return;
       if (u.type === "capital") return;
       let tx = u.x, ty = u.y;
+      if (u.broken) {
+        // run for home: foes away from the carrier, friendlies toward it
+        const cb = carrier();
+        const hx = cb ? cb.x : 0, hy = cb ? cb.y : 0;
+        const dxb = u.x - hx, dyb = u.y - hy, db = Math.hypot(dxb, dyb) || 1;
+        if (u.side === "foe") {
+          if (db > 55) { u.alive = false; return; }        // off the field, not dead
+          tx = hx + (dxb / db) * 80; ty = hy + (dyb / db) * 80;
+        } else {
+          tx = hx; ty = hy;
+        }
+        const dd = Math.hypot(tx - u.x, ty - u.y);
+        if (dd > 0.25) {
+          const spb = TYPES[u.type].speed;
+          u.x += ((tx - u.x) / dd) * spb * dt;
+          u.y += ((ty - u.y) / dd) * spb * dt;
+          u.heading = Math.atan2(ty - u.y, tx - u.x);
+        }
+        u.frame += dt * 9;
+        return;
+      }
       if (u.stun > 0) { u.stun -= dt; }
       else if (u.lock && u.anchor) { tx = u.anchor.x; ty = u.anchor.y; }
       else if (u.order.kind === "move") { tx = u.order.x; ty = u.order.y; }
@@ -481,47 +532,76 @@
     });
 
     // --- duels
+    //
+    // An even duel wears a craft down to a quarter and no further. Ammunition used to
+    // enforce this — a duel ran dry at ~16s and the kill did not land until ~18s — and
+    // with unlimited ammo, tuning dps low enough to imitate that has no safe value: any
+    // rate slow enough never to resolve in a 90s mission is also too slow to feel like a
+    // fight. A floor states the rule instead of approximating it.
+    //
+    // Finishing a pinned craft takes an advantage, an assist or the carrier's flak. None
+    // of those are floored. That is §3.4: pinning is the default outcome and killing is
+    // what happens when you solve the matchup.
+    //
+    // Damage is gathered first and applied afterwards so both halves of a duel resolve on
+    // the same tick. Applying it inline meant the craft the loop reached first ground its
+    // opponent to the floor, which broke the lock, which stopped the opponent's own
+    // damage landing that tick — so in an exactly even fight the friendly always walked
+    // away intact and the hostile always routed. Friendly units are simply added to the
+    // array first; nothing in the design says they win ties.
+    const duelDmg = new Map();
     units.filter(u => u.alive && u.lock).forEach((u) => {
       const o = units.find(x => x.id === u.lock);
       if (!o || !o.alive) { breakLock(u); return; }
       if (Math.hypot(u.x - o.x, u.y - o.y) > 1.6) return;   // still closing on the anchor
       if (u.stun > 0) return;
       const m = matchup(u, o);
-      // A dry craft still holds the lock — it just cannot kill. Pinning is free; killing
-      // is what costs a magazine.
-      if (u.ord > 0) {
-        o.cond -= m.dps * dt;
-        u.ord = Math.max(0, u.ord - m.burn * (u.type === "bomber" ? 0.18 : 1) * dt);
-        if (u.ord === 0 && !u.dryNoted && u.side === "friend") {
-          u.dryNoted = true;
-          say(`${u.name} is dry — still holding him.`, "warn");
-          autoPause();
-        }
-      }
+      const prev = duelDmg.get(o.id) || { amt: 0, floor: 0 };
+      duelDmg.set(o.id, {
+        amt: prev.amt + m.dps * dt,
+        floor: Math.max(prev.floor, m === EVEN ? o.maxCond * 0.25 : 0),
+      });
+    });
+    duelDmg.forEach((d, id) => {
+      const o = units.find(x => x.id === id);
+      if (!o || !o.alive) return;
+      o.cond = Math.max(d.floor, o.cond - d.amt);
       if (o.cond <= 0) kill(o);
+      else if (d.floor && o.cond <= d.floor && !o.broken) breakOff(o);
     });
 
     // --- assists: an engage order on an already-locked enemy stacks damage
-    units.filter(u => u.alive && !u.lock && u.ord > 0 && u.order.kind === "engage").forEach((u) => {
+    units.filter(u => u.alive && !u.lock && u.order.kind === "engage").forEach((u) => {
       const g = units.find(o => o.id === u.order.target && o.alive && o.side !== u.side);
       if (!g || !g.lock) return;
       if (Math.hypot(g.x - u.x, g.y - u.y) > ASSIST_RANGE) return;
       const m = matchup(u, g);
       g.cond -= m.dps * 0.7 * dt;
-      u.ord = Math.max(0, u.ord - m.burn * 0.7 * dt);
       if (g.cond <= 0) kill(g);
     });
 
-    // --- bombers on the capital: only if not pinned
+    // --- bombers on the capital: only if not pinned, and never for free
+    //
+    // The capital shoots back. This is the return arrow of the counter-chain (§3.3) —
+    // "only bombers threaten capitals, and flak punishes bombers" — and until ammunition
+    // went unlimited the magazine was quietly standing in for it: a bomber had a fixed
+    // number of salvoes, so its time over the target was bounded whether or not anything
+    // was shooting at it. Take the magazine away and a lone bomber can loiter forever,
+    // which is exactly what flattened the whole difficulty table to 'charge'.
+    //
+    // Now the bomber's time over the target is bounded by its own hull: about 17s under
+    // flak against roughly 11s of salvoes needed. It survives a clean run with a little
+    // to spare and nothing at all to spare if it gets pinned on the way in.
     const cap = capital();
     if (cap) {
-      friendlies().filter(u => u.type === "bomber" && !u.lock && u.ord > 8).forEach((u) => {
+      friendlies().filter(u => u.type === "bomber" && !u.lock).forEach((u) => {
         if (Math.hypot(cap.x - u.x, cap.y - u.y) > BOMB_RANGE) return;
         u.bombCd -= dt;
         if (u.bombCd <= 0) {
           u.bombCd = 2.2;
           cap.cond -= 46;
-          u.ord = Math.max(0, u.ord - 30);
+          u.cond -= CAP_FLAK;
+          if (u.cond <= 0) { kill(u); return; }
           fx.push({ x: cap.x, y: cap.y, life: 0.5, max: 0.5 });
           say(`${u.name} puts a salvo into the capital.`, "good");
           if (cap.cond <= 0) kill(cap);
@@ -558,27 +638,27 @@
       else if (!friendlies().length && !pods.length) finish(false, "The wing is gone.");
       else if (scenario.goal === "capital" && !capital())
         finish(true, "Capital killed. That is the only thing that was ever going to end this.");
-      else if (scenario.goal === "rout" && !foes().length)
+      else if (scenario.goal === "rout" && !fightingFoes().length)
         finish(true, "Patrol broken.");
-      else if (scenario.goal === "capital" && !foes().length && !capital())
+      else if (scenario.goal === "capital" && !fightingFoes().length && !capital())
         finish(true, "Cleared.");
       else if (scenario.goal === "capital" && capital() &&
-               !friendlies().some(u => u.type === "bomber" && u.ord > 8)) {
+               !friendlies().some(u => u.type === "bomber" && !u.broken)) {
         // The objective is dead, but the mission is not over: pilots persist across a
         // run (GDD 3.6), so what is left to play for is the pods. Ending the instant
         // the bomber died took that away — and the bomber dies first in every scenario,
         // because pinning it is correct enemy doctrine.
+        //
+        // With unlimited ammunition this is now the *only* way a strike can fail short of
+        // losing the carrier: the bomber cannot run out, so it either lives or it does not.
         if (!strikeDead) {
           strikeDead = true;
           say("Strike is dead — nothing left that can hurt a capital. Get your people out.", "bad");
           autoPause();
         }
         if (!pods.length)
-          finish(false, "The strike is dead. Ordnance does not come back.");
+          finish(false, "The strike is dead. Nothing left that can touch a capital.");
       }
-      else if (friendlies().length && !friendlies().some(u => u.ord > 4))
-        finish(false, "The wing is spent. Everything still flying is dry — they can pin, "
-                    + "but they cannot kill.");
     }
   }
 
@@ -696,16 +776,13 @@
       ctx.beginPath(); ctx.arc(sx, sy, 14, 0, Math.PI * 2); ctx.stroke();
     }
 
-    // condition and ordnance, right above the craft
-    if (u.type !== "capital" || true) {
+    // condition, right above the craft. There is no second bar any more: ammunition is
+    // unlimited, so the only thing draining is the craft itself.
+    {
       const w = cell * 0.46, x0 = sx - w / 2, y0 = sy - cell * 0.34;
-      ctx.fillStyle = "rgba(8,7,6,0.75)"; ctx.fillRect(x0 - 1, y0 - 1, w + 2, u.maxOrd > 1 ? 7 : 4);
+      ctx.fillStyle = "rgba(8,7,6,0.75)"; ctx.fillRect(x0 - 1, y0 - 1, w + 2, 4);
       ctx.fillStyle = u.side === "friend" ? "#3fe07a" : "#5fa8d8";
       ctx.fillRect(x0, y0, w * Math.max(0, u.cond / u.maxCond), 2);
-      if (u.maxOrd > 1) {
-        ctx.fillStyle = u.ord <= 0 ? "#c62222" : "#d4991c";
-        ctx.fillRect(x0, y0 + 3, w * Math.max(0.02, u.ord / u.maxOrd), 2);
-      }
     }
   }
 
@@ -716,13 +793,11 @@
     units.filter(u => u.side === "friend").forEach((u) => {
       const d = document.createElement("div");
       d.className = "unit" + (sel.has(u.id) ? " sel" : "") + (u.alive ? "" : " dead");
-      const st = !u.alive ? "lost" : u.lock ? "locked" : u.ord <= 0 ? "dry" : u.order.kind;
+      const st = !u.alive ? "lost" : u.lock ? "locked" : u.order.kind;
       d.innerHTML = `<div class="nm">${u.name || TYPES[u.type].label}` +
         `<small>${TYPES[u.type].label} · ${st}</small></div>` +
         `<div class="meters">` +
         `<div class="meter"><i style="width:${Math.max(0, 100 * u.cond / u.maxCond)}%"></i></div>` +
-        (u.maxOrd > 1 ? `<div class="meter ord ${u.ord <= 0 ? "low" : ""}">` +
-          `<i style="width:${Math.max(0, 100 * u.ord / u.maxOrd)}%"></i></div>` : "") +
         `</div>`;
       d.addEventListener("click", () => {
         if (!u.alive) return;

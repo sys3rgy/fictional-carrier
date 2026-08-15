@@ -27,8 +27,13 @@ The three that would silently rot in a refactor, and why they are asserted:
     was ordered onto, skill stops paying and the whole table flattens to 'charge'.
   - the duel anchor is biased toward whoever is holding station, which is the only
     reason the flak reliably covers a defended fight.
-  - nothing rearms. A magazine is the whole sortie, so a dry craft must still hold a
-    lock — pinning is free, killing is what costs.
+  - an even duel does not resolve. Ammunition is unlimited, so nothing external stops two
+    evenly matched craft from grinding each other down; if EVEN dps ever rises enough to
+    kill inside a mission, every engagement becomes a 1-for-1 trade and the counter-chain
+    stops being the thing that decides fights.
+  - a capital's flak is what bounds a bombing run. It is the only pressure left on the
+    bomber now that it cannot run out of ordnance, and it is what the convoy lesson rests
+    on: measured, at 0 the mission falls to a naive charge.
 """
 
 import functools
@@ -89,14 +94,19 @@ POLICIES = {
     "screen": COMMON + """
       const bomber = mine.find(u=>u.type==='bomber');
       const loose = foes.filter(o=>!o.lock);
+      // whoever has the bomber pinned is the only target that matters
+      const captor = bomber && bomber.lock
+        ? s.units.find(o=>o.id===bomber.lock && o.alive && o.side==='foe') : null;
       mine.forEach(u=>{
-        if (u.lock) return;
         if (u.type==='bomber') {
+          if (u.lock) return;
           const near = foes.filter(o=>bomber && dist(o,bomber)<7 && !o.lock);
           if (near.length) u.order = {kind:'move', x:u.x+9, y:u.y-9};
           else if (cap) u.order = {kind:'engage', target:cap.id};
           return;
         }
+        if (captor) { u.order = {kind:'engage', target:captor.id}; return; }
+        if (u.lock) return;
         const pick = loose.find(o=>B[u.type]===o.type) || loose.find(o=>B[o.type]!==u.type)
                   || loose[0] || foes[0];
         if (pick) u.order = {kind:'engage', target:pick.id};
@@ -145,7 +155,7 @@ RUN = """
   const [pol, limit] = args;
   const C = window.__combat, f = new Function(pol);
   const seen = new Map();       // unit id -> the lock we last audited
-  let t = 0, violations = [], minOrd = 1e9, defendAnchors = [], engageAnchors = [];
+  let t = 0, violations = [], defendAnchors = [], engageAnchors = [];
   const R = 11.5;
   while (t < limit) {
     f();
@@ -171,12 +181,11 @@ RUN = """
         (u.order.kind === 'defend' ? defendAnchors : engageAnchors).push(r);
       }
     });
-    s.units.forEach(u => { if (u.alive && u.maxOrd > 1) minOrd = Math.min(minOrd, u.ord); });
     if (s.over !== null) break;
   }
   const s = C.s;
   return {
-    t, over: s.over, violations, minOrd,
+    t, over: s.over, violations,
     defendAnchors, engageAnchors,
     lost: s.units.filter(u => !u.alive && u.side === 'friend' && u.type !== 'carrier').length,
     foesLeft: s.units.filter(u => u.alive && u.side === 'foe' && u.type !== 'capital').length,
@@ -184,36 +193,62 @@ RUN = """
 }
 """
 
-# Play produces dry craft only sometimes, so the no-rearm rule is asserted directly:
-# empty a locked craft's magazine and check it still holds its foe and still deals
-# nothing. Pinning is free; killing is what costs a magazine.
-DRY_PROBE = """
+# Two rules that no longer have a magazine enforcing them, so they are asserted directly.
+#
+# EVEN_PROBE: park two identical fighters in a duel and check that a mission-length stretch
+# of grinding does not kill either. Ammunition used to do this — a duel ran dry at ~16s and
+# the kill landed at ~18s — so with unlimited ammo the dps table is the only thing left
+# holding "pinning is the default outcome" up.
+EVEN_PROBE = """
 () => {
   const C = window.__combat;
   C.start('patrol');
   const s = C.s;
-  for (let i = 0; i < 400; i++) {
-    s.units.filter(u=>u.alive&&u.side==='friend'&&u.type!=='carrier'&&!u.lock).forEach(u=>{
-      const f = s.units.filter(o=>o.alive&&o.side==='foe').sort(
+  for (let i = 0; i < 900; i++) {
+    s.units.filter(u=>u.alive&&u.side==='friend'&&u.type==='fighter'&&!u.lock).forEach(u=>{
+      const f = s.units.filter(o=>o.alive&&o.side==='foe'&&o.type==='fighter').sort(
         (a,b)=>Math.hypot(a.x-u.x,a.y-u.y)-Math.hypot(b.x-u.x,b.y-u.y))[0];
       if (f) u.order = {kind:'engage', target:f.id};
     });
     C.step(1, 1/30);
-    const duel = C.s.units.find(u=>u.alive&&u.lock&&u.side==='friend');
+    const duel = C.s.units.find(u=>u.alive&&u.lock&&u.side==='friend'&&u.type==='fighter');
     if (!duel) continue;
     const foe = C.s.units.find(x=>x.id===duel.lock);
-    // isolate the duel so the only possible damage source is the dry craft itself:
-    // empty every friendly magazine (assists need ordnance) and take the carrier's
-    // flak out of range.
-    C.s.units.filter(u=>u.side==='friend').forEach(u=>{ u.ord = 0; });
-    const car = C.s.units.find(u=>u.type==='carrier'); if (car) { car.x += 500; car.y += 500; }
-    const before = foe.cond;
-    for (let k = 0; k < 30; k++) C.step(1, 1/30);   // one more second of holding
-    return { heldLock: duel.alive && duel.lock === foe.id,
-             dealt: +(before - foe.cond).toFixed(2),
-             refilled: duel.ord };
+    if (foe.type !== 'fighter') continue;
+    // isolate: no assists, no flak, nobody else in reach
+    C.s.units.filter(u=>u!==duel&&u!==foe).forEach(u=>{ u.x += 900; u.y += 900; });
+    const a0 = duel.cond, b0 = foe.cond;
+    for (let k = 0; k < 30 * 40; k++) C.step(1, 1/30);   // 40s, longer than any mission
+    // 'alive' is not the question — a routed craft leaves the field and reads as not
+    // alive. The question is whether the grinding produced a kill.
+    return { killed: duel.cond <= 0 || foe.cond <= 0,
+             bothBroke: !!(duel.broken && foe.broken),
+             dealtToFoe: +(b0 - foe.cond).toFixed(1),
+             floorFrac: +(foe.cond / foe.maxCond).toFixed(2) };
   }
-  return { heldLock: null };
+  return { bothAlive: null };
+}
+"""
+
+# CAP_FLAK_PROBE: fly an untouched bomber onto an undefended capital and read off what the
+# run costs it. This is the only pressure left on a bomber that cannot run out of ordnance,
+# and the convoy lesson rests on it: at zero, that mission falls to a naive charge.
+CAP_FLAK_PROBE = """
+() => {
+  const C = window.__combat;
+  C.start('convoy');
+  const s = C.s;
+  const cap = s.units.find(u=>u.type==='capital');
+  const bomber = s.units.find(u=>u.side==='friend'&&u.type==='bomber');
+  s.units.filter(u=>u.side==='foe'&&u.type!=='capital').forEach(u=>{ u.x += 900; u.y += 900; });
+  const start = bomber.cond;
+  bomber.order = {kind:'engage', target:cap.id};
+  for (let k = 0; k < 30 * 60 && cap.alive; k++) {
+    bomber.order = {kind:'engage', target:cap.id};
+    C.step(1, 1/30);
+  }
+  return { capDead: !cap.alive, bomberAlive: bomber.alive,
+           costHull: +(start - bomber.cond).toFixed(1), startHull: start };
 }
 """
 
@@ -235,7 +270,6 @@ def main():
         page.wait_for_function("window.__combat !== undefined")
 
         table, violations = {}, []
-        min_ord = 1e9
         defend_r, engage_r = [], []
         for sc in SCENARIOS:
             for pol in ORDER:
@@ -243,11 +277,11 @@ def main():
                 r = page.evaluate(RUN, [POLICIES[pol], 90.0])
                 table[(sc, pol)] = r
                 violations += [f"{sc}/{pol}: {v}" for v in r["violations"][:3]]
-                min_ord = min(min_ord, r["minOrd"])
                 defend_r += r["defendAnchors"]
                 engage_r += r["engageAnchors"]
 
-        dry = page.evaluate(DRY_PROBE)
+        even = page.evaluate(EVEN_PROBE)
+        capflak = page.evaluate(CAP_FLAK_PROBE)
 
         browser.close()
     httpd.shutdown()
@@ -308,17 +342,32 @@ def main():
         f"defended duels anchor at {d:.1f}, outside the {11.5} flak radius — the "
         "umbrella never fires")
 
-    # --- nothing rearms
-    assert dry["heldLock"] is not None, "the dry probe never got a duel to test"
-    assert dry["heldLock"], (
-        "a craft that ran out of ordnance dropped its lock — a dry craft is supposed to "
-        "still pin, block and pull a pod out (GDD v4 3.5)")
-    assert dry["dealt"] == 0, (
-        f"a dry craft still dealt {dry['dealt']} damage — killing is meant to cost a "
-        "magazine")
-    assert dry["refilled"] == 0, (
-        f"a dry craft's magazine refilled to {dry['refilled']}; there is no rearm cycle")
-    assert min_ord < 130, "no craft ever spent ordnance across 15 runs"
+    # --- an even duel must not resolve inside a mission
+    assert even.get("killed") is not None, "the even-duel probe never got a duel to test"
+    assert not even["killed"], (
+        "an even duel produced a kill in 40s of grinding. With no magazine to run dry, an "
+        "even duel that resolves turns every engagement into a 1-for-1 trade and the "
+        "counter-chain stops deciding fights (GDD v4 3.4)")
+    assert even["dealtToFoe"] > 0, (
+        "an even duel dealt no damage at all — a pin should still be a grind, not a "
+        "stalemate two craft can sit in for free")
+    assert even["bothBroke"], (
+        "an even duel ground on past the floor without either craft breaking off; a pin "
+        "that neither side can end or leave is a deadlock, and rout objectives become "
+        "unreachable")
+
+    # --- the capital's flak is the only thing bounding a bombing run now
+    assert capflak["capDead"], (
+        "an unmolested bomber could not kill a capital at all; the objective is "
+        "unreachable rather than defended")
+    assert capflak["costHull"] > 0, (
+        "a bombing run cost the bomber nothing. Flak is the only pressure left on a craft "
+        "that cannot run out of ordnance, and with it at zero convoy falls to a naive "
+        "charge — measured, not assumed")
+    frac = capflak["costHull"] / capflak["startHull"]
+    assert 0.20 <= frac <= 0.75, (
+        f"a clean bombing run costs {frac:.0%} of the bomber's hull; outside 20-75% the "
+        "run is either free or unsurvivable, and the convoy lesson stops being teachable")
 
     if errors:
         sys.exit("console errors:\n  " + "\n  ".join(errors))
@@ -326,9 +375,10 @@ def main():
     print(f"\ncombat ok — 15 scripted runs, skill gradient holds")
     print(f"anchors — defended duels {d:.1f} from the carrier, reached-out {e:.1f} "
           f"(flak radius 11.5)")
-    print(f"orders are binding; ordnance is a per-sortie budget "
-          f"(lowest magazine seen across all runs: {min_ord:.0f} of 130)")
-    print("a dry craft holds its lock and deals nothing — pinning is free, killing costs")
+    print("orders are binding; ammunition is unlimited")
+    print(f"even duel — 40s of grinding killed nobody ({even['dealtToFoe']:.0f} dealt, "
+          f"floored at {even['floorFrac']:.0%}); both broke off instead")
+    print(f"bombing run — a clean pass on a capital costs {frac:.0%} of the bomber's hull")
 
 
 if __name__ == "__main__":

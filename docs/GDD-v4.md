@@ -156,12 +156,29 @@ rules the prototype forced, both load-bearing:
   reason the flak umbrella reliably covers a defended fight (§3.7), and it makes "reach
   out and take him" a real cost rather than a free action.
 
-> **Because most duels end in a pin rather than a kill, most of what is on screen is the
-> default outcome.** The pin must not read as dead time. The thing being spent is
-> ordnance, so ordnance is what the UI must foreground during a lock — the player should
-> be watching a magazine drain, not a health bar crawl.
+**An even duel wears a craft to a quarter of its condition and no further** — a hard floor,
+not a slow rate. Below that the loser **breaks off and runs for home**: combat-ineffective,
+out of the fight, pilot alive. Killing takes an advantage, an assist, or the carrier's
+flak, none of which are floored.
 
-### 3.5 Logistics: the second loop
+This was a per-sortie magazine until the combat prototype removed ammunition, at which
+point it became clear the magazine had been the *only* thing making the sentence above
+true, and that no dps value can imitate it — any rate slow enough never to resolve inside
+a mission is too slow to feel like a fight (§10.2). Breaking off is the better rule
+anyway: it gives a fight a losing side without a corpse, and it makes `rout` an objective
+you can meet without killing everyone.
+
+> **Because most duels end in a pin rather than a kill, most of what is on screen is the
+> default outcome.** The pin must not read as dead time. With ammunition unlimited there
+> is no magazine to watch drain, so what the UI has to sell during a lock is the *approach
+> to the floor* — the moment a craft is about to break — and the arrival of help.
+
+### 3.5 Logistics: the second loop — *not in the prototype*
+
+**The combat prototype has unlimited ammunition and no rearm cycle**, on purpose: the
+question it exists to answer is whether the fight is fun before logistics props it up.
+What follows is the design as it stands for the full game; §10.2 records what removing it
+cost and what had to be built to replace it.
 
 - **Ordnance only refills at the carrier.** Winning an even duel costs roughly 90% of a
   magazine; killing a fighter with the right tool costs about 25%. The chain therefore
@@ -170,6 +187,11 @@ rules the prototype forced, both load-bearing:
 - **Running dry is loud**: the craft goes visibly dark with a pulsing DRY flag, and a
   per-craft *return when dry* standing order can be switched off to keep it out for
   pinning, blocking or scooping a pod.
+
+> **Before reinstating this, read §10.2.** Ammunition was doing three jobs beyond supply,
+> and two of them now have their own mechanics — the even-duel floor and the capital's
+> per-salvo flak. Putting the magazine back on top of those without removing them would
+> bound the bomber's exposure twice and make even duels unable to resolve at all.
 
 Combat pulls the wing forward; logistics pulls it home. **Risk is a product of geometry
 and clocks. There is no separate risk system.**
@@ -602,45 +624,77 @@ the battle layer *generalises*, and finding out it does not is better early than
 de-risks a different thing than the one §10 names as the risk. If the fear is never
 finishing, close the loop first.
 
-### 10.2 What building combat without the rearm cycle taught — *new*
+### 10.2 What building combat taught — *new*
 
 The prototype exists to answer one question — *is the fight fun on its own?* — so it was
-built with §3.5 deliberately removed. Ordnance is still a per-sortie budget, but nothing
-flies home. Five scripted commanders of increasing sophistication play all three scenarios
-to termination, and the measurement that matters is whether playing better wins more:
+built with §3.5 deliberately removed, first as "no rearm cycle" and then, on a second
+pass, as **unlimited ammunition**: nothing is spent but the craft themselves. Five
+scripted commanders of increasing sophistication play all three scenarios to termination,
+and the measurement that matters is whether playing better wins more:
 
 | | charge | matchup | screen | umbrella | anvil |
 |---|---|---|---|---|---|
 | **patrol** | win | win | win | win | win |
-| **convoy** | loss | loss | win | win | win |
+| **convoy** | loss | loss | win | loss | win |
 | **outnumbered** | loss | loss | loss | loss | **win** |
 
 Each scenario teaches exactly one thing, and the policy that learns it is the first one to
-beat it. Findings:
+beat it. Findings, in the order they were forced:
 
 - **The gradient does not exist for free.** Before orders were binding (§3.4), all five
   columns were identical — every policy performed like `charge`, because assignment did
   not survive contact. *A counter-chain with unassignable matchups is not a mechanic.*
-- **Pinning as the default outcome needs an exit.** With no rearm, two even duellists run
-  dry just before either kill lands and pin each other permanently. The fix was not to
-  retune the numbers but to accept it: a dry pin is a legitimate board state that the
-  player breaks by sending help, and the game says so out loud and auto-pauses when it
-  happens. `The wing is spent` is a loss condition.
-- **Without rearm, a capital's health is a hard constraint, not a dial.** A bomber carries
-  one magazine, so a capital that outlasts it makes the mission unwinnable by arithmetic
-  before a shot is fired. This is the clearest evidence yet that §3.5 is load-bearing:
-  removing it does not make the fight simpler, it makes capital HP a puzzle with one legal
-  answer.
+- **The umbrella is a position, not a button** (§3.7). Getting this wrong cost three
+  passes and produced the single most embarrassing bug in the project: an envelope drawn
+  on screen, named in a mission brief as the way to win, that had never fired a shot.
 - **Losing the objective should not end the mission.** The bomber dies first in every
   scenario, because pinning it is correct enemy doctrine. Ending the instant it died threw
   away the pods, so a dead strike now converts the mission into an extraction: you cannot
   win, but pilots persist (§3.6) and there is still something to play for.
 
+#### What ammunition was secretly doing
+
+Removing the magazine did not simplify the model — it exposed three jobs the magazine had
+been doing that nothing else was:
+
+- **It was the reason even duels did not kill.** A duel ran dry at ~16s and the kill did
+  not land until ~18s, so "pinning is the default outcome" was enforced by *supply*. With
+  ammunition unlimited, every even engagement became a 1-for-1 trade, and no dps value
+  fixes it: any rate slow enough never to resolve inside a 90s mission is too slow to feel
+  like a fight. The replacement is a stated rule rather than a tuned approximation — **an
+  even duel wears a craft to a quarter of its condition and no further**, and finishing it
+  needs an advantage, an assist or the carrier's flak, none of which are floored.
+- **It was the bomber's clock over the target.** A bomber had a fixed number of salvoes,
+  so its exposure was bounded whether or not anything was shooting at it. Without that, a
+  lone bomber loiters indefinitely and *the convoy mission falls to a naive charge*. The
+  fix was already in the design and simply unimplemented: the **flak-punishes-bombers**
+  return arrow of §3.3. Measured, this one number carries the whole screening lesson — at
+  zero, charge wins convoy; above about 15 per salvo, even a well-screened bomber cannot
+  finish. It is charged per salvo rather than per second, because a per-second cost
+  punishes exactly the thing screening produces: a bomber that breaks off and comes back.
+- **It was hiding a tie-break bug.** Two identical fighters reach zero on the same tick,
+  and whichever the update loop reached first won — always the friendly, because friendly
+  units are added to the array first. Ammunition ran out before ties ever happened, so
+  this never surfaced. Duel damage is now gathered and applied in separate passes so both
+  halves resolve together.
+
+**A craft ground to the floor breaks off and runs.** This fell out of the floor rule and is
+better than what it replaced: it makes `rout` an objective you can actually meet without
+killing everything, it gives a fight a losing side without a corpse, and the pilot lives —
+which is the point of §3.6. Losses across the scripted runs dropped noticeably once fights
+could end this way.
+
 **On the question that prompted this — is it fun?** The `outnumbered` line is: fall back,
-let them stack on the lip of the flak, reach out and pull one in, trade three-on-one under
-your own guns, and eat the losses. It costs two of three craft and takes about thirty
-seconds. That reads as a fight worth having. What is *not* yet fun is the middle of an even
-duel, which is exactly the dead time §3.4 warned about.
+let them stack on the lip of the flak, reach out and pull one in, fight three-on-one under
+your own guns, and eat the losses. It takes about forty-five seconds and costs a craft.
+That reads as a fight worth having.
+
+**What this says about §3.5.** Two passes at removing logistics both ended by rebuilding
+something logistics had been providing for free — a bound on the bomber's exposure, and a
+reason even duels do not resolve. That is not an argument that the rearm cycle is
+mandatory; the replacements are cheaper and more legible than the loop they stand in for.
+It *is* an argument that the loop was never only about supply, and that anything replacing
+it has to be checked against what else it was quietly holding up.
 
 ---
 
@@ -688,3 +742,7 @@ duel, which is exactly the dead time §3.4 warned about.
 | 16 | The umbrella is a position, not a button: hostiles hold the lip, then press | §3.7 |
 | 17 | Losing the objective converts the mission to an extraction rather than ending it | §10.2 |
 | 18 | Combat measured as a skill gradient across five scripted commanders | §10.2 |
+| 19 | Prototype runs on unlimited ammunition; §3.5 marked as not-in-prototype | §3.5, §10.2 |
+| 20 | Even duels floor at a quarter condition rather than being bounded by a magazine | §3.4 |
+| 21 | A craft ground to the floor breaks off and runs; rout is winnable without kills | §3.4 |
+| 22 | Capital flak on bombers implemented as the §3.3 return arrow, charged per salvo | §3.3, §10.2 |
